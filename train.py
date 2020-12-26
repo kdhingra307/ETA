@@ -27,9 +27,9 @@ ckpt_dir = join_directory(
 
 ckpt_manager = CheckpointManager(optimizer, model, ckpt_dir)
 log_manager = TensorBoard(log_dir=log_dir)
-lr_manager = tf_keras.callbacks.ReduceLROnPlateau(monitor="val_loss", factor=0.8,
-                                                  patience=3, min_delta=0.005)
+print(optimizer.learning_rate)
 ckpt_manager.ckpt_manager.restore_or_initialize()
+print(optimizer.learning_rate)
 
 model.fit(
     Dataset(train_split),
