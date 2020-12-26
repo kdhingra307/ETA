@@ -19,7 +19,7 @@ log_dir = config.training.log_dir.format(training_label, temporal_label)
 
 model.fit(
     Dataset(train_split),
-    epochs=10,
+    epochs=config.training.epochs,
     callbacks=[TensorBoard(log_dir=join_directory(config.model.working_dir,log_dir))],
     validation_data=Dataset(validation_split)
 )

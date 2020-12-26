@@ -12,3 +12,4 @@ training:
   learning_rate: 1e-3
   decay: 1e+3
   log_dir: 'logs/{}_{}'
+  epochs: 50
