@@ -10,8 +10,9 @@ data:
   split_prefix: "custom_{}"
 
 training:
-  learning_rate: 0.001
+  learning_rate: 0.0005
   decay: 1e+3
   log_dir: 'logs/{}'
   ckpt_dir: 'ckpt/{}'
   epochs: 50
+  reset: False
