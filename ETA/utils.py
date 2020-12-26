@@ -57,6 +57,6 @@ class CheckpointManager(tf_keras.callbacks.Callback):
                                                        directory=ckpt_dir, max_to_keep=5)
     
 
-    def on_epoch_begin(self, epoch, logs):
+    def on_epoch_end(self, epoch, logs):
         if logs[self.label] < self.loss:
             self.ckpt_manager.save()
