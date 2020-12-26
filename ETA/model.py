@@ -43,7 +43,7 @@ class Model(tf_keras.Model):
             tf_keras.layers.Conv1D(filters=2048, kernel_size=3, padding="SAME",
                                    activation=tf_keras.layers.LeakyReLU(alpha=0.2)),
 
-            tf_keras.layers.Conv1D(filters=6001, kernel_size=3, padding="SAME",
+            tf_keras.layers.Conv1D(filters=6118, kernel_size=3, padding="SAME",
                                    activation=tf_keras.layers.ReLU()),
         ])
 
