@@ -18,14 +18,12 @@ test_split = config.data.split_prefix.format("test")
 log_dir = join_directory(
     config.model.working_dir,
     config.training.log_dir.format(
-        config.model.training_label,
-        config.model.temporal_label))
+        config.model.training_label))
 
 ckpt_dir = join_directory(
     config.model.working_dir,
     config.training.ckpt_dir.format(
-        config.model.training_label,
-        config.model.temporal_label))
+        config.model.training_label))
 
 ckpt_manager = CheckpointManager(optimizer, model, ckpt_dir)
 log_manager = TensorBoard(log_dir=log_dir)

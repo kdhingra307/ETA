@@ -12,6 +12,6 @@ data:
 training:
   learning_rate: 4e-4
   decay: 1e+3
-  log_dir: 'logs/{}_{}'
-  ckpt_dir: 'ckpt/{}_{}'
+  log_dir: 'logs/{}'
+  ckpt_dir: 'ckpt/{}'
   epochs: 50
