@@ -1,0 +1,10 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "ETA model",
+            "type": "process",
+            "command": "python3 ./eta.py"
+        }
+    ]
+}

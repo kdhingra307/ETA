@@ -1,0 +1,19 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"launch": {
+		"version": "0.0.1",
+		"configurations": [
+			{
+				"name": "Debug : for faster testing",
+				"type": "python",
+				"request": "launch",
+				"program": "train.py",
+				"console": "integratedTerminal"
+			}
+		]
+	}
+}
