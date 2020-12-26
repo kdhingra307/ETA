@@ -10,7 +10,7 @@ data:
   split_prefix: "custom_{}"
 
 training:
-  learning_rate: 1e-3
+  learning_rate: 1e-5
   decay: 1e+3
   log_dir: 'logs/{}'
   ckpt_dir: 'ckpt/{}'
