@@ -1,4 +1,4 @@
-from ETA.utils import get_config, mse, mae, mape, rmse
+from ETA.utils import get_config, mse, mae, mape, rmse, CheckpointManager
 
 config = get_config("./config.yaml")
 metrics = [mse, mae, mape, rmse]

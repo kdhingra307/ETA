@@ -1,6 +1,5 @@
 import tensorflow.keras as tf_keras
 
-
 class Encoder(tf_keras.layers.Layer):
 
     def __init__(self):

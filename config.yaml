@@ -1,6 +1,7 @@
 model:
   working_dir: './data'
   batch_size: 16
+  training_label: "lstm_with_conv1d"
 
 data:
   shuffle: 1000
@@ -12,4 +13,5 @@ training:
   learning_rate: 1e-3
   decay: 1e+3
   log_dir: 'logs/{}_{}'
+  ckpt_dir: 'ckpt/{}_{}'
   epochs: 50
