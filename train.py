@@ -27,9 +27,8 @@ ckpt_dir = join_directory(
 
 ckpt_manager = CheckpointManager(optimizer, model, ckpt_dir)
 log_manager = TensorBoard(log_dir=log_dir)
-print(optimizer.learning_rate)
 ckpt_manager.ckpt_manager.restore_or_initialize()
-print(optimizer.learning_rate)
+optimizer.learning_rate = config.training.learning_rate
 
 model.fit(
     Dataset(train_split),
