@@ -5,7 +5,7 @@ from tensorflow.keras.callbacks import TensorBoard
 from os.path import join as join_directory
 
 
-optimizer = tf_keras.optimizers.Adam(learning_rate=1e-3)
+optimizer = tf_keras.optimizers.Adam(learning_rate=config.training.learning_rate)
 model = Model()
 model.compile(optimizer=optimizer,
               loss=loss_function,
