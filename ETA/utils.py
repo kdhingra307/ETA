@@ -1,3 +1,4 @@
+import pickle
 import yaml
 from collections import namedtuple
 from munch import munchify
