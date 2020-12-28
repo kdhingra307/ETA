@@ -13,11 +13,10 @@ def get_data(split_label):
 
         mask = (y > 0) * 1
 
-        print(x.shape)
         # x = np.concatenate([eta_data, time_info], axis=1).astype(np.float32)
         y = np.stack([y, mask], axis=-1).astype(np.float32)
 
-        return x, y
+        return x.astype(np.float32), y
 
     files = glob("{}/{}/{}/*.npz".format(config.model.working_dir,
                                          config.data.path_pattern,
