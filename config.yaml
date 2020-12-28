@@ -1,6 +1,6 @@
 model:
   working_dir: './data'
-  batch_size: 16
+  batch_size: 4
   training_label: "DCRNN"
   static_data_dir: 'static'
   num_nodes: 6639
