@@ -6,6 +6,8 @@ from ETA import DCGRUBlock, DCGRUCell, config
 import numpy as np
 
 
+
+
 class Encoder(tf_keras.layers.Layer):
 
     def __init__(self):

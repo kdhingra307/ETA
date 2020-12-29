@@ -4,6 +4,9 @@ model:
   training_label: "dcrnn_testing"
   static_data_dir: 'static'
   num_nodes: 207
+  counter_position: 0
+  teacher_decay_rate: 2000
+
 
 data:
   shuffle: 1000
