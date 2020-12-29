@@ -26,7 +26,7 @@ ckpt_dir = join_directory(
         config.model.training_label))
 
 ckpt_manager = CheckpointManager(optimizer, model, ckpt_dir)
-log_manager = TensorBoard(log_dir=log_dir)
+log_manager = TensorBoard(log_dir=log_dir, update_freq=20)
 ckpt_manager.ckpt_manager.restore_or_initialize()
 optimizer.learning_rate = config.training.learning_rate
 
