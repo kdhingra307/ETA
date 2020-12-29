@@ -4,6 +4,8 @@ import numpy as np
 from ETA import config
 
 mean, std = config.data.mean, config.data.std
+mean = np.array(mean).reshape([1, 1, -1])
+std = np.array(std).reshape([1, 1, -1])
 
 def get_data(split_label):
 

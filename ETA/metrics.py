@@ -2,6 +2,10 @@ from tensorflow import math as tf_maths
 from tensorflow import where as tf_where
 from ETA import config
 
+mean, std = config.data.mean, config.data.std
+mean = np.array(mean).reshape([1, 1, 1, -1])
+std = np.array(std).reshape([1, 1, 1, -1])
+
 
 def mse(y_true, y_pred):
     mask = y_true[:, :, :, 1]
