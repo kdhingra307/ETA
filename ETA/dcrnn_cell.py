@@ -2,6 +2,7 @@ import tensorflow.keras as tf_keras
 import numpy as np
 import tensorflow as tf
 import scipy.sparse as sp
+from ETA import config
 
 
 class DCGRUCell(tf.keras.layers.AbstractRNNCell):
