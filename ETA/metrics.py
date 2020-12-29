@@ -1,6 +1,7 @@
 from tensorflow import math as tf_maths
 from tensorflow import where as tf_where
 from ETA import config
+import numpy as np
 
 mean, std = config.data.mean, config.data.std
 mean = np.array(mean).reshape([1, 1, 1, -1])
