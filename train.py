@@ -1,7 +1,7 @@
 from ETA import Model, Dataset, loss_function, metrics, config, CheckpointManager
 from datetime import datetime
 import tensorflow.keras as tf_keras
-from tensorflow.keras.callbacks import TensorBoard
+from tensorflow.keras.callbacks import TensorBoard, LearningRateScheduler
 from os.path import join as join_directory
 from tensorflow.config import experimental as tf_gpu
 
@@ -52,7 +52,7 @@ def scheduler(epoch, lr):
 
 ckpt_manager = CheckpointManager(optimizer, model, ckpt_dir)
 log_manager = TensorBoard(log_dir=log_dir, update_freq=20)
-lr_manager = tf.keras.callbacks.LearningRateScheduler(scheduler)
+lr_manager = LearningRateScheduler(scheduler)
 ckpt_manager.ckpt_manager.restore_or_initialize()
 
 model.fit(
