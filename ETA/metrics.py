@@ -2,10 +2,11 @@ from tensorflow import math as tf_maths
 from tensorflow import where as tf_where
 from ETA import config
 import numpy as np
+import tensorflow as tf
 
 mean, std = config.data.mean, config.data.std
-mean = np.array(mean).reshape([1, 1, 1, -1])
-std = np.array(std).reshape([1, 1, 1, -1])
+mean = tf.constant(np.array(mean).reshape([1, 1, 1, -1]))
+std = tf.constant(np.array(std).reshape([1, 1, 1, -1]))
 
 
 def mse(y_true, y_pred):
