@@ -52,12 +52,12 @@ def scheduler(epoch, lr):
 
 ckpt_manager = CheckpointManager(optimizer, model, ckpt_dir)
 log_manager = TensorBoard(log_dir=log_dir, update_freq=20)
+lr_manager = tf.keras.callbacks.LearningRateScheduler(scheduler)
 ckpt_manager.ckpt_manager.restore_or_initialize()
-optimizer.learning_rate = config.training.learning_rate
 
 model.fit(
     Dataset(train_split),
     epochs=config.training.epochs,
-    callbacks=[ckpt_manager, log_manager],
+    callbacks=[ckpt_manager, log_manager, lr_manager],
     validation_data=Dataset(validation_split)
 )
