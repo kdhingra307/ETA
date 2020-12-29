@@ -3,6 +3,19 @@ from datetime import datetime
 import tensorflow.keras as tf_keras
 from tensorflow.keras.callbacks import TensorBoard
 from os.path import join as join_directory
+from tensorflow.config import experimental as tf_gpu
+
+
+gpus = tf_gpu.list_physical_devices('GPU')
+if gpus:
+  try:
+    for gpu in gpus:
+        tf_gpu.set_memory_growth(gpu, True)
+    logical_gpus = tf_gpu.list_logical_devices('GPU')
+    print(len(gpus), "Physical GPUs,", len(logical_gpus), "Logical GPUs")
+  except RuntimeError as e:
+    # Memory growth must be set before GPUs have been initialized
+    print(e)
 
 
 optimizer = tf_keras.optimizers.Adam(learning_rate=config.training.learning_rate)
