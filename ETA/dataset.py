@@ -18,6 +18,7 @@ def get_data(split_label):
 
         y = (y-mean)/std
         x = (x-mean)/std
+        print(mean, std)
 
         y = np.stack([y, mask], axis=-1).astype(np.float32)
 
