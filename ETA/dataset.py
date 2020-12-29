@@ -4,8 +4,8 @@ import numpy as np
 from ETA import config
 
 mean, std = config.data.mean, config.data.std
-mean = np.array(mean).reshape([1, 1, -1])
-std = np.array(std).reshape([1, 1, -1])
+mean_expanded = np.array(mean).reshape([1, 1, -1])
+std_expanded = np.array(std).reshape([1, 1, -1])
 
 def get_data(split_label):
 
@@ -16,9 +16,8 @@ def get_data(split_label):
 
         mask = (y > 0) * 1
 
-        y = (y-mean)/std
-        x = (x-mean)/std
-        print(mean, std)
+        y = (y-mean[0])/std[0]
+        x = (x-mean_expanded)/std_expanded
 
         y = np.stack([y, mask], axis=-1).astype(np.float32)
 
