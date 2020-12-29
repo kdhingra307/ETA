@@ -44,9 +44,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         for support in supports:
             self._supports.append(self._build_sparse_matrix(support))
         
-        self.gconv_layer1 = tf_keras.layers.Dense(units=2*num_units)
-        self.gconv_layer2 = tf_keras.layers.Dense(units=num_units)
-
         if num_proj != None:
             self.projection_layer = tf_keras.layers.Dense(units=num_proj)
 
@@ -59,6 +56,22 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
 
     def build(self, inp_shape):
+
+        inpt_features = (inp_shape[-1] + 64) * 4
+        
+        kernel_initializer = tf_keras.initializers.GlorotUniform()
+        bias_initializer = tf_keras.initializers.Zeros()
+        self.w1 = tf.Variable(initial_value=kernel_initializer(shape=(inpt_features, 2*self._num_units), dtype=tf.float32), trainable=True)
+        self.w2 = tf.Variable(initial_value=kernel_initializer(shape=(inpt_features, self._num_units), dtype=tf.float32), trainable=True)
+
+        self.b1 = tf.Variable(initial_value=bias_initializer(shape=(2*self._num_units,), dtype=tf.float32), trainable=True)
+        self.b2 = tf.Variable(initial_value=bias_initializer(shape=(self._num_units,), dtype=tf.float32), trainable=True)
+
+
+        # self.gconv_layer1 = tf_keras.layers.Dense(units=2*self._num_units, kernel_initializer=tf_keras.initializers.Constant(w1), bias_initializer=tf_keras.initializers.Constant(b1))
+        # self.gconv_layer2 = tf_keras.layers.Dense(units=self._num_units, kernel_initializer=tf_keras.initializers.Constant(w2), bias_initializer=tf_keras.initializers.Constant(b2))
+
+
         self.batch_size = inp_shape[0]
 
     @tf.function
@@ -100,6 +113,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     @tf.function
     def _gconv(self, inputs, state, output_size, bias_start=0.0):
         
+
         inputs_and_state = tf.concat([inputs, state], axis=2)
         num_inpt_features = inputs_and_state.shape[-1]
 
@@ -120,12 +134,12 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         x = tf.transpose(x, [2, 0, 1, 3])
         x = tf.reshape(x, [self.batch_size, self._num_nodes, -1])
 
-
-
         if output_size == self._num_units:
-            x = self.gconv_layer2(x)
+            x = tf.matmul(x, self.w2) + self.b2
+            # x = self.gconv_layer2(x)
         else:
-            x = self.gconv_layer1(x)
+            x = tf.matmul(x, self.w1) + self.b1
+            # x = self.gconv_layer1(x)
         
         return x
 
