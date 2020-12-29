@@ -3,6 +3,7 @@ import tensorflow as tf
 import numpy as np
 from ETA import config
 
+mean, std = config.data.mean, config.data.std
 
 def get_data(split_label):
 
@@ -13,7 +14,9 @@ def get_data(split_label):
 
         mask = (y > 0) * 1
 
-        # x = np.concatenate([eta_data, time_info], axis=1).astype(np.float32)
+        y = (y-mean)/std
+        x = (x-mean)/std
+
         y = np.stack([y, mask], axis=-1).astype(np.float32)
 
         return x.astype(np.float32), y
