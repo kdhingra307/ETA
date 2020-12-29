@@ -5,8 +5,8 @@ import numpy as np
 import tensorflow as tf
 
 mean, std = config.data.mean, config.data.std
-mean = tf.constant(np.array(mean).reshape([1, 1, 1, -1]).astype(np.float32))
-std = tf.constant(np.array(std).reshape([1, 1, 1, -1]).astype(np.float32))
+mean = mean[0]
+std = std[0]
 
 
 def mse(y_true, y_pred):
