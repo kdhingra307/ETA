@@ -15,11 +15,11 @@ variance_sum = 0
 
 for e in tqdm(files):
     e = np.load(e)['x']
-    total_sum += np.sum(e)
-    total_count += np.prod(e.shape)
-    variance_sum += np.sum(e**2)
+    total_sum += np.sum(e, axis=(0, 1))
+    total_count += np.prod(e.shape[:-1])
+    variance_sum += np.sum(e**2, axis=(0, 1))
 
 mean = total_sum/total_count
 std = np.sqrt(variance_sum/total_count  - mean**2)
-print("Mean, std of one batch {}, {}".format(np.mean(e), np.std(e)))
+print("Mean, std of one batch {}, {}".format(np.mean(e, axis=(0, 1)), np.std(e, axis=(0, 1))))
 print("Mean, std of complete data {}, {}".format(mean, std))
