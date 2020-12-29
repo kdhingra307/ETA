@@ -40,6 +40,7 @@ class Model(tf_keras.Model):
                                                                    DCGRUCell(64, adjacency_matrix, 2, num_nodes, num_proj=1)]),
                                   num_nodes=num_nodes, steps_to_predict=6, encode=False)
 
+    @tf.function
     def call(self, x, training=False, y=None):
 
         encoded = self.encoder(x, state=None)
