@@ -3,6 +3,7 @@ from datetime import datetime
 import tensorflow.keras as tf_keras
 from tensorflow.keras.callbacks import TensorBoard, LearningRateScheduler
 from os.path import join as join_directory
+from tensorflow import summary as tf_summary
 from tensorflow.config import experimental as tf_gpu
 
 
@@ -46,7 +47,7 @@ def scheduler(epoch, lr):
     else:
         pass
     
-    print(tf.summary.scalar("LearningRate", data=lr))
+    print(tf_summary.scalar("LearningRate", data=lr))
     return lr
   
 
