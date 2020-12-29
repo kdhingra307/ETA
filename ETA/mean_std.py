@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 files = glob("{}/{}/{}/*.npz".format(config.model.working_dir,
                                          config.data.path_pattern,
-                                         config.split_prefix.format("train")))
+                                         config.data.split_prefix.format("train")))
 
 
 total_sum  = 0
