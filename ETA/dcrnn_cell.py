@@ -61,6 +61,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     def build(self, inp_shape):
         self.batch_size = inp_shape[0]
 
+    @tf.function
     def call(self, inputs, state, scope=None):
 
         """
@@ -96,6 +97,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         x_ = tf.expand_dims(x_, 0)
         return tf.concat([x, x_], axis=0)
 
+    @tf.function
     def _gconv(self, inputs, state, output_size, bias_start=0.0):
         
         inputs_and_state = tf.concat([inputs, state], axis=2)
@@ -155,6 +157,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         state = self.block(x)
         return state[-1]
     
+    @tf.function
     def decode(self, state, x_targ=None):
         
         init = tf.zeros([self.batch_size, self.num_nodes, 1], dtype=tf.float32)
