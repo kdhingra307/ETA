@@ -38,6 +38,18 @@ ckpt_dir = join_directory(
     config.training.ckpt_dir.format(
         config.model.training_label))
 
+def scheduler(epoch, lr):
+    if epoch < 20 or epoch > 50:
+        pass
+    if epoch % 10 == 0:
+        lr *= 0.1
+    else:
+        pass
+    
+    print(tf.summary.scalar("LearningRate", data=lr))
+    return lr
+  
+
 ckpt_manager = CheckpointManager(optimizer, model, ckpt_dir)
 log_manager = TensorBoard(log_dir=log_dir, update_freq=20)
 ckpt_manager.ckpt_manager.restore_or_initialize()
