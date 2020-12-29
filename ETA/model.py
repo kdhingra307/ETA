@@ -30,7 +30,7 @@ class Model(tf_keras.Model):
 
         super(Model, self).__init__()
 
-        adjacency_matrix = np.load("{}/{}/adj_matrix.npz".format(config.model.working_dir, config.model.static_data_dir))['arr_0'].astype(np.float32)
+        adjacency_matrix = np.load("{}/{}/metr_adj_matrix.npz".format(config.model.working_dir, config.model.static_data_dir))['arr_0'].astype(np.float32)
         num_nodes = config.model.num_nodes
 
         self.encoder = DCGRUBlock(tf_keras.layers.StackedRNNCells(
