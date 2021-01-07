@@ -103,7 +103,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         x0 = tf.reshape(tf.transpose(x, perm=[1, 2, 0]), [self._num_nodes, -1])
         output = []
 
-        x1 = tf.tensordot(support, x0, axis=[[1], [2]])
+        x1 = tf.tensordot(support, x0, axes=[[1], [2]])
         print(x1.shape)
         output.append(x1)
 
