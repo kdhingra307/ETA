@@ -61,7 +61,7 @@ class sampling:
 
     def __init__(self, sampler="random"):
 
-        adjacency_matrix = np.load("{}/{}/melr_adj_matrix.npz".format(
+        adjacency_matrix = np.load("{}/{}/metr_adj_matrix.npz".format(
             config.model.working_dir, config.model.static_data_dir))['arr_0'].astype(np.float32)
         
         self.n_init = config.model.graph_batch_size
