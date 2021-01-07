@@ -43,8 +43,8 @@ def get_data(split_label):
     # tf_dataset = tf_dataset.cache(
     #     "{}/cache".format(config.model.working_dir))
 
-    # tf_dataset = tf_dataset.map(lambda x, y: (tf.ensure_shape(
-    #     x, [None, config.model.num_nodes, 2]), tf.ensure_shape(y, [None, config.model.num_nodes, 2])))
+    tf_dataset = tf_dataset.map(lambda x, y: (tf.ensure_shape(
+        x, [None, config.model.graph_batch_size, 2]), tf.ensure_shape(y, [None, config.model.graph_batch_size, 2])))
     
     # tf_dataset = tf_dataset.map(batch_sampler.sample)
     
