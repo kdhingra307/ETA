@@ -4,8 +4,6 @@ import tensorflow as tf
 import scipy.sparse as sp
 from ETA import config
 
-support = tf.zeros([36, 36])
-
 
 class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
@@ -102,6 +100,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         x = inputs_and_state
         x0 = tf.reshape(tf.transpose(x, perm=[1, 2, 0]), [self._num_nodes, -1])
         output = []
+
+        support = tf.zeros([36, 36])
 
         x1 = tf.matmul(support, x0)
         output.append(x1)
