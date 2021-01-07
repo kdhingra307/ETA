@@ -26,9 +26,7 @@ def get_data(split_label):
 
         y = np.stack([y, mask], axis=-1).astype(np.float32)
 
-        locations = batch_sampler.sample()
-
-        return x.astype(np.float32)[:, locations], y[:, locations]
+        return x.astype(np.float32) , y
 
     files = glob("{}/{}/{}/*.npz".format(config.model.working_dir,
                                          config.data.path_pattern,
@@ -40,16 +38,24 @@ def get_data(split_label):
                                                             [tf.float32,
                                                                 tf.float32],
                                                             name="load_each_file"))
-    # tf_dataset = tf_dataset.cache(
-    #     "{}/cache".format(config.model.working_dir))
 
     tf_dataset = tf_dataset.map(lambda x, y: (tf.ensure_shape(
-        x, [None, config.model.graph_batch_size, 2]), tf.ensure_shape(y, [None, config.model.graph_batch_size, 2])))
-    
-    # tf_dataset = tf_dataset.map(batch_sampler.sample)
+        x, [None, config.model.num_nodes, 2]), tf.ensure_shape(y, [None, config.model.num_nodes, 2])))
     
     tf_dataset = tf_dataset.batch(batch_size=config.model.batch_size,
                                   drop_remainder=True)
+
+    def second_map(x, y):
+        positions = batch_sampler.sample()
+
+        adj_mx = batch_sampler.adjacency_matrix[positions][:, positions]
+        x = tf.gather(x, indices=positions, axis=2)
+        y = tf.gather(y, indices=positions, axis=2)
+
+        return adj_mx, x, y
+
+    tf_dataset = tf_dataset.map(second_map)
+
 
     tf_dataset = tf_dataset.prefetch(config.data.prefetch)
 
@@ -61,11 +67,11 @@ class sampling:
 
     def __init__(self, sampler="random"):
 
-        adjacency_matrix = np.load("{}/{}/metr_adj_matrix.npz".format(
+        self.adjacency_matrix = np.load("{}/{}/adj_matrix.npz".format(
             config.model.working_dir, config.model.static_data_dir))['arr_0'].astype(np.float32)
         
         self.n_init = config.model.graph_batch_size
-        self.probab = np.sum(adjacency_matrix**2, axis=0)
+        self.probab = np.sum(self.adjacency_matrix**2, axis=0)[:6000]
         self.probab = self.probab/np.sum(self.probab)
     
     def sample(self):
