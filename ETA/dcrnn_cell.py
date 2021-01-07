@@ -57,7 +57,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
     @tf.function
     def call(self, inputs, state, constants, scope=None):
-        print(constants)
 
         """
             inputs_shape [BatchSize, Num_Nodes, Inp_features]
