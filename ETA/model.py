@@ -35,5 +35,5 @@ class Model(tf_keras.Model):
                 y, y_pred, None, regularization_losses=self.losses)
         
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
-        self.compiled_metrics.update_state(y, y_pred, sample_weight)
+        self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}
