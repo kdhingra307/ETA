@@ -103,13 +103,11 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         x0 = tf.reshape(tf.transpose(x, perm=[1, 2, 0]), [self._num_nodes, -1])
         output = []
 
-        print(support.shape, x0.shape)
-        x1 = tf.tensordot(support, x0, axes=[[1], [2]])
-        print(x1.shape)
+        x1 = tf.matmul(support, x0)
         output.append(x1)
 
         for k in range(2, self._max_diffusion_step + 1):
-            x2 = 2 * tf.sparse.sparse_dense_matmul(support, x1) - x0
+            x2 = 2 * tf.matmul(support, x1) - x0
             output.append(x2)
             x1, x0 = x2, x1
 
