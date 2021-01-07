@@ -101,7 +101,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         x0 = tf.reshape(tf.transpose(x, perm=[1, 2, 0]), [self._num_nodes, -1])
         output = []
 
-        support = tf.zeros([36, 36])
+        support = tf.zeros([50, 50])
 
         x1 = tf.matmul(support, x0)
         output.append(x1)
