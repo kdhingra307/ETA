@@ -70,6 +70,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         """
 
         state = tf.reshape(state, [-1, self._num_nodes, self._num_units])
+        support = constants[0]
         
         output_size = 2 * self._num_units
         value = tf.sigmoid(self._gconv(inputs, state, support, output_size, bias_start=1.0))
