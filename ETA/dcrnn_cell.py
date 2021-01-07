@@ -56,7 +56,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self.batch_size = inp_shape[0]
 
     @tf.function
-    def call(self, inputs, state, scope=None):
+    def call(self, inputs, state, constants, scope=None):
+        print(constants)
 
         """
             inputs_shape [BatchSize, Num_Nodes, Inp_features]
@@ -71,11 +72,11 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         state = tf.reshape(state, [-1, self._num_nodes, self._num_units])
         
         output_size = 2 * self._num_units
-        value = tf.sigmoid(self._gconv(inputs, state, output_size, bias_start=1.0))
+        value = tf.sigmoid(self._gconv(inputs, state, support, output_size, bias_start=1.0))
         value = tf.reshape(value, (-1, self._num_nodes, output_size))
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
-        c = self._gconv(inputs, r * state, self._num_units)
+        c = self._gconv(inputs, r * state, support, self._num_units)
 
         if self._activation is not None:
             c = self._activation(c)
@@ -92,7 +93,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         return tf.concat([x, x_], axis=0)
 
     @tf.function
-    def _gconv(self, inputs, state, output_size, bias_start=0.0):
+    def _gconv(self, inputs, state, support, output_size, bias_start=0.0):
         
         inputs_and_state = tf.concat([inputs, state], axis=2)
         num_inpt_features = inputs_and_state.shape[-1]
@@ -140,8 +141,8 @@ class DCGRUBlock(tf_keras.layers.Layer):
     def build(self, x_shape):
         self.batch_size = x_shape[0]
     
-    def encode(self, x):
-        state = self.block(x)
+    def encode(self, x, adj):
+        state = self.block(x, constants=[adj])
         return state[-1]
     
     @tf.function
@@ -156,7 +157,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
     
     @tf.function
-    def decode(self, state, x_targ=None):
+    def decode(self, state, adj, x_targ=None):
         
         init = tf.zeros([self.batch_size, self.num_nodes, 1], dtype=tf.float32)
         nstate = self.cells.get_initial_state(batch_size=self.batch_size, dtype=tf.float32)
@@ -165,12 +166,12 @@ class DCGRUBlock(tf_keras.layers.Layer):
         to_return = []
         if x_targ is None:
             for i in range(self.steps_to_predict):
-                init, state = self.cells(init, states=state)
+                init, state = self.cells(init, states=state, constants=[adj])
                 to_return.append(init)
             return tf.stack(to_return, axis=1)
         else:
             for i in range(self.steps_to_predict):
-                output, state = self.cells(init, states=state)
+                output, state = self.cells(init, states=state, constants=[adj])
                 to_return.append(output)
 
                 if tf.random.uniform(shape=[]) > self.decay_teacher_coefficient():
@@ -182,12 +183,10 @@ class DCGRUBlock(tf_keras.layers.Layer):
         
     
     def call(self, x, state, adj):
-        global support
-        support = adj
         if self.is_encoder:
-            return self.encode(x)
+            return self.encode(x, adj)
         else:
-            return self.decode(state, x)
+            return self.decode(state, adj, x)
             
 
 
