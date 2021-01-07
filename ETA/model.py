@@ -32,7 +32,7 @@ class Model(tf_keras.Model):
         with tf_diff.GradientTape() as tape:
             y_pred = self(x, training=True, y=y[:, :, :, :1], adj=adj)
             loss = self.compiled_loss(
-                y, y_pred, sample_weight, regularization_losses=self.losses)
+                y, y_pred, None, regularization_losses=self.losses)
         
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
         self.compiled_metrics.update_state(y, y_pred, sample_weight)
