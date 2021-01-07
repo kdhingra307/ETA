@@ -4,6 +4,8 @@ import tensorflow as tf
 import scipy.sparse as sp
 from ETA import config
 
+support = tf.zeros([36, 36])
+
 
 class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
@@ -35,7 +37,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._num_proj = num_proj
         self._num_units = num_units
         self._max_diffusion_step = max_diffusion_step
-        self._supports = []
         self._use_gc_for_ru = use_gc_for_ru
         
         if num_proj != None:
@@ -93,7 +94,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         return tf.concat([x, x_], axis=0)
 
     @tf.function
-    def _gconv(self, inputs, state, output_size, support, bias_start=0.0):
+    def _gconv(self, inputs, state, output_size, bias_start=0.0):
         
         inputs_and_state = tf.concat([inputs, state], axis=2)
         num_inpt_features = inputs_and_state.shape[-1]
@@ -181,7 +182,9 @@ class DCGRUBlock(tf_keras.layers.Layer):
             return tf.stack(to_return, axis=1)
         
     
-    def call(self, x, state):
+    def call(self, x, state, adj):
+        global support
+        support = adj
         if self.is_encoder:
             return self.encode(x)
         else:

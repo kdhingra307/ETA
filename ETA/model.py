@@ -20,19 +20,17 @@ class Model(tf_keras.Model):
                                                                    DCGRUCell(64, 2, num_nodes, num_proj=1)]),
                                   num_nodes=num_nodes, steps_to_predict=12, encode=False)
 
-    def call(self, x, training=False, y=None):
+    def call(self, x, adj, training=False, y=None):
 
-        encoded = self.encoder(x, state=None)
-        decoded = self.decoder(state=encoded, x=y)
+        encoded = self.encoder(x=x, adj=adj,  state=None)
+        decoded = self.decoder(adj=adj, state=encoded, x=y)
         return tf_squeeze(decoded, axis=-1)
     
     def train_step(self, data):
-        print(data)
-        data = data_adapter.expand_1d(data)
-        x, y, sample_weight = data_adapter.unpack_x_y_sample_weight(data)
+        adj, x, y = data
 
         with tf_diff.GradientTape() as tape:
-            y_pred = self(x, training=True, y=y[:, :, :, :1])
+            y_pred = self(x, adj, training=True, y=y[:, :, :, :1])
             loss = self.compiled_loss(
                 y, y_pred, sample_weight, regularization_losses=self.losses)
         
