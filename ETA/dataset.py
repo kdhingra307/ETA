@@ -10,6 +10,14 @@ mean, std = config.data.mean, config.data.std
 mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
+def calculate_random_walk_matrix(adj_mx):
+    d = np.array(adj_mx.sum(1))
+    d_inv = np.power(d, -1).flatten()
+    d_inv[np.isinf(d_inv)] = 0.
+    d_mat_inv = np.diag(d_inv)
+    random_walk_mx = d_mat_inv.dot(adj_mx)
+    return random_walk_mx
+
 def get_data(split_label):
 
     batch_sampler = sampling()
@@ -67,8 +75,8 @@ class sampling:
 
     def __init__(self, sampler="random"):
 
-        self.adjacency_matrix = np.load("{}/{}/adj_matrix.npz".format(
-            config.model.working_dir, config.model.static_data_dir))['arr_0'].astype(np.float32)
+        self.adjacency_matrix = calculate_random_walk_matrix(np.load("{}/{}/adj_matrix.npz".format(
+            config.model.working_dir, config.model.static_data_dir))['arr_0'].astype(np.float32))
         
         self.n_init = config.model.graph_batch_size
         self.probab = np.sum(self.adjacency_matrix**2, axis=0)[:6000]
