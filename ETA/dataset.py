@@ -7,6 +7,7 @@ mean, std = config.data.mean, config.data.std
 mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
+
 def get_data(split_label):
 
     def tf_map(file_name):
@@ -31,15 +32,29 @@ def get_data(split_label):
     tf_dataset = tf_dataset.shuffle(config.data.shuffle)
     tf_dataset = tf_dataset.map(lambda x: tf.numpy_function(tf_map,
                                                             [x],
-                                                            [tf.float32, tf.float32],
+                                                            [tf.float32,
+                                                                tf.float32],
                                                             name="load_each_file"))
     tf_dataset = tf_dataset.cache(
         "{}/cache".format(config.model.working_dir))
-    
-    tf_dataset = tf_dataset.map(lambda x, y: (tf.ensure_shape(x, [None, config.model.num_nodes, 2]), tf.ensure_shape(y, [None, config.model.num_nodes, 2])))
+
+    tf_dataset = tf_dataset.map(lambda x, y: (tf.ensure_shape(
+        x, [None, config.model.num_nodes, 2]), tf.ensure_shape(y, [None, config.model.num_nodes, 2])))
     tf_dataset = tf_dataset.batch(batch_size=config.model.batch_size,
                                   drop_remainder=True)
 
     tf_dataset = tf_dataset.prefetch(config.data.prefetch)
 
     return tf_dataset
+
+
+class sampling:
+
+    def __init__(self, type="graphsage"):
+
+        adjacency_matrix = np.load("{}/{}/metr_adj_matrix.npz".format(
+            config.model.working_dir, config.model.static_data_dir))['arr_0'].astype(np.float32)
+        
+        self.n_init = 
+    
+    def 
