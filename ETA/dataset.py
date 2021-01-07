@@ -57,6 +57,7 @@ def get_data(split_label):
         positions = batch_sampler.sample()
 
         adj_mx = batch_sampler.adjacency_matrix[positions][:, positions]
+        adj_mx = tf.convert_to_tensor(adj_mx, dtype=tf.float32)
         x = tf.gather(x, indices=positions, axis=2)
         y = tf.gather(y, indices=positions, axis=2)
 
