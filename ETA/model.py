@@ -11,7 +11,7 @@ class Model(tf_keras.Model):
     def __init__(self):
 
         super(Model, self).__init__()
-        num_nodes = config.model.num_nodes
+        num_nodes = config.model.graph_batch_size
 
         self.encoder = DCGRUBlock(tf_keras.layers.StackedRNNCells(
             [DCGRUCell(64, 2, num_nodes) for _ in range(2)]), num_nodes=num_nodes, steps_to_predict=12)
