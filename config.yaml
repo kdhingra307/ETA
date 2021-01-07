@@ -13,7 +13,7 @@ data:
   shuffle: 1000
   prefetch: 10
   path_pattern: "training_files"
-  split_prefix: "custom_{}"
+  split_prefix: "melr_{}"
   mean: 
     - 54.405
     - 0.497
