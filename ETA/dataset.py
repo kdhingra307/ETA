@@ -78,6 +78,8 @@ class sampling:
 
         self.adjacency_matrix = calculate_random_walk_matrix(np.load("{}/{}/metr_adj_matrix.npz".format(
             config.model.working_dir, config.model.static_data_dir))['arr_0'].astype(np.float32))
+
+        print(self.adjacency_matrix.shape)
         
         self.n_init = config.model.graph_batch_size
         self.probab = np.sum(self.adjacency_matrix**2, axis=0)
