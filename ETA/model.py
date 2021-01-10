@@ -37,3 +37,17 @@ class Model(tf_keras.Model):
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
         self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}
+    
+    def test_step(self, data):
+        adj, x, y = data
+        y_pred = self(x, training=False, adj=adj)
+        # Updates stateful loss metrics.
+        self.compiled_loss(
+        y, y_pred, sample_weight, regularization_losses=self.losses)
+        self.compiled_metrics.update_state(y, y_pred, sample_weight)
+        return {m.name: m.result() for m in self.metrics}
+    
+
+    def predict_step(self, data):
+        adj, x, _ = data
+        return self(x, training=False, adj=adj)
