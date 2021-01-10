@@ -44,7 +44,7 @@ class Model(tf_keras.Model):
         # Updates stateful loss metrics.
         self.compiled_loss(
         y, y_pred, sample_weight, regularization_losses=self.losses)
-        self.compiled_metrics.update_state(y, y_pred, sample_weight)
+        self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}
     
 
