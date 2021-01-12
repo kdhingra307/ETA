@@ -3,6 +3,7 @@ from tensorflow import where as tf_where
 from ETA import config
 import numpy as np
 import tensorflow as tf
+import sys
 
 mean, std = config.data.mean, config.data.std
 mean = mean[0]
@@ -49,7 +50,7 @@ def mape(y_true, y_pred):
     y_true = (y_true*std + mean)
     y_pred = (y_pred*std + mean)
 
-    tf.print(tf.reduce_min(y_true))
+    tf.print(tf.reduce_min(y_true), output_stream=sys.stdout)
 
     output = tf_maths.abs(y_true - y_pred) / y_true
     output = tf_where(tf_maths.is_nan(output), mask, output)
