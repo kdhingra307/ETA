@@ -65,7 +65,6 @@ def get_data(split_label):
 
     tf_dataset = tf_dataset.map(second_map)
 
-
     tf_dataset = tf_dataset.prefetch(config.data.prefetch)
 
     return tf_dataset
@@ -80,7 +79,7 @@ class sampling:
             config.model.working_dir, config.model.static_data_dir))['arr_0'].astype(np.float32))
         
         self.n_init = config.model.graph_batch_size
-        self.probab = np.sum(self.adjacency_matrix**2, axis=0)
+        self.probab = np.sum(self.adjacency_matrix**2, axis=0)[:1000]
         self.probab = self.probab/np.sum(self.probab)
     
     def sample(self):
