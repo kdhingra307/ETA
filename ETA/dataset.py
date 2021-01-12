@@ -57,6 +57,10 @@ def get_data(split_label):
         positions = batch_sampler.sample()
 
         adj_mx = batch_sampler.adjacency_matrix[positions][:, positions]
+        norm = batch_sampler.probab_individ[positions][:, positions]
+
+        # adj_mx /= norm
+
         adj_mx = tf.convert_to_tensor(adj_mx, dtype=tf.float32)
         x = tf.gather(x, indices=positions, axis=2)
         y = tf.gather(y, indices=positions, axis=2)
@@ -79,14 +83,15 @@ class sampling:
             config.model.working_dir, config.model.static_data_dir))['arr_0'].astype(np.float32))
         
         self.n_init = config.model.graph_batch_size
-        self.probab = np.sum(self.adjacency_matrix**2, axis=0)
+        self.probab_individ = self.adjacency_matrix**2
+        self.probab = np.sum(self.probab_individ, axis=-1)
         self.probab = self.probab/np.sum(self.probab)
     
     def sample(self):
-        return np.arange(256)
+        return np.arange(self.n_init)
         # samples =  np.random.multinomial(1, self.probab, self.n_init)
         # positions = np.argmax(samples, axis=-1)
 
-        # return positions
+        return positions
 
 # %%
