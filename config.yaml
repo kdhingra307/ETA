@@ -1,7 +1,7 @@
 model:
   working_dir: './data'
   batch_size: 256
-  training_label: "dcrnn_baseline_sampling_1"
+  training_label: "dcrnn_baseline_sampling_2"
   static_data_dir: 'static'
   num_nodes: 6639
   counter_position: 0
