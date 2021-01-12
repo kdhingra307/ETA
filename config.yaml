@@ -16,11 +16,12 @@ data:
   path_pattern: "training_files"
   split_prefix: "custom_{}"
   mean: 
-    - 54.405
-    - 0.497
+    - 1.3395504
+    - 0.49493809
+
   std:
-    - 19.493
-    - 0.288
+    - 1.64047834
+    - 0.28855661
 
 training:
   learning_rate: 0.01
