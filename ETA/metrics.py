@@ -49,7 +49,7 @@ def mape(y_true, y_pred):
     y_true = (y_true*std + mean)
     y_pred = (y_pred*std + mean)
 
-    print(tf.reduce_min(y_true))
+    tf.print(tf.reduce_min(y_true))
 
     output = tf_maths.abs(y_true - y_pred) / y_true
     output = tf_where(tf_maths.is_nan(output), mask, output)
