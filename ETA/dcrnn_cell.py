@@ -62,10 +62,10 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         
         kernel_initializer = tf_keras.initializers.GlorotUniform()
         bias_initializer = tf_keras.initializers.Zeros()
-        self.w1 = tf.Variable(initial_value=kernel_initializer(shape=(inpt_features, 2*self._num_units), dtype=tf.float32), trainable=True)
+        self.w1 = tf.Variable(initial_value=kernel_initializer(shape=(inpt_features, 3*self._num_units), dtype=tf.float32), trainable=True)
         self.w2 = tf.Variable(initial_value=kernel_initializer(shape=(inpt_features, self._num_units), dtype=tf.float32), trainable=True)
 
-        self.b1 = tf.Variable(initial_value=bias_initializer(shape=(2*self._num_units,), dtype=tf.float32), trainable=True)
+        self.b1 = tf.Variable(initial_value=bias_initializer(shape=(3*self._num_units,), dtype=tf.float32), trainable=True)
         self.b2 = tf.Variable(initial_value=bias_initializer(shape=(self._num_units,), dtype=tf.float32), trainable=True)
 
 
