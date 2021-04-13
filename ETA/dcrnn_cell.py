@@ -58,7 +58,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
     def build(self, inp_shape):
 
-        inpt_features = (inp_shape[-1] + 64)
+        inpt_features = (inp_shape[-1] + 64)*4
         
         kernel_initializer = tf_keras.initializers.GlorotUniform()
         bias_initializer = tf_keras.initializers.Zeros()
@@ -114,7 +114,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     @tf.function
     def _gconv(self, inputs, state, output_size, bias_start=0.0):
         
-
+        self._max_diffusion_step = 2
         inputs_and_state = tf.concat([inputs, state], axis=2)
         num_inpt_features = inputs_and_state.shape[-1]
 
@@ -133,7 +133,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                 x1, x0 = x2, x1
 
         x = tf.reshape(tf.concat(output, axis=-1), [self._num_nodes, num_inpt_features, self.batch_size, -1])
-        x = tf.reduce_sum(x, axis=-1)
+        # x = tf.reduce_sum(x, axis=-1)
         x = tf.transpose(x, [2, 0, 1])
         x = tf.reshape(x, [self.batch_size, self._num_nodes, -1])
 
