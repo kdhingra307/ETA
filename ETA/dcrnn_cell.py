@@ -58,7 +58,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
     def build(self, inp_shape):
 
-        inpt_features = (inp_shape[-1] + 64)*4
+        inpt_features = (inp_shape[-1] + 64)
         
         kernel_initializer = tf_keras.initializers.GlorotUniform()
         bias_initializer = tf_keras.initializers.Zeros()
@@ -134,8 +134,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
         x = tf.reshape(tf.concat(output, axis=-1), [self._num_nodes, num_inpt_features, self.batch_size, -1])
         # x = tf.reduce_sum(x, axis=-1)
-        x = tf.transpose(x, [2, 0, 1, 3])
-        x = tf.reshape(x, [self.batch_size, self._num_nodes, -1])
+        x = tf.transpose(x, [2, 0, 3, 1])
+        # x = tf.reshape(x, [self.batch_size, self._num_nodes, -1])
 
         if output_size == self._num_units:
             x = tf.matmul(x, self.w2) + self.b2
@@ -144,7 +144,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             x = tf.matmul(x, self.w1) + self.b1
             # x = self.gconv_layer1(x)
         
-        return x
+        return tf.reduce_sum(x, axis=2)
 
 def calculate_random_walk_matrix(adj_mx):
     adj_mx = sp.coo_matrix(adj_mx)
