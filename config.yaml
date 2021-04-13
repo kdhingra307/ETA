@@ -7,7 +7,7 @@ model:
   counter_position: 0
   teacher_decay_rate: 2000
   graph_batch_size: 196
-  steps_to_predict: 6
+  steps_to_predict: 12
 
 
 data:
