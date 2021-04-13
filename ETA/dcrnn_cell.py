@@ -144,7 +144,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             x = tf.matmul(x, self.w1) + self.b1
             # x = self.gconv_layer1(x)
         
-        return tf.reduce_sum(x, axis=2)
+        return tf.reduce_mean(x, axis=2)
 
 def calculate_random_walk_matrix(adj_mx):
     adj_mx = sp.coo_matrix(adj_mx)
