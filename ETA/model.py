@@ -1,4 +1,5 @@
 import tensorflow.keras as tf_keras
+from ETA import config
 
 class Encoder(tf_keras.layers.Layer):
 
@@ -43,7 +44,7 @@ class Model(tf_keras.Model):
             tf_keras.layers.Conv1D(filters=2048, kernel_size=3, padding="SAME",
                                    activation=tf_keras.layers.LeakyReLU(alpha=0.2)),
 
-            tf_keras.layers.Conv1D(filters=6118, kernel_size=3, padding="SAME",
+            tf_keras.layers.Conv1D(filters=config.model.num_nodes, kernel_size=3, padding="SAME",
                                    activation=tf_keras.layers.ReLU()),
         ])
 

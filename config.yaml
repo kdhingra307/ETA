@@ -2,6 +2,7 @@ model:
   working_dir: './data'
   batch_size: 16
   training_label: "lstm_with_conv1d"
+  num_nodes: 6639
 
 data:
   shuffle: 1000
