@@ -1,7 +1,7 @@
 model:
   working_dir: './data'
   batch_size: 16
-  training_label: "melr_lstm_conv1d"
+  training_label: "melr_lstm_conv1d_params"
   num_nodes: 207
 
 data:
