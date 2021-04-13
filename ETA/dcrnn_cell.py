@@ -114,37 +114,36 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     @tf.function
     def _gconv(self, inputs, state, output_size, bias_start=0.0):
         
-        self._max_diffusion_step = 2
+        self._max_diffusion_step = 1
         inputs_and_state = tf.concat([inputs, state], axis=2)
         num_inpt_features = inputs_and_state.shape[-1]
 
         x = inputs_and_state
         output = []
 
-        x00 = tf.reshape(tf.transpose(x, perm=[1, 2, 0]), [self._num_nodes, -1])
-        for support in self._supports:
-            x0 = x00
-            x1 = tf.sparse.sparse_dense_matmul(support, x0)
-            output.append(x1)
+        x0 = tf.reshape(tf.transpose(x, perm=[1, 2, 0]), [self._num_nodes, -1])
+        x1 = tf.sparse.sparse_dense_matmul(self._supports[0], x0)
+        
+        # for support in self._supports:
+        #     x1 = tf.sparse.sparse_dense_matmul(support, x0)
+        #     output.append(x1)
 
-            for k in range(2, self._max_diffusion_step + 1):
-                x2 = 2 * tf.sparse.sparse_dense_matmul(support, x1) - x0
-                output.append(x2)
-                x1, x0 = x2, x1
+        #     for k in range(2, self._max_diffusion_step + 1):
+        #         x2 = 2 * tf.sparse.sparse_dense_matmul(support, x1) - x0
+        #         output.append(x2)
+        #         x1, x0 = x2, x1
 
-        x = tf.reshape(tf.concat(output, axis=-1), [self._num_nodes, num_inpt_features, self.batch_size, -1])
-        # x = tf.reduce_sum(x, axis=-1)
+        x = tf.reshape(tf.concat([x0, x1], axis=-1), [self._num_nodes, num_inpt_features, self.batch_size, -1])
+
         x = tf.transpose(x, [2, 0, 3, 1])
-        # x = tf.reshape(x, [self.batch_size, self._num_nodes, -1])
+        x = tf.reshape(x, [self.batch_size, self._num_nodes, -1])
 
         if output_size == self._num_units:
             x = tf.matmul(x, self.w2) + self.b2
-            # x = self.gconv_layer2(x)
         else:
             x = tf.matmul(x, self.w1) + self.b1
-            # x = self.gconv_layer1(x)
-        print(tf.reduce_mean(x, axis=2).shape)
-        return tf.reduce_mean(x, axis=2)
+        
+        return x
 
 def calculate_random_walk_matrix(adj_mx):
     adj_mx = sp.coo_matrix(adj_mx)
