@@ -45,7 +45,7 @@ class Model(tf_keras.Model):
                                    activation=tf_keras.layers.LeakyReLU(alpha=0.2)),
 
             tf_keras.layers.Conv1D(filters=config.model.num_nodes, kernel_size=3, padding="SAME",
-                                   activation=tf_keras.layers.ReLU()),
+                                   ),
         ])
 
     def call(self, x, training=False):
