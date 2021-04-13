@@ -1,12 +1,12 @@
 model:
   working_dir: './data'
   batch_size: 256
-  training_label: "dcrnn_baseline_sampling_3"
+  training_label: "GCN_196/207"
   static_data_dir: 'static'
-  num_nodes: 6639
+  num_nodes: 207
   counter_position: 0
   teacher_decay_rate: 2000
-  graph_batch_size: 256
+  graph_batch_size: 196
   steps_to_predict: 6
 
 
@@ -14,15 +14,13 @@ data:
   shuffle: 1000
   prefetch: 10
   path_pattern: "training_files"
-  split_prefix: "custom_{}"
+  split_prefix: "melr_{}"
   mean: 
-    - 1.3395504
-    - 0.49493809
-
+    - 54.405
+    - 0.497
   std:
-    - 1.64047834
-    - 0.28855661
-
+    - 19.493
+    - 0.288
 training:
   learning_rate: 0.01
   decay: 1e+3
