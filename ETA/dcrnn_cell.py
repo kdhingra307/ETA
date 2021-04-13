@@ -143,7 +143,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         else:
             x = tf.matmul(x, self.w1) + self.b1
             # x = self.gconv_layer1(x)
-        
+        print(tf.reduce_mean(x, axis=2).shape)
         return tf.reduce_mean(x, axis=2)
 
 def calculate_random_walk_matrix(adj_mx):
