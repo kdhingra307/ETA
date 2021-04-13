@@ -48,7 +48,7 @@ def scheduler(epoch, lr):
   
 
 ckpt_manager = CheckpointManager(optimizer, model, ckpt_dir)
-log_manager = TensorBoard(log_dir=log_dir, update_freq=20)
+log_manager = TensorBoard(log_dir=log_dir, update_freq=20, histogram_freq=1,)
 lr_manager = LearningRateScheduler(scheduler)
 ckpt_manager.ckpt_manager.restore_or_initialize()
 
