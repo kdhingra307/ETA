@@ -35,7 +35,7 @@ def get_data(split_label):
     tf_dataset = tf_dataset.batch(batch_size=config.model.batch_size,
                                   drop_remainder=True)
 
-    tf_dataset = tf_dataset.map(lambda x, y: (tf.ensure_shape(x, [None, None, 6119]), tf.ensure_shape(y, [None, None, 6118, 2])))
+    tf_dataset = tf_dataset.map(lambda x, y: (tf.ensure_shape(x, [None, None, config.model.num_nodes+1]), tf.ensure_shape(y, [None, None, config.model.num_nodes, 2])))
 
     tf_dataset = tf_dataset.prefetch(config.data.prefetch)
 
