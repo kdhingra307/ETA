@@ -16,10 +16,10 @@ class Model(tf_keras.Model):
         num_nodes = config.model.num_nodes
 
         self.encoder = DCGRUBlock(tf_keras.layers.StackedRNNCells(
-            [DCGRUCell(64, adjacency_matrix, 2, num_nodes) for _ in range(2)]), num_nodes=num_nodes, steps_to_predict=12)
+            [DCGRUCell(64, adjacency_matrix, 3, num_nodes) for _ in range(2)]), num_nodes=num_nodes, steps_to_predict=12)
         
-        self.decoder = DCGRUBlock(tf_keras.layers.StackedRNNCells([DCGRUCell(64, adjacency_matrix, 2, num_nodes),
-                                                                   DCGRUCell(64, adjacency_matrix, 2, num_nodes, num_proj=1)]),
+        self.decoder = DCGRUBlock(tf_keras.layers.StackedRNNCells([DCGRUCell(64, adjacency_matrix, 3, num_nodes),
+                                                                   DCGRUCell(64, adjacency_matrix, 3, num_nodes, num_proj=1)]),
                                   num_nodes=num_nodes, steps_to_predict=12, encode=False)
 
     def call(self, x, training=False, y=None):
