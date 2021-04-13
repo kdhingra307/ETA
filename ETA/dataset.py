@@ -91,7 +91,7 @@ class sampling:
         self.probab = self.probab/np.sum(self.probab)
     
     def sample(self):
-        # return np.arange(self.n_init)
+        return np.arange(self.n_init)
         samples =  np.random.multinomial(1, self.probab, self.n_init)
         positions = np.argmax(samples, axis=-1)
 
