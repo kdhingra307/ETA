@@ -9,6 +9,12 @@ data:
   prefetch: 10
   path_pattern: "training_files"
   split_prefix: "melr_{}"
+  mean: 
+    - 54.405
+    - 0.497
+  std:
+    - 19.493
+    - 0.288
 
 training:
   learning_rate: 0.00001

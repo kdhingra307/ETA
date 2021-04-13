@@ -4,6 +4,10 @@ import numpy as np
 from ETA import config
 
 
+mean, std = config.data.mean, config.data.std
+mean_expanded = np.array(mean).reshape([1, 1, -1])
+std_expanded = np.array(std).reshape([1, 1, -1])
+
 def get_data(split_label):
 
     def tf_map(file_name):
@@ -11,11 +15,12 @@ def get_data(split_label):
         data = np.load(file_name)
         x, y = data['x'], data['y'][:, :, 0]
 
-        eta_data = x[:, :, 0]
-        time_info = x[:, :1, 1]
         mask = (y > 0) * 1
 
-        x = np.concatenate([eta_data, time_info], axis=1).astype(np.float32)
+        y = (y-mean[0])/std[0]
+        x = (x-mean_expanded)/std_expanded
+
+        x = np.concatenate([x[:, :, 0], x[:, :1, 1]], axis=1).astype(np.float32)
         y = np.stack([y, mask], axis=-1).astype(np.float32)
 
         return x, y
