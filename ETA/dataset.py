@@ -57,7 +57,7 @@ def get_data(split_label):
         positions = batch_sampler.sample()
 
         # adj_mx = batch_sampler.adjacency_matrix[positions][:, positions]
-        adj_mx = batch_sampler.adjacency_matrix[:, positions][:, :, positions]
+        adj_mx = batch_sampler.adjacency_matrix[positions][:, positions]
         adj_mx = tf.stack([calculate_random_walk_matrix(adj_mx), calculate_random_walk_matrix(adj_mx.T)], axis=0)
         # norm = batch_sampler.probab_individ[positions][:, positions]
 
