@@ -153,15 +153,12 @@ class DCGRUBlock(tf_keras.layers.Layer):
         state = self.block(x, constants=[adj])
         return state[-1]
     
-    @tf.function
     def decay_teacher_coefficient(self):
         decay_rate = config.model.teacher_decay_rate
 
         teacher_coeff = decay_rate/ (decay_rate + tf.exp(self.counter/35))
         tf.summary.scalar(name="teacher_decay_coefficient", data=teacher_coeff, step=tf.cast(self.counter, tf.int64))
-        tf.print(self.counter)
         self.counter = self.counter + 1.
-        tf.print(self.counter, self.counter + 1.)
 
         return teacher_coeff
 
