@@ -1,7 +1,7 @@
 model:
   working_dir: './data'
   batch_size: 64
-  training_label: "basic_gcn_test2_random_sub_3"
+  training_label: "basic_gcn_autoregression"
   static_data_dir: 'static'
   num_nodes: 207
   counter_position: 0
