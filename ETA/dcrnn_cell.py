@@ -142,7 +142,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         self.cells = dcrnn_cells
         self.num_nodes = num_nodes
         self.steps_to_predict = steps_to_predict
-        self.counter = tf.constant(config.model.counter_position, dtype=tf.int32)
+        self.counter = tf.constant(config.model.counter_position, dtype=tf.float32)
         if encode:
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
         
@@ -158,7 +158,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         decay_rate = config.model.teacher_decay_rate
 
         teacher_coeff = decay_rate/ (decay_rate + tf.exp(self.counter/35))
-        tf.summary.scalar(name="teacher_decay_coefficient", data=teacher_coeff, step=self.counter)
+        tf.summary.scalar(name="teacher_decay_coefficient", data=teacher_coeff, step=tf.cast(self.counter, tf.int64))
 
         self.counter += 1
 
