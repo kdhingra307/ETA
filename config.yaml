@@ -6,7 +6,7 @@ model:
   num_nodes: 207
   counter_position: 0
   teacher_decay_rate: 2000
-  graph_batch_size: 207
+  graph_batch_size: 200
   steps_to_predict: 12
 
 
