@@ -57,7 +57,7 @@ def get_data(split_label):
         positions = batch_sampler.sample()
 
         adj_mx = batch_sampler.adjacency_matrix[positions][:, positions]
-        norm = batch_sampler.probab_individ[positions][:, positions]
+        # norm = batch_sampler.probab_individ[positions][:, positions]
 
         # adj_mx /= norm
         # adj_mx *= batch_sampler.probab[positions].reshape([1, -1])
@@ -65,6 +65,7 @@ def get_data(split_label):
         # adj_mx[np.isinf(adj_mx)] = 0
 
         adj_mx = tf.convert_to_tensor(adj_mx, dtype=tf.float32)
+        print(adj_mx.shape)
         x = tf.gather(x, indices=positions, axis=2)
         y = tf.gather(y, indices=positions, axis=2)
 
@@ -81,20 +82,21 @@ def get_data(split_label):
 class sampling:
 
     def __init__(self, sampler="random"):
-
-        self.adjacency_matrix = calculate_random_walk_matrix(np.load("{}/{}/metr_adj_matrix.npz".format(
-            config.model.working_dir, config.model.static_data_dir))['arr_0'].astype(np.float32))
+        
+        adj = np.load("{}/{}/metr_adj_matrix.npz".format(
+            config.model.working_dir, config.model.static_data_dir)['arr_0'].astype(np.float32)
+        self.adjacency_matrix = [calculate_random_walk_matrix(adj), calculate_random_walk_matrix(adj).T]
         
         self.n_init = config.model.graph_batch_size
-        self.probab_individ = self.adjacency_matrix**2
-        self.probab = np.sum(self.probab_individ, axis=-1)
-        self.probab = self.probab/np.sum(self.probab)
+        # self.probab_individ = self.adjacency_matrix**2
+        # self.probab = np.sum(self.probab_individ, axis=-1)
+        # self.probab = self.probab/np.sum(self.probab)
     
     def sample(self):
         return np.arange(self.n_init)
-        samples =  np.random.multinomial(1, self.probab, self.n_init)
-        positions = np.argmax(samples, axis=-1)
+        # samples =  np.random.multinomial(1, self.probab, self.n_init)
+        # positions = np.argmax(samples, axis=-1)
 
-        return positions
+        # return positions
 
 # %%
