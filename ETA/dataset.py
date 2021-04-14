@@ -58,6 +58,7 @@ def get_data(split_label):
 
         # adj_mx = batch_sampler.adjacency_matrix[positions][:, positions]
         adj_mx = batch_sampler.adjacency_matrix[:, positions][:, :, positions]
+        adj_mx = tf.stack([calculate_random_walk_matrix(adj_mx), calculate_random_walk_matrix(adj_mx.T)], axis=0)
         # norm = batch_sampler.probab_individ[positions][:, positions]
 
         # adj_mx /= norm
@@ -86,7 +87,7 @@ class sampling:
         
         adj = np.load("{}/{}/metr_adj_matrix.npz".format(
             config.model.working_dir, config.model.static_data_dir))['arr_0'].astype(np.float32)
-        self.adjacency_matrix = np.stack([calculate_random_walk_matrix(adj), calculate_random_walk_matrix(adj).T], axis=0)
+        self.adjacency_matrix = adj
         
         # self.adjacency_matrix = calculate_random_walk_matrix(adj)
         self.n_init = config.model.graph_batch_size
