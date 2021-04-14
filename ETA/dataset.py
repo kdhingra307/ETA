@@ -61,8 +61,8 @@ def get_data(split_label):
 
         # adj_mx /= norm
         # adj_mx *= batch_sampler.probab[positions].reshape([1, -1])
-        adj_mx[np.isnan(adj_mx)] = 0
-        adj_mx[np.isinf(adj_mx)] = 0
+        # adj_mx[np.isnan(adj_mx)] = 0
+        # adj_mx[np.isinf(adj_mx)] = 0
 
         adj_mx = tf.convert_to_tensor(adj_mx, dtype=tf.float32)
         x = tf.gather(x, indices=positions, axis=2)
