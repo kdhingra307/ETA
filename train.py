@@ -40,10 +40,10 @@ ckpt_dir = join_directory(
         config.model.training_label))
 
 def scheduler(epoch, lr):
-    if epoch >= 20 and epoch <= 50 and epoch % 10 == 0:
-        lr *= 0.1
+    if epoch >= 20 and epoch <= 50:
+        lr *= 0.9
     
-    print(tf_summary.scalar("LearningRate", data=lr))
+    print(tf_summary.scalar("LearningRate", data=lr, step=epoch))
     return lr
   
 
