@@ -165,8 +165,12 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
     
     @tf.function
-    def decode(self, state, adj, x_targ=None):
+    def decode(self, state, adj, x_init, x_targ=None):
         
+        #TODO last x input as current input
+        #embedding of input, testing on dropout
+        #monitor average gradient norm, gradient on each node and output of each layer at epoch.
+
         init = tf.zeros([self.batch_size, self.num_nodes, 1], dtype=tf.float32)
         nstate = self.cells.get_initial_state(batch_size=self.batch_size, dtype=tf.float32)
         state = [state, nstate[1]]

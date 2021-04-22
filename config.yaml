@@ -1,11 +1,11 @@
 model:
   working_dir: './data'
   batch_size: 64
-  training_label: "basic_gcn_autoregression_2"
+  training_label: "basic_gcn_autoregression_3"
   static_data_dir: 'static'
   num_nodes: 207
   counter_position: 0
-  teacher_decay_rate: 2000
+  teacher_decay_rate: 10000
   graph_batch_size: 196
   steps_to_predict: 12
 
