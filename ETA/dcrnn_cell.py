@@ -176,7 +176,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         nstate = self.cells.get_initial_state(batch_size=self.batch_size, dtype=tf.float32)
         state = [state, nstate[1]]
 
-        tf.print("here")
+        tf.print("here\n\n\n")
 
         to_return = []
         if x_targ is None:
