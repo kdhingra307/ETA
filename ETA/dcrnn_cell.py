@@ -205,6 +205,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         if self.is_encoder:
             return self.encode(x, adj)
         else:
+            tf.print(x)
             return self.decode(state, adj, x)
             
 
