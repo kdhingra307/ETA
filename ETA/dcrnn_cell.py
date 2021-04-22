@@ -156,18 +156,15 @@ class DCGRUBlock(tf_keras.layers.Layer):
     @tf.function
     def decay_teacher_coefficient(self):
         decay_rate = config.model.teacher_decay_rate
-        tf.print(decay_rate)
 
         teacher_coeff = decay_rate/ (decay_rate + self.counter/128)
-        tf.print(tf.summary.scalar(name="teacher_decay_coefficient", data=teacher_coeff, step=tf.cast(self.counter, tf.int64)))
+        tf.summary.scalar(name="teacher_decay_coefficient", data=teacher_coeff, step=tf.cast(self.counter, tf.int64))
         self.counter.assign_add(1)
 
         return teacher_coeff
 
     
-    def decode(self, state, adj, x_init, x_targ=None):
-
-        tf.print(x_targ)
+    def decode(self, state, adj, x_targ=None):
         
         #TODO last x input as current input
         #embedding of input, testing on dropout
@@ -176,8 +173,6 @@ class DCGRUBlock(tf_keras.layers.Layer):
         init = tf.zeros([self.batch_size, self.num_nodes, 1], dtype=tf.float32)
         nstate = self.cells.get_initial_state(batch_size=self.batch_size, dtype=tf.float32)
         state = [state, nstate[1]]
-
-        tf.print("here\n\n\n", x_targ)
 
         to_return = []
         if x_targ is None:
@@ -191,7 +186,6 @@ class DCGRUBlock(tf_keras.layers.Layer):
                 to_return.append(output)
                 xrand = tf.random.uniform(shape=[])
                 corff = self.decay_teacher_coefficient()
-                tf.print(xrand, corff)
                 if xrand < corff:
                     init = output
                 else:
