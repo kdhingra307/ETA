@@ -167,6 +167,8 @@ class DCGRUBlock(tf_keras.layers.Layer):
     
     @tf.function
     def decode(self, state, adj, x_init, x_targ=None):
+
+        tf.print(x_targ)
         
         #TODO last x input as current input
         #embedding of input, testing on dropout
@@ -203,7 +205,6 @@ class DCGRUBlock(tf_keras.layers.Layer):
         if self.is_encoder:
             return self.encode(x, adj)
         else:
-            tf.print(x)
             return self.decode(state, adj, x)
             
 
