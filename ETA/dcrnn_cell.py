@@ -186,8 +186,10 @@ class DCGRUBlock(tf_keras.layers.Layer):
             for i in range(self.steps_to_predict):
                 output, state = self.cells(init, states=state, constants=[adj])
                 to_return.append(output)
-
-                if tf.random.uniform(shape=[]) > self.decay_teacher_coefficient():
+                xrand = tf.random.uniform(shape=[])
+                corff = self.decay_teacher_coefficient()
+                tf.print(xrand, corff)
+                if xrand < corff:
                     init = output
                 else:
                     init = x_targ[:, i]
