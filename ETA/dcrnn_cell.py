@@ -165,7 +165,6 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return teacher_coeff
 
     
-    @tf.function
     def decode(self, state, adj, x_init, x_targ=None):
 
         tf.print(x_targ)
@@ -205,7 +204,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         if self.is_encoder:
             return self.encode(x, adj)
         else:
-            tf.print(x)
+            tf.print(x.shape)
             return self.decode(state, adj, x)
             
 
