@@ -70,7 +70,7 @@ def get_data(split_label):
 
         return adj_mx, x, y
 
-    tf_dataset = tf_dataset.map(second_map)
+    # tf_dataset = tf_dataset.map(second_map)
 
     tf_dataset = tf_dataset.prefetch(config.data.prefetch)
 
