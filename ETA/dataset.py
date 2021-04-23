@@ -54,10 +54,10 @@ def get_data(split_label):
                                   drop_remainder=True)
 
     def second_map(x, y):
-        positions = batch_sampler.sample()
+        # positions = batch_sampler.sample()
 
         adj_mx = batch_sampler.adjacency_matrix[positions][:, positions]
-        norm = batch_sampler.probab_individ[positions][:, positions]
+        # norm = batch_sampler.probab_individ[positions][:, positions]
 
         # adj_mx /= norm
         # adj_mx *= batch_sampler.probab[positions].reshape([1, -1])
@@ -65,12 +65,12 @@ def get_data(split_label):
         adj_mx[np.isinf(adj_mx)] = 0
 
         adj_mx = tf.convert_to_tensor(adj_mx, dtype=tf.float32)
-        x = tf.gather(x, indices=positions, axis=2)
-        y = tf.gather(y, indices=positions, axis=2)
+        # x = tf.gather(x, indices=positions, axis=2)
+        # y = tf.gather(y, indices=positions, axis=2)
 
         return adj_mx, x, y
 
-    # tf_dataset = tf_dataset.map(second_map)
+    tf_dataset = tf_dataset.map(second_map)
 
     tf_dataset = tf_dataset.prefetch(config.data.prefetch)
 
