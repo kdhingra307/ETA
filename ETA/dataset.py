@@ -56,7 +56,7 @@ def get_data(split_label):
     def second_map(x, y):
         # positions = batch_sampler.sample()
 
-        adj_mx = batch_sampler.adjacency_matrix[positions][:, positions]
+        adj_mx = batch_sampler.adjacency_matrix
         # norm = batch_sampler.probab_individ[positions][:, positions]
 
         # adj_mx /= norm
