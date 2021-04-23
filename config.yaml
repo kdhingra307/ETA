@@ -1,7 +1,7 @@
 model:
   working_dir: './data'
   batch_size: 256
-  training_label: "GCN_basic_1"
+  training_label: "GCN_basic_2"
   static_data_dir: 'static'
   num_nodes: 207
   counter_position: 0
