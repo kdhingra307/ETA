@@ -61,6 +61,7 @@ def get_data(split_label):
 
         # adj_mx /= norm
         # adj_mx *= batch_sampler.probab[positions].reshape([1, -1])
+        print(type(adj_mx), np.isnan(adj_mx).shape)
         adj_mx[np.isnan(adj_mx)] = 0
         adj_mx[np.isinf(adj_mx)] = 0
 
