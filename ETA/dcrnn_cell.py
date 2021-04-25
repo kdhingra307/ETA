@@ -99,16 +99,11 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         num_inpt_features = inputs_and_state.shape[-1]
 
         x = inputs_and_state
-        x0 = tf.reshape(tf.transpose(x, perm=[1, 2, 0]), [self._num_nodes, -1])
-        output = []
+        # x - [B, num_nodes, num_features]
+        
+        x1 = tf.tensordot(x0, support, axes=[1, 0])
 
-        x1 = tf.matmul(support, x0)
-        output.append(x1)
-
-        for k in range(2, self._max_diffusion_step + 1):
-            x2 = 2 * tf.matmul(support, x1) - x0
-            output.append(x2)
-            x1, x0 = x2, x1
+        print(x.shape, support.shape, x1.shape)
 
         x = tf.reshape(tf.concat(output, axis=-1), [self._num_nodes, num_inpt_features, self.batch_size, -1])
         x = tf.transpose(x, [2, 0, 1, 3])
