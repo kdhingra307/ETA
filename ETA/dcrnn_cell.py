@@ -101,7 +101,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         x = inputs_and_state
         # x - [B, num_nodes, num_features]
         
-        x1 = tf.tensordot(x0, support, axes=[1, 0])
+        x1 = tf.tensordot(x, support, axes=[1, 0])
 
         print(x.shape, support.shape, x1.shape)
 
