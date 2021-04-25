@@ -87,6 +87,8 @@ class sampling:
         
         self.adjacency_matrix = tf.concat([self.adjacency_matrix, np.matmul(self.adjacency_matrix, (self.adjacency_matrix - 1))], axis=-1)
         
+        print(self.adjacency_matrix.shape)
+
         self.n_init = config.model.graph_batch_size
         self.probab_individ = self.adjacency_matrix**2
         self.probab = np.sum(self.probab_individ, axis=-1)
