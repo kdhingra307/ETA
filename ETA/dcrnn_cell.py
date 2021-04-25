@@ -102,8 +102,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         # x - [B, num_nodes, num_features]
         
         x1 = tf.tensordot(x, support, axes=[1, 0])
-
-        print(x.shape, support.shape, x1.shape)
+        # x1 - [B, num_features, num_nodes]        
 
         x = tf.reshape(tf.concat(output, axis=-1), [self._num_nodes, num_inpt_features, self.batch_size, -1])
         x = tf.transpose(x, [2, 0, 1, 3])
