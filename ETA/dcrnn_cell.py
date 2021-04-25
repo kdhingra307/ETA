@@ -153,7 +153,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
         self.counter.assign_add(1)
 
-        return self.counter/self.counter
+        return teacher_coeff
 
     
     @tf.function
