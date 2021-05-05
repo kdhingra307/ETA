@@ -71,24 +71,18 @@ class Model(tf_keras.Model):
 
         self.post_process = tf_keras.Sequential(
             [
-                tf_keras.layers.Conv1D(
-                    filters=64,
-                    kernel_size=3,
-                    padding="SAME",
+                tf_keras.layers.Dense(
+                    units=128,
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
-                    filters=128,
-                    kernel_size=3,
-                    padding="SAME",
+                tf_keras.layers.Dense(
+                    units=256,
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
-                    filters=1,
-                    kernel_size=3,
-                    padding="SAME",
+                tf_keras.layers.Dense(
+                    units=207,
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
             ]
@@ -116,7 +110,7 @@ class Model(tf_keras.Model):
             import tensorflow as tf
 
             init = tf_array_ops.zeros(
-                [tf_array_ops.shape(state[0])[0], num_nodes, 1],
+                [tf_array_ops.shape(state[0])[0], num_nodes],
                 dtype=tf_dtype.float32,
             )
 
@@ -144,12 +138,11 @@ class Model(tf_keras.Model):
             return tf_array_ops.stack(to_return, axis=1)
 
     def call(self, x, training=False, y=None):
-
         embedding = self.embedding(x, training=training)
         otpt = self.encoder(embedding)
         encoded = otpt[1:]
         decoded = self.decode(state=encoded, x_targ=y)
-        return tf_array_ops.squeeze(decoded, axis=-1)
+        return decoded
 
     def train_step(self, data):
         x, y = data
