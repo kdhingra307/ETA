@@ -114,8 +114,6 @@ class Model(tf_keras.Model):
                 dtype=tf_dtype.float32,
             )
 
-        tf.print(tf.shape(init))
-
         num_steps = config.model.steps_to_predict
         to_return = []
         if x_targ is None:
