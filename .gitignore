@@ -2,3 +2,4 @@ data/logs/
 *.npz
 data/cache*
 *.pyc
+data/ckpt*
