@@ -131,7 +131,7 @@ class Model(tf_keras.Model):
                 if np.random.rand() > config.model.ttr:
                     init = output
                 else:
-                    init = x_targ[:, i]
+                    init = tf_array_ops.squeeze(x_targ[:, i], axis=-1)
 
             return tf_array_ops.stack(to_return, axis=1)
 
