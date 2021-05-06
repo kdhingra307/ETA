@@ -103,7 +103,7 @@ class Model(tf_keras.Model):
     #     return teacher_coeff
 
     @tf_function
-    def decode(self, state, x_targ=None, init=None):
+    def decode(self, state, x_targ=None, init=None, training=False):
 
         if init is None:
             num_nodes = config.model.num_nodes
@@ -118,14 +118,18 @@ class Model(tf_keras.Model):
         to_return = []
         if x_targ is None:
             for i in range(num_steps):
-                init, state = self.decoder(init, states=state)
-                init = self.post_process(init)
+                init, state = self.decoder(
+                    init, states=state, training=training
+                )
+                init = self.post_process(init, training=training)
                 to_return.append(init)
             return tf_array_ops.stack(to_return, axis=1)
         else:
             for i in range(num_steps):
-                output, state = self.decoder(init, states=state)
-                output = self.post_process(output)
+                output, state = self.decoder(
+                    init, states=state, training=training
+                )
+                output = self.post_process(output, training=training)
                 to_return.append(output)
 
                 if np.random.rand() > config.model.ttr:
@@ -137,9 +141,9 @@ class Model(tf_keras.Model):
 
     def call(self, x, training=False, y=None):
         embedding = self.embedding(x, training=training)
-        otpt = self.encoder(embedding)
+        otpt = self.encoder(embedding, training=training)
         encoded = otpt[1:]
-        decoded = self.decode(state=encoded, x_targ=y)
+        decoded = self.decode(state=encoded, x_targ=y, training=training)
         return decoded
 
     def train_step(self, data):
