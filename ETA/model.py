@@ -140,9 +140,6 @@ class Model(tf_keras.Model):
 
     def call(self, x, training=False, y=None):
 
-        import tensorflow as tf
-
-        tf.print(tf.shape(x))
         embedding = self.embedding(x, training=training)
         otpt = self.encoder(embedding, training=training)
         print([e.shape for e in otpt])
