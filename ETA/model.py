@@ -83,7 +83,6 @@ class Model(tf_keras.Model):
                 tf_keras.layers.BatchNormalization(),
                 tf_keras.layers.Dense(
                     units=207,
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
             ]
         )
@@ -140,8 +139,13 @@ class Model(tf_keras.Model):
             return tf_array_ops.stack(to_return, axis=1)
 
     def call(self, x, training=False, y=None):
+
+        import tensorflow as tf
+
+        tf.print(tf.shape(x))
         embedding = self.embedding(x, training=training)
         otpt = self.encoder(embedding, training=training)
+        print([e.shape for e in otpt])
         encoded = otpt[1:]
         decoded = self.decode(state=encoded, x_targ=y, training=training)
         return decoded
