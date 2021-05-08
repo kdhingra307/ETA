@@ -1,10 +1,10 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "lstm_conv1d_melr/teacher_force/3"
+  training_label: "lstm_conv1d_melr/autoregression/1"
   num_nodes: 207
   steps_to_predict: 12
-  ttr: 1
+  ttr: 0
 
 data:
   shuffle: 1000
