@@ -101,6 +101,7 @@ class Model(tf_keras.Model):
         self.counter = tf.Variable(0, dtype=tf.float32, trainable=False)
         self.avg_train = tf.Variable(0, dtype=tf.float32, trainable=False)
         self.gcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
+        self.current_reward = tf.Variable(0, dtype=tf.int64, trainable=False)
 
     @tf.function
     def q_update_train(self, loss):
@@ -158,6 +159,11 @@ class Model(tf_keras.Model):
             name="Q/ttr",
             data=self.ttr_param,
             step=self.gcounter,
+        )
+        tf.summary.scalar(
+            name="Q/assert",
+            data=self.ttr_param,
+            step=self.counter,
         )
         tf.summary.scalar(
             name="Q/table",
