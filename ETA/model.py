@@ -97,7 +97,7 @@ class Model(tf_keras.Model):
             dtype=tf.int32,
             trainable=False,
         )
-        tf.print(self.prev_q_state)
+        # tf.print(self.prev_q_state)
         self.counter = tf.Variable(0, dtype=tf.float32, trainable=False)
         self.avg_train = tf.Variable(0, dtype=tf.float32, trainable=False)
         self.gcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
@@ -155,7 +155,7 @@ class Model(tf_keras.Model):
 
         self.ttr_param = next_state / 100
 
-        tf.print(next_state)
+        # tf.print(next_state)
 
         tf.summary.scalar(
             name="Q/ttr",
