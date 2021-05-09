@@ -155,6 +155,8 @@ class Model(tf_keras.Model):
 
         self.ttr_param = next_state / 100
 
+        tf.print(next_state)
+
         tf.summary.scalar(
             name="Q/ttr",
             data=self.ttr_param,
