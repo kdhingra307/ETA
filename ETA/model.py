@@ -6,6 +6,7 @@ import numpy as np
 from ETA import config
 import tensorflow.python.framework.dtypes as tf_dtype
 from tensorflow import function as tf_function
+import tensorflow as tf
 
 
 class Model(tf_keras.Model):
@@ -87,19 +88,112 @@ class Model(tf_keras.Model):
             ]
         )
 
-    # @tf.function
-    # def decay_teacher_coefficient(self):
-    #     decay_rate = config.model.teacher_decay_rate
+        self.q_table = tf.Variable(
+            tf.zeros([100, 3]), dtype=tf.float32, trainable=False
+        )
+        self.ttr_param = config.model.ttr
+        self.prev_q_state = tf.Variable(
+            config.model.ttr, dtype=tf.int32, trainable=False
+        )
+        tf.print(self.prev_q_state)
+        self.counter = tf.Variable(0, dtype=tf.float32, trainable=False)
+        self.avg_train = tf.Variable(0, dtype=tf.float32, trainable=False)
+        self.gcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
 
-    #     teacher_coeff = decay_rate/ (decay_rate + self.counter/128)
-    #     tf.summary.scalar(
-    #         name="teacher_decay_coefficient",
-    #         data=teacher_coeff,
-    #         step=tf.cast(self.counter, tf.int64),
-    #     )
-    #     self.counter.assign_add(1)
+    @tf.function
+    def q_update_train(self, loss):
 
-    #     return teacher_coeff
+        self.counter.assign_add(1)
+        self.avg_train.assign_add(loss)
+
+    def q_update_val(self, loss):
+
+        tf.print(self.prev_q_state)
+        action = tf.cond(
+            tf.random.uniform(shape=[]) < 0.01,
+            lambda: tf.random.uniform(
+                shape=[], minval=0, maxval=3, dtype=tf.int32
+            ),
+            lambda: tf.argmax(
+                self.q_table[self.prev_q_state], output_type=tf.int32
+            ),
+        )
+
+        tf.print(self.prev_q_state)
+        next_state = self.prev_q_state.value() + tf.cond(
+            (action == 0),
+            lambda: -1,
+            lambda: tf.cond(
+                action == 1,
+                lambda: 0,
+                lambda: 1,
+            ),
+        )
+
+        tf.print(self.prev_q_state)
+
+        next_state = tf.cond(next_state < 0, lambda: 1, lambda: next_state)
+        next_state = tf.cond(next_state >= 100, lambda: 98, lambda: next_state)
+
+        average_train = self.avg_train / self.counter
+
+        # tf.print(
+        #     action,
+        #     action == 1,
+        #     action == 2,
+        #     action == 0,
+        #     self.prev_q_state,
+        #     next_state,
+        # )
+
+        tf.print(next_state, self.prev_q_state, action)
+
+        self.q_table.scatter_nd_add(
+            tf.expand_dims(
+                tf.stack([self.prev_q_state, action], axis=-1), axis=0
+            ),
+            tf.expand_dims(
+                0.8
+                * (
+                    (average_train - loss)
+                    + 0.95 * tf.reduce_max(self.q_table[next_state])
+                    - self.q_table[self.prev_q_state, action]
+                ),
+                axis=0,
+            ),
+        )
+
+        self.prev_q_state.assign(next_state)
+
+        self.ttr_param = next_state / 100
+
+        tf.summary.scalar(
+            name="Q/ttr",
+            data=self.ttr_param,
+            step=self.gcounter,
+        )
+        tf.summary.scalar(
+            name="Q/table",
+            data=tf.reduce_mean(self.q_table),
+            step=self.gcounter,
+        )
+        tf.summary.scalar(
+            name="Q/reward",
+            data=(average_train - loss),
+            step=self.gcounter,
+        )
+        tf.summary.scalar(
+            name="Q/train",
+            data=(average_train),
+            step=self.gcounter,
+        )
+        tf.summary.scalar(
+            name="Q/loss",
+            data=(loss),
+            step=self.gcounter,
+        )
+        self.counter.assign_add(1)
+        self.gcounter.assign_add(1)
 
     @tf_function
     def decode(self, state, x_targ=None, init=None, training=False):
@@ -131,7 +225,7 @@ class Model(tf_keras.Model):
                 output = self.post_process(output, training=training)
                 to_return.append(output)
 
-                if np.random.rand() > config.model.ttr:
+                if tf.random.uniform(shape=[]) < self.ttr_param:
                     init = output
                 else:
                     init = tf_array_ops.squeeze(x_targ[:, i], axis=-1)
@@ -142,7 +236,6 @@ class Model(tf_keras.Model):
 
         embedding = self.embedding(x, training=training)
         otpt = self.encoder(embedding, training=training)
-        print([e.shape for e in otpt])
         encoded = otpt[1:]
         decoded = self.decode(state=encoded, x_targ=y, training=training)
         return decoded
@@ -156,6 +249,8 @@ class Model(tf_keras.Model):
                 y, y_pred, None, regularization_losses=self.losses
             )
 
+        self.q_update_train(loss)
+
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
         self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}
@@ -164,7 +259,10 @@ class Model(tf_keras.Model):
         x, y = data
         y_pred = self(x, training=False)
         # Updates stateful loss metrics.
-        self.compiled_loss(y, y_pred, None, regularization_losses=self.losses)
+        loss = self.compiled_loss(
+            y, y_pred, None, regularization_losses=self.losses
+        )
+        self.q_update_val(loss)
         self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}
 
