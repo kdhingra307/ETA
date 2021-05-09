@@ -210,7 +210,7 @@ class Model(tf_keras.Model):
                 output = self.post_process(output, training=training)
                 to_return.append(output)
 
-                if tf.random.uniform(shape=[]) > self.ttr_param:
+                if tf.random.uniform(shape=[]) < self.ttr_param:
                     init = output
                 else:
                     init = tf_array_ops.squeeze(x_targ[:, i], axis=-1)
