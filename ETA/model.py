@@ -172,7 +172,7 @@ class Model(tf_keras.Model):
         )
         tf.summary.scalar(
             name="Q/reward",
-            data=(average_train - loss),
+            data=tf.clip_by_value(average_train - loss, -1, 0),
             step=self.gcounter,
         )
         tf.summary.scalar(
