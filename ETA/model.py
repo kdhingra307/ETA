@@ -93,7 +93,7 @@ class Model(tf_keras.Model):
         )
         self.ttr_param = config.model.ttr
         self.prev_q_state = tf.Variable(
-            config.model.ttr, dtype=tf.int32, trainable=False
+            100*config.model.ttr, dtype=tf.int32, trainable=False
         )
         tf.print(self.prev_q_state)
         self.counter = tf.Variable(0, dtype=tf.float32, trainable=False)
