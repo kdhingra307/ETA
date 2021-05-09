@@ -112,7 +112,10 @@ class Model(tf_keras.Model):
     def q_update_val(self, loss):
 
         action = tf.cond(
-            tf.random.uniform(shape=[]) < 0.01,
+            tf.logical_or(
+                (tf.random.uniform(shape=[]) < 0.01),
+                (tf.reduce_max(self.q_table[self.prev_q_state]) == 0),
+            ),
             lambda: tf.random.uniform(
                 shape=[], minval=0, maxval=3, dtype=tf.int32
             ),
@@ -187,7 +190,6 @@ class Model(tf_keras.Model):
             data=(loss),
             step=self.gcounter,
         )
-        self.counter.assign_add(1)
         self.gcounter.assign_add(1)
 
     @tf_function
