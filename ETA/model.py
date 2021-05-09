@@ -108,7 +108,6 @@ class Model(tf_keras.Model):
 
     def q_update_val(self, loss):
 
-        tf.print(self.prev_q_state)
         action = tf.cond(
             tf.random.uniform(shape=[]) < 0.01,
             lambda: tf.random.uniform(
@@ -119,7 +118,6 @@ class Model(tf_keras.Model):
             ),
         )
 
-        tf.print(self.prev_q_state)
         next_state = self.prev_q_state.value() + tf.cond(
             (action == 0),
             lambda: -1,
@@ -129,8 +127,6 @@ class Model(tf_keras.Model):
                 lambda: 1,
             ),
         )
-
-        tf.print(self.prev_q_state)
 
         next_state = tf.cond(next_state < 0, lambda: 1, lambda: next_state)
         next_state = tf.cond(next_state >= 100, lambda: 98, lambda: next_state)
