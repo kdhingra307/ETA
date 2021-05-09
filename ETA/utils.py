@@ -71,5 +71,3 @@ class CheckpointManager(tf_keras.callbacks.Callback):
         )
         self.model.counter.assign(0)
         self.model.avg_train.assign(0)
-
-        tf.print("counter", self.model.counter)
