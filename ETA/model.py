@@ -162,8 +162,8 @@ class Model(tf_keras.Model):
         )
         tf.summary.scalar(
             name="Q/assert",
-            data=self.ttr_param,
-            step=tf.cast(self.counter, tf.int64),
+            data=self.counter,
+            step=self.gcounter,
         )
         tf.summary.scalar(
             name="Q/table",
