@@ -133,15 +133,6 @@ class Model(tf_keras.Model):
 
         average_train = self.avg_train / self.counter
 
-        # tf.print(
-        #     action,
-        #     action == 1,
-        #     action == 2,
-        #     action == 0,
-        #     self.prev_q_state,
-        #     next_state,
-        # )
-
         self.q_table.scatter_nd_add(
             tf.expand_dims(
                 tf.stack([self.prev_q_state, action], axis=-1), axis=0
@@ -219,7 +210,7 @@ class Model(tf_keras.Model):
                 output = self.post_process(output, training=training)
                 to_return.append(output)
 
-                if tf.random.uniform(shape=[]) < self.ttr_param:
+                if tf.random.uniform(shape=[]) > self.ttr_param:
                     init = output
                 else:
                     init = tf_array_ops.squeeze(x_targ[:, i], axis=-1)
