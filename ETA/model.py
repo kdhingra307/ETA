@@ -142,8 +142,6 @@ class Model(tf_keras.Model):
         #     next_state,
         # )
 
-        tf.print(next_state, self.prev_q_state, action)
-
         self.q_table.scatter_nd_add(
             tf.expand_dims(
                 tf.stack([self.prev_q_state, action], axis=-1), axis=0
