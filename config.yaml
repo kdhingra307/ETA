@@ -4,7 +4,7 @@ model:
   training_label: "lstm_conv1d_melr/RL/12/11"
   num_nodes: 207
   steps_to_predict: 12
-  ttr: 0
+  ttr: 1
 
 data:
   shuffle: 1000

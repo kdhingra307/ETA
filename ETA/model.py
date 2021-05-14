@@ -89,7 +89,7 @@ class Model(tf_keras.Model):
         )
 
         self.q_table = tf.Variable(
-            tf.zeros([100, 3]), dtype=tf.float32, trainable=False
+            tf.zeros([101, 3]), dtype=tf.float32, trainable=False
         )
         self.ttr_param = config.model.ttr
         self.prev_q_state = tf.Variable(
@@ -156,7 +156,7 @@ class Model(tf_keras.Model):
 
         self.prev_q_state.assign(next_state)
 
-        self.ttr_param = next_state / 100
+        # self.ttr_param = next_state / 100
 
         # tf.print(next_state)
 
