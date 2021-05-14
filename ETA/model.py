@@ -146,7 +146,9 @@ class Model(tf_keras.Model):
             tf.expand_dims(
                 0.004
                 * (
-                    tf.clip((average_train - loss) / average_train, -1, 0)
+                    tf.clip_by_value(
+                        (average_train - loss) / average_train, -1, 0
+                    )
                     + 0.95 * tf.reduce_max(self.q_table[next_state])
                     - self.q_table[self.prev_q_state, action]
                 ),
@@ -177,7 +179,9 @@ class Model(tf_keras.Model):
         )
         tf.summary.scalar(
             name="Q/reward",
-            data=tf.clip((average_train - loss) / average_train, -1, 0),
+            data=tf.clip_by_value(
+                (average_train - loss) / average_train, -1, 0
+            ),
             step=self.gcounter,
         )
         tf.summary.scalar(
