@@ -16,7 +16,16 @@ optimizer = tf_keras.optimizers.Adam(
     learning_rate=config.training.learning_rate
 )
 model = Model()
-model.compile(optimizer=optimizer, loss=loss_function, metrics=metrics)
+model.compile(
+    optimizer=optimizer,
+    loss={
+        "mse/tt": loss_function,
+        "bce/tt": tf_keras.losses.BinaryCrossentropy(from_logits=True),
+        "mse/ar": loss_function,
+        "bce/ar": tf_keras.losses.BinaryCrossentropy(from_logits=True),
+    },
+    metrics=metrics,
+)
 
 train_split = config.data.split_prefix.format("train")
 validation_split = config.data.split_prefix.format("val")

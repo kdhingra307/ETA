@@ -70,6 +70,15 @@ class Model(tf_keras.Model):
             ]
         )
 
+        self.discriminator = tf_keras.layers.RNN(
+            tf_keras.layers.StackedRNNCells(
+                [
+                    tf_keras.layers.GRUCell(units=32),
+                    tf_keras.layers.GRUCell(units=1),
+                ]
+            )
+        )
+
         self.post_process = tf_keras.Sequential(
             [
                 tf_keras.layers.Dense(
@@ -102,6 +111,7 @@ class Model(tf_keras.Model):
         self.avg_train = tf.Variable(0, dtype=tf.float32, trainable=False)
         self.gcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
         self.current_reward = tf.Variable(0, dtype=tf.int64, trainable=False)
+        self.dcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
 
     @tf.function
     def q_update_train(self, loss):
@@ -210,26 +220,47 @@ class Model(tf_keras.Model):
 
         num_steps = config.model.steps_to_predict
         to_return = []
+        if training:
+            embedding = []
         if x_targ is None:
             for i in range(num_steps):
                 init, state = self.decoder(
                     init, states=state, training=training
                 )
+                if training:
+                    embedding.append(init)
                 init = self.post_process(init, training=training)
                 to_return.append(init)
+
+            if training:
+                return (
+                    tf_array_ops.stack(to_return, axis=1),
+                    tf_array_ops.stack(embedding, axis=1),
+                )
+
             return tf_array_ops.stack(to_return, axis=1)
         else:
             for i in range(num_steps):
                 output, state = self.decoder(
                     init, states=state, training=training
                 )
+
+                if training:
+                    embedding.append(output)
+
                 output = self.post_process(output, training=training)
                 to_return.append(output)
 
-                if tf.random.uniform(shape=[]) < self.ttr_param:
-                    init = tf.stop_gradient(output)
-                else:
-                    init = tf_array_ops.squeeze(x_targ[:, i], axis=-1)
+                # if tf.random.uniform(shape=[]) < self.ttr_param:
+                #     init = tf.stop_gradient(output)
+                # else:
+                init = tf_array_ops.squeeze(x_targ[:, i], axis=-1)
+
+            if training:
+                return (
+                    tf_array_ops.stack(to_return, axis=1),
+                    tf_array_ops.stack(embedding, axis=1),
+                )
 
             return tf_array_ops.stack(to_return, axis=1)
 
@@ -245,15 +276,63 @@ class Model(tf_keras.Model):
         x, y = data
 
         with tf_diff.GradientTape() as tape:
-            y_pred = self(x, training=True, y=y[:, :, :, :1])
-            loss = self.compiled_loss(
-                y, y_pred, None, regularization_losses=self.losses
+
+            y_out, embedding = tf.cond(
+                self.dcounter % 2 == 0,
+                lambda: self(x, training=True, y=y[:, :, :, :1]),
+                lambda: self(x, training=True),
             )
 
-        self.q_update_train(loss)
+            de = tf.squeeze(self.discriminator(embedding), axis=-1)
+
+            bce_true = tf.cond(
+                self.dcounter % 2 == 0,
+                lambda: tf.ones(tf.shape(de)[0]),
+                lambda: tf.zeros(tf.shape(de)[0]),
+            )
+
+            loss = tf.cond(
+                self.dcounter % 2 == 0,
+                lambda: self.compiled_loss(
+                    {
+                        "mse/tt": y,
+                        "bce/tt": bce_true,
+                        "mse/ar": None,
+                        "bce/ar": None,
+                    },
+                    {
+                        "mse/tt": y_out,
+                        "bce/tt": de,
+                        "mse/ar": None,
+                        "bce/ar": None,
+                    },
+                    None,
+                    regularization_losses=self.losses,
+                ),
+                lambda: self.compiled_loss(
+                    {
+                        "mse/ar": y,
+                        "bce/ar": bce_true,
+                        "mse/tt": None,
+                        "bce/tt": None,
+                    },
+                    {
+                        "mse/ar": y_out,
+                        "bce/ar": de,
+                        "mse/tt": None,
+                        "bce/tt": None,
+                    },
+                    None,
+                    regularization_losses=self.losses,
+                ),
+            )
+
+            self.dcounter.assign_add(1)
+
+        # self.q_update_train(loss)
 
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
-        self.compiled_metrics.update_state(y, y_pred, None)
+        self.compiled_metrics.update_state(y, y_out, None)
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
@@ -261,7 +340,10 @@ class Model(tf_keras.Model):
         y_pred = self(x, training=False)
         # Updates stateful loss metrics.
         loss = self.compiled_loss(
-            y, y_pred, None, regularization_losses=self.losses
+            {"mse/ar": y, "bce/ar": None, "mse/tt": None, "bce/tt": None},
+            {"mse/ar": y_pred, "bce/ar": None, "mse/tt": None, "bce/tt": None},
+            None,
+            regularization_losses=self.losses,
         )
         self.q_update_val(loss)
         self.compiled_metrics.update_state(y, y_pred, None)
