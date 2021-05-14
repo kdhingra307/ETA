@@ -144,7 +144,7 @@ class Model(tf_keras.Model):
                 tf.stack([self.prev_q_state, action], axis=-1), axis=0
             ),
             tf.expand_dims(
-                0.8
+                0.01
                 * (
                     ((average_train - loss) / average_train)
                     + 0.95 * tf.reduce_max(self.q_table[next_state])
