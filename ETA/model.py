@@ -223,7 +223,7 @@ class Model(tf_keras.Model):
                 to_return.append(output)
 
                 if tf.random.uniform(shape=[]) < self.ttr_param:
-                    init = output
+                    init = tf.stop_gradient(output)
                 else:
                     init = tf_array_ops.squeeze(x_targ[:, i], axis=-1)
 
