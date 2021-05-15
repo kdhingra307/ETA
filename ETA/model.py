@@ -374,6 +374,12 @@ class Model(tf_keras.Model):
                 step=self.dcounter,
             )
 
+            tf.summary.scalar(
+                name="acc/dloss",
+                data=discriminator_loss,
+                step=self.dcounter,
+            )
+
             self.dcounter.assign_add(1)
 
         # self.q_update_train(loss)
