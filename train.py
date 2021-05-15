@@ -12,12 +12,17 @@ from tensorflow.keras.callbacks import TensorBoard
 from os.path import join as join_directory
 
 
-optimizer = tf_keras.optimizers.Adam(
+disc_optimizer = tf_keras.optimizers.Adam(
     learning_rate=config.training.learning_rate
 )
+
+gen_optimizer = tf_keras.optimizers.Adam(
+    learning_rate=config.training.learning_rate
+)
+
 model = Model()
 model.compile(
-    optimizer=optimizer,
+    optimizer={"discriminator": disc_optimizer, "generator": gen_optimizer},
     loss={
         "ind/mse": loss_function,
         "ind/generator": tf_keras.losses.BinaryCrossentropy(from_logits=True),
@@ -42,12 +47,15 @@ ckpt_dir = join_directory(
     config.training.ckpt_dir.format(config.model.training_label),
 )
 
-ckpt_manager = CheckpointManager(optimizer, model, ckpt_dir)
+ckpt_manager = CheckpointManager(
+    (disc_optimizer, gen_optimizer), model, ckpt_dir
+)
 log_manager = TensorBoard(
     log_dir=log_dir, update_freq="batch", histogram_freq=1, embeddings_freq=5
 )
 ckpt_manager.ckpt_manager.restore_or_initialize()
-optimizer.learning_rate = config.training.learning_rate
+gen_optimizer.learning_rate = config.training.learning_rate
+disc_optimizer.learning_rate = config.training.learning_rate
 
 model.fit(
     Dataset(train_split),

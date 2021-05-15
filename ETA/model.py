@@ -113,6 +113,19 @@ class Model(tf_keras.Model):
         self.current_reward = tf.Variable(0, dtype=tf.int64, trainable=False)
         self.dcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
         self.accuracy_metric = tf.keras.metrics.Accuracy()
+        self.disc_loss = tf_keras.losses.BinaryCrossentropy(from_logits=True)
+
+    def build(self, input_shape):
+        super().build(input_shape)
+
+        self.generator_variables = (
+            self.embedding.variables
+            + self.encoder.variables
+            + self.decoder.variables
+            + self.post_process.variables
+        )
+
+        self.discriminator_variables = self.discriminator.variables
 
     @tf.function
     def q_update_train(self, loss):
@@ -277,9 +290,7 @@ class Model(tf_keras.Model):
         discriminator = tf.squeeze(
             self.discriminator(tf.stop_gradient(embedding)), axis=-1
         )
-        generator = tf.stop_gradient(
-            tf.squeeze(self.discriminator(embedding), axis=-1)
-        )
+        generator = tf.squeeze(self.discriminator(embedding), axis=-1)
 
         tf.summary.scalar(
             name="acc/aar",
@@ -290,19 +301,22 @@ class Model(tf_keras.Model):
         loss = self.compiled_loss(
             {
                 "ind/mse": y_inp,
-                "ind/discriminator": tf.ones(tf.shape(discriminator)[0]),
+                "ind/discriminator": None,
                 "ind/generator": tf.zeros(tf.shape(discriminator)[0]),
             },
             {
                 "ind/mse": y_out,
-                "ind/discriminator": discriminator,
+                "ind/discriminator": None,
                 "ind/generator": generator,
             },
             None,
             regularization_losses=self.losses,
         )
 
-        return loss
+        return loss, self.disc_loss(
+            y_true=tf.ones(tf.shape(discriminator)[0]),
+            y_pred=discriminator,
+        )
 
     def teacher_force(self, y_inp, y_out, embedding):
         discriminator = tf.squeeze(
@@ -318,18 +332,24 @@ class Model(tf_keras.Model):
         loss = self.compiled_loss(
             {
                 "ind/mse": y_inp,
-                "ind/discriminator": tf.zeros(tf.shape(discriminator)[0]),
+                "ind/discriminator": None,
                 "ind/generator": None,
             },
             {
                 "ind/mse": y_out,
-                "ind/discriminator": discriminator,
+                "ind/discriminator": None,
                 "ind/generator": None,
             },
             None,
             regularization_losses=self.losses,
         )
-        return loss
+        return (
+            loss,
+            self.disc_loss(
+                y_true=tf.zeros(tf.shape(discriminator)[0]),
+                y_pred=discriminator,
+            ),
+        )
 
     def train_step(self, data):
         x, y = data
@@ -342,7 +362,7 @@ class Model(tf_keras.Model):
                 lambda: self(x, training=True),
             )
 
-            loss = tf.cond(
+            loss, discriminator_loss = tf.cond(
                 self.dcounter % 2 == 0,
                 lambda: self.teacher_force(y, y_out, embedding),
                 lambda: self.auto_regression(y, y_out, embedding),
@@ -358,7 +378,12 @@ class Model(tf_keras.Model):
 
         # self.q_update_train(loss)
 
-        self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
+        self.optimizer["generator"].minimize(
+            loss, self.generator_variables, tape=tape
+        )
+        self.optimizer["discriminator"].minimize(
+            discriminator_loss, self.discriminator_variables, tape=tape
+        )
         self.compiled_metrics.update_state(y, y_out, None)
         return {m.name: m.result() for m in self.metrics}
 
