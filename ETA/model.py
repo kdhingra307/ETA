@@ -112,6 +112,7 @@ class Model(tf_keras.Model):
         self.gcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
         self.current_reward = tf.Variable(0, dtype=tf.int64, trainable=False)
         self.dcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
+        self.accuracy_metric = tf.keras.metrics.Accuracy()
 
     @tf.function
     def q_update_train(self, loss):
@@ -278,6 +279,12 @@ class Model(tf_keras.Model):
         )
         generator = tf.squeeze(self.discriminator(embedding), axis=-1)
 
+        tf.summary.scalar(
+            name="acc/aar",
+            data=tf.math.count_nonzero(tf.nn.sigmoid(discriminator) > 0.5),
+            step=self.dcounter,
+        )
+
         loss = self.compiled_loss(
             {
                 "ind/mse": y_inp,
@@ -293,13 +300,17 @@ class Model(tf_keras.Model):
             regularization_losses=self.losses,
         )
 
-        tf.print("aar")
-        tf.print(loss)
         return loss
 
     def teacher_force(self, y_inp, y_out, embedding):
         discriminator = tf.squeeze(
             self.discriminator(tf.stop_gradient(embedding)), axis=-1
+        )
+
+        tf.summary.scalar(
+            name="acc/ttf",
+            data=tf.math.count_nonzero(tf.nn.sigmoid(discriminator) < 0.5),
+            step=self.dcounter,
         )
 
         loss = self.compiled_loss(
@@ -316,8 +327,6 @@ class Model(tf_keras.Model):
             None,
             regularization_losses=self.losses,
         )
-        tf.print("ttf")
-        tf.print(loss)
         return loss
 
     def train_step(self, data):
