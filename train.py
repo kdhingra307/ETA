@@ -54,5 +54,5 @@ model.fit(
     epochs=config.training.epochs,
     callbacks=[ckpt_manager, log_manager],
     validation_data=Dataset(validation_split),
-    # verbose=2,
+    verbose=2,
 )
