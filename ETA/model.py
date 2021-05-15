@@ -347,8 +347,8 @@ class Model(tf_keras.Model):
         y_pred = self(x, training=False)
         # Updates stateful loss metrics.
         loss = self.compiled_loss(
-            {"mse/ar": y, "bce/ar": None, "mse/tt": None, "bce/tt": None},
-            {"mse/ar": y_pred, "bce/ar": None, "mse/tt": None, "bce/tt": None},
+            {"mse": y, "generator": None, "discriminator": None},
+            {"mse": y_pred, "generator": None, "discriminator": None},
             None,
             regularization_losses=self.losses,
         )
