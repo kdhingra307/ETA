@@ -293,7 +293,7 @@ class Model(tf_keras.Model):
             regularization_losses=self.losses,
         )
 
-        tf.print("ttf")
+        tf.print("aar")
         tf.print(loss)
         return loss
 
