@@ -272,6 +272,45 @@ class Model(tf_keras.Model):
         decoded = self.decode(state=encoded, x_targ=y, training=training)
         return decoded
 
+    def auto_regression(self, y_inp, y_out, embedding):
+        discriminator = tf.squeeze(
+            self.discriminator(tf.stop_gradient(embedding)), axis=-1
+        )
+        generator = tf.squeeze(self.discriminator(embedding), axis=-1)
+
+        return self.compiled_loss(
+            {
+                "mse": y_inp,
+                "discriminator": tf.ones(tf.shape(discriminator)[0]),
+                "generator": tf.zeros(tf.shape(discriminator)[0]),
+            },
+            {
+                "mse": y_inp,
+                "discriminator": discriminator,
+                "generator": generator,
+            },
+            None,
+            regularization_losses=self.losses,
+        )
+
+    def teacher_force(self, y_inp, y_out, embedding):
+        discriminator = tf.squeeze(
+            self.discriminator(tf.stop_gradient(embedding)), axis=-1
+        )
+
+        return self.compiled_loss(
+            {
+                "mse": y_inp,
+                "discriminator": tf.zeros(tf.shape(discriminator)[0]),
+            },
+            {
+                "mse": y_inp,
+                "discriminator": discriminator,
+            },
+            None,
+            regularization_losses=self.losses,
+        )
+
     def train_step(self, data):
         x, y = data
 
@@ -283,48 +322,16 @@ class Model(tf_keras.Model):
                 lambda: self(x, training=True),
             )
 
-            de = tf.squeeze(self.discriminator(embedding), axis=-1)
-
-            bce_true = tf.cond(
-                self.dcounter % 2 == 0,
-                lambda: tf.ones(tf.shape(de)[0]),
-                lambda: tf.zeros(tf.shape(de)[0]),
-            )
-
             loss = tf.cond(
                 self.dcounter % 2 == 0,
-                lambda: self.compiled_loss(
-                    {
-                        "mse/tt": y,
-                        "bce/tt": bce_true,
-                        "mse/ar": None,
-                        "bce/ar": None,
-                    },
-                    {
-                        "mse/tt": y_out,
-                        "bce/tt": de,
-                        "mse/ar": None,
-                        "bce/ar": None,
-                    },
-                    None,
-                    regularization_losses=self.losses,
-                ),
-                lambda: self.compiled_loss(
-                    {
-                        "mse/ar": y,
-                        "bce/ar": bce_true,
-                        "mse/tt": None,
-                        "bce/tt": None,
-                    },
-                    {
-                        "mse/ar": y_out,
-                        "bce/ar": de,
-                        "mse/tt": None,
-                        "bce/tt": None,
-                    },
-                    None,
-                    regularization_losses=self.losses,
-                ),
+                lambda: self.teacher_force(y, y_out, embedding),
+                lambda: self.auto_regression(y, y_out, embedding),
+            )
+
+            tf.summary.scalar(
+                name="dcounter",
+                data=(self.dcounter % 2),
+                step=self.dcounter,
             )
 
             self.dcounter.assign_add(1)
