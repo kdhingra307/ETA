@@ -273,7 +273,6 @@ class Model(tf_keras.Model):
         return decoded
 
     def auto_regression(self, y_inp, y_out, embedding):
-        tf.print("called??")
         discriminator = tf.squeeze(
             self.discriminator(tf.stop_gradient(embedding)), axis=-1
         )
@@ -286,7 +285,7 @@ class Model(tf_keras.Model):
                 "ind/generator": tf.zeros(tf.shape(discriminator)[0]),
             },
             {
-                "ind/mse": y_inp,
+                "ind/mse": y_out,
                 "ind/discriminator": discriminator,
                 "ind/generator": generator,
             },
@@ -295,7 +294,6 @@ class Model(tf_keras.Model):
         )
 
     def teacher_force(self, y_inp, y_out, embedding):
-        tf.print("ttf??")
         discriminator = tf.squeeze(
             self.discriminator(tf.stop_gradient(embedding)), axis=-1
         )
@@ -307,7 +305,7 @@ class Model(tf_keras.Model):
                 "ind/generator": None,
             },
             {
-                "ind/mse": y_inp,
+                "ind/mse": y_out,
                 "ind/discriminator": discriminator,
                 "ind/generator": None,
             },
