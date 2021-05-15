@@ -273,6 +273,7 @@ class Model(tf_keras.Model):
         return decoded
 
     def auto_regression(self, y_inp, y_out, embedding):
+        tf.print("called??")
         discriminator = tf.squeeze(
             self.discriminator(tf.stop_gradient(embedding)), axis=-1
         )
@@ -280,32 +281,35 @@ class Model(tf_keras.Model):
 
         return self.compiled_loss(
             {
-                "mse": y_inp,
-                "discriminator": tf.ones(tf.shape(discriminator)[0]),
-                "generator": tf.zeros(tf.shape(discriminator)[0]),
+                "ind/mse": y_inp,
+                "ind/discriminator": tf.ones(tf.shape(discriminator)[0]),
+                "ind/generator": tf.zeros(tf.shape(discriminator)[0]),
             },
             {
-                "mse": y_inp,
-                "discriminator": discriminator,
-                "generator": generator,
+                "ind/mse": y_inp,
+                "ind/discriminator": discriminator,
+                "ind/generator": generator,
             },
             None,
             regularization_losses=self.losses,
         )
 
     def teacher_force(self, y_inp, y_out, embedding):
+        tf.print("ttf??")
         discriminator = tf.squeeze(
             self.discriminator(tf.stop_gradient(embedding)), axis=-1
         )
 
         return self.compiled_loss(
             {
-                "mse": y_inp,
-                "discriminator": tf.zeros(tf.shape(discriminator)[0]),
+                "ind/mse": y_inp,
+                "ind/discriminator": tf.zeros(tf.shape(discriminator)[0]),
+                "ind/generator": None,
             },
             {
-                "mse": y_inp,
-                "discriminator": discriminator,
+                "ind/mse": y_inp,
+                "ind/discriminator": discriminator,
+                "ind/generator": None,
             },
             None,
             regularization_losses=self.losses,
@@ -324,7 +328,7 @@ class Model(tf_keras.Model):
 
             loss = tf.cond(
                 self.dcounter % 2 == 0,
-                lambda: self.teacher_force(y, y_out, embedding),
+                lambda: self.auto_regression(y, y_out, embedding),
                 lambda: self.auto_regression(y, y_out, embedding),
             )
 
@@ -352,7 +356,7 @@ class Model(tf_keras.Model):
             None,
             regularization_losses=self.losses,
         )
-        self.q_update_val(loss)
+        # self.q_update_val(loss)
         self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}
 

@@ -19,9 +19,11 @@ model = Model()
 model.compile(
     optimizer=optimizer,
     loss={
-        "mse": loss_function,
-        "generator": tf_keras.losses.BinaryCrossentropy(from_logits=True),
-        "discriminator": tf_keras.losses.BinaryCrossentropy(from_logits=True),
+        "ind/mse": loss_function,
+        "ind/generator": tf_keras.losses.BinaryCrossentropy(from_logits=True),
+        "ind/discriminator": tf_keras.losses.BinaryCrossentropy(
+            from_logits=True
+        ),
     },
     metrics=metrics,
 )
