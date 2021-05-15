@@ -326,7 +326,7 @@ class Model(tf_keras.Model):
 
             loss = tf.cond(
                 self.dcounter % 2 == 0,
-                lambda: self.auto_regression(y, y_out, embedding),
+                lambda: self.teacher_force(y, y_out, embedding),
                 lambda: self.auto_regression(y, y_out, embedding),
             )
 
