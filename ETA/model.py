@@ -278,7 +278,7 @@ class Model(tf_keras.Model):
         )
         generator = tf.squeeze(self.discriminator(embedding), axis=-1)
 
-        return self.compiled_loss(
+        loss = self.compiled_loss(
             {
                 "ind/mse": y_inp,
                 "ind/discriminator": tf.ones(tf.shape(discriminator)[0]),
@@ -293,12 +293,16 @@ class Model(tf_keras.Model):
             regularization_losses=self.losses,
         )
 
+        tf.print("ttf")
+        tf.print(loss)
+        return loss
+
     def teacher_force(self, y_inp, y_out, embedding):
         discriminator = tf.squeeze(
             self.discriminator(tf.stop_gradient(embedding)), axis=-1
         )
 
-        return self.compiled_loss(
+        loss = self.compiled_loss(
             {
                 "ind/mse": y_inp,
                 "ind/discriminator": tf.zeros(tf.shape(discriminator)[0]),
@@ -312,6 +316,9 @@ class Model(tf_keras.Model):
             None,
             regularization_losses=self.losses,
         )
+        tf.print("ttf")
+        tf.print(loss)
+        return loss
 
     def train_step(self, data):
         x, y = data
