@@ -290,7 +290,7 @@ class Model(tf_keras.Model):
         discriminator = tf.squeeze(
             self.discriminator(tf.stop_gradient(embedding)), axis=-1
         )
-        generator = tf.squeeze(self.discriminator(embedding), axis=-1)
+        generator = tf.stop_gradient(tf.squeeze(self.discriminator(embedding), axis=-1))
 
         tf.summary.scalar(
             name="acc/aar",
@@ -378,7 +378,7 @@ class Model(tf_keras.Model):
                 name="acc/dloss",
                 data=discriminator_loss,
                 step=self.dcounter,
-            )
+            ) 
 
             self.dcounter.assign_add(1)
 
