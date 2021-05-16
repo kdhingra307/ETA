@@ -290,7 +290,7 @@ class Model(tf_keras.Model):
         discriminator = tf.squeeze(
             self.discriminator(tf.stop_gradient(embedding)), axis=-1
         )
-        generator = tf.stop_gradient(tf.squeeze(self.discriminator(embedding), axis=-1))
+        generator = tf.squeeze(self.discriminator(embedding), axis=-1)
 
         tf.summary.scalar(
             name="acc/aar",
@@ -354,7 +354,7 @@ class Model(tf_keras.Model):
     def train_step(self, data):
         x, y = data
 
-        with tf_diff.GradientTape() as tape:
+        with tf_diff.GradientTape() as tape1, tf_diff.GradientTape() as tape2:
 
             y_out, embedding = tf.cond(
                 self.dcounter % 2 == 0,
@@ -378,17 +378,17 @@ class Model(tf_keras.Model):
                 name="acc/dloss",
                 data=discriminator_loss,
                 step=self.dcounter,
-            ) 
+            )
 
             self.dcounter.assign_add(1)
 
         # self.q_update_train(loss)
 
         self.optimizer["generator"].minimize(
-            loss, self.generator_variables, tape=tape
+            loss, self.generator_variables, tape=tape1
         )
         self.optimizer["discriminator"].minimize(
-            discriminator_loss, self.discriminator_variables, tape=tape
+            discriminator_loss, self.discriminator_variables, tape=tape2
         )
         self.compiled_metrics.update_state(y, y_out, None)
         return {m.name: m.result() for m in self.metrics}
