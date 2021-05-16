@@ -290,7 +290,7 @@ class Model(tf_keras.Model):
         discriminator = tf.squeeze(
             self.discriminator(tf.stop_gradient(embedding)), axis=-1
         )
-        generator = tf.stop_gradient(tf.squeeze(self.discriminator(embedding), axis=-1))
+        generator = tf.squeeze(self.discriminator(embedding), axis=-1)
 
         tf.summary.scalar(
             name="acc/aar",
@@ -356,27 +356,23 @@ class Model(tf_keras.Model):
 
         with tf_diff.GradientTape() as tape1, tf_diff.GradientTape() as tape2:
 
-            y_out, embedding = tf.cond(
-                self.dcounter % 2 == 0,
-                lambda: self(x, training=True, y=y[:, :, :, :1]),
-                lambda: self(x, training=True),
+            y_true, embedding_true = self(x, training=True, y=y[:, :, :, :1])
+            y_fake, embedding_fake = self(x, training=True)
+
+            loss_true, d_loss_true = self.teacher_force(
+                y, y_true, embedding_true
             )
 
-            loss, discriminator_loss = tf.cond(
-                self.dcounter % 2 == 0,
-                lambda: self.teacher_force(y, y_out, embedding),
-                lambda: self.auto_regression(y, y_out, embedding),
+            loss_fake, d_loss_fake = self.auto_regression(
+                y, y_fake, embedding_fake
             )
 
-            tf.summary.scalar(
-                name="dcounter",
-                data=(self.dcounter % 2),
-                step=self.dcounter,
-            )
+            sum_loss = loss_true + loss_fake
+            sum_dloss = d_loss_true + d_loss_fake
 
             tf.summary.scalar(
                 name="acc/dloss",
-                data=discriminator_loss,
+                data=d_loss_true + d_loss_fake,
                 step=self.dcounter,
             )
 
@@ -385,12 +381,12 @@ class Model(tf_keras.Model):
         # self.q_update_train(loss)
 
         self.optimizer["generator"].minimize(
-            loss, self.generator_variables, tape=tape1
+            sum_loss, self.generator_variables, tape=tape1
         )
         self.optimizer["discriminator"].minimize(
-            discriminator_loss, self.discriminator_variables, tape=tape2
+            sum_dloss, self.discriminator_variables, tape=tape2
         )
-        self.compiled_metrics.update_state(y, y_out, None)
+        self.compiled_metrics.update_state(y, y_fake, None)
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
