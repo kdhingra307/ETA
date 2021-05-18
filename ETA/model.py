@@ -50,7 +50,8 @@ class Model(tf_keras.Model):
                     padding="SAME",
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
-            ]
+            ],
+            name="embedding",
         )
 
         self.encoder = tf_keras.layers.RNN(
@@ -61,13 +62,15 @@ class Model(tf_keras.Model):
                 ]
             ),
             return_state=True,
+            name="encoding",
         )
 
         self.decoder = tf_keras.layers.StackedRNNCells(
             [
                 tf_keras.layers.GRUCell(units=256),
                 tf_keras.layers.GRUCell(units=128),
-            ]
+            ],
+            name="decoding",
         )
 
         self.post_process = tf_keras.Sequential(
@@ -85,7 +88,8 @@ class Model(tf_keras.Model):
                 tf_keras.layers.Dense(
                     units=207,
                 ),
-            ]
+            ],
+            name="post_process",
         )
 
         self.q_table = tf.Variable(
@@ -97,11 +101,28 @@ class Model(tf_keras.Model):
             dtype=tf.int32,
             trainable=False,
         )
-        # tf.print(self.prev_q_state)
+
         self.counter = tf.Variable(0, dtype=tf.float32, trainable=False)
         self.avg_train = tf.Variable(0, dtype=tf.float32, trainable=False)
         self.gcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
         self.current_reward = tf.Variable(0, dtype=tf.int64, trainable=False)
+        self.dcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
+        self.accuracy_metric = tf.keras.metrics.Accuracy()
+        self.disc_loss = tf_keras.losses.BinaryCrossentropy(from_logits=True)
+
+    def build(self, input_shape):
+        super().build(input_shape)
+
+        self.discriminator.build(tf.constant([8, 12, 128]))
+
+        self.generator_variables = (
+            self.embedding.trainable_variables
+            + self.encoder.trainable_variables
+            + self.decoder.trainable_variables
+            + self.post_process.trainable_variables
+        )
+
+        self.discriminator_variables = self.discriminator.trainable_variables
 
     @tf.function
     def q_update_train(self, loss):
@@ -199,6 +220,7 @@ class Model(tf_keras.Model):
     @tf_function
     def decode(self, state, x_targ=None, init=None, training=False):
 
+        state = tuple(state)
         if init is None:
             num_nodes = config.model.num_nodes
             import tensorflow as tf
@@ -211,7 +233,7 @@ class Model(tf_keras.Model):
         num_steps = config.model.steps_to_predict
         to_return = []
         if x_targ is None:
-            for i in range(num_steps):
+            for i in tf.range(num_steps):
                 init, state = self.decoder(
                     init, states=state, training=training
                 )
@@ -219,12 +241,12 @@ class Model(tf_keras.Model):
                 to_return.append(init)
             return tf_array_ops.stack(to_return, axis=1)
         else:
-            for i in range(num_steps):
+            for i in tf.range(num_steps):
                 output, state = self.decoder(
                     init, states=state, training=training
                 )
                 output = self.post_process(output, training=training)
-                to_return.append(output)
+                to_return = to_return.write(i, output)
 
                 if tf.random.uniform(shape=[]) < self.ttr_param:
                     init = tf.stop_gradient(output)
@@ -258,7 +280,7 @@ class Model(tf_keras.Model):
 
     def test_step(self, data):
         x, y = data
-        y_pred = self(x, training=False)
+        y_pred, _ = self(x, training=False)
         # Updates stateful loss metrics.
         loss = self.compiled_loss(
             y, y_pred, None, regularization_losses=self.losses
