@@ -110,20 +110,6 @@ class Model(tf_keras.Model):
         self.accuracy_metric = tf.keras.metrics.Accuracy()
         self.disc_loss = tf_keras.losses.BinaryCrossentropy(from_logits=True)
 
-    def build(self, input_shape):
-        super().build(input_shape)
-
-        self.discriminator.build(tf.constant([8, 12, 128]))
-
-        self.generator_variables = (
-            self.embedding.trainable_variables
-            + self.encoder.trainable_variables
-            + self.decoder.trainable_variables
-            + self.post_process.trainable_variables
-        )
-
-        self.discriminator_variables = self.discriminator.trainable_variables
-
     @tf.function
     def q_update_train(self, loss):
 
@@ -231,15 +217,14 @@ class Model(tf_keras.Model):
             )
 
         num_steps = config.model.steps_to_predict
-        to_return = []
+        to_return = tf.TensorArray(size=num_steps, dtype=tf.float32)
         if x_targ is None:
             for i in tf.range(num_steps):
                 init, state = self.decoder(
                     init, states=state, training=training
                 )
                 init = self.post_process(init, training=training)
-                to_return.append(init)
-            return tf_array_ops.stack(to_return, axis=1)
+                to_return = to_return.write(i, init)
         else:
             for i in tf.range(num_steps):
                 output, state = self.decoder(
@@ -253,7 +238,7 @@ class Model(tf_keras.Model):
                 else:
                     init = tf_array_ops.squeeze(x_targ[:, i], axis=-1)
 
-            return tf_array_ops.stack(to_return, axis=1)
+        return tf_array_ops.transpose(to_return.stack(), [1, 0, 2])
 
     def call(self, x, training=False, y=None):
 
