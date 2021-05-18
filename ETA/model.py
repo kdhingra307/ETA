@@ -265,7 +265,7 @@ class Model(tf_keras.Model):
 
     def test_step(self, data):
         x, y = data
-        y_pred, _ = self(x, training=False)
+        y_pred = self(x, training=False)
         # Updates stateful loss metrics.
         loss = self.compiled_loss(
             y, y_pred, None, regularization_losses=self.losses
