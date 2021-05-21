@@ -239,20 +239,30 @@ class Model(tf_keras.Model):
             gloss1, dloss1, mtrue1, mpred1 = self.teacher_force(
                 x, y, training=True
             )
-            gloss2, dloss2, mtrue2, mpred2 = self.auto_regression(
-                x, y, training=True
-            )
+            # gloss2, dloss2, mtrue2, mpred2 = self.auto_regression(
+            #     x, y, training=True
+            # )
 
-            gloss = gloss1 + gloss2
-            dloss = dloss1 + dloss2
+            # gloss = gloss1 + gloss2
+            gloss = gloss1
+            # dloss = dloss1 + dloss2
+            dloss = dloss2
 
         self.optimizer["generator"].minimize(
             gloss, self.generator_variables, tape=tape1
         )
 
-        self.optimizer["discriminator"].minimize(
-            dloss, self.discriminator_variables, tape=tape2
-        )
+        # self.optimizer["discriminator"].minimize(
+        #     dloss, self.discriminator_variables, tape=tape2
+        # )
+        mtrue2 = {
+            "seq2seq/ar": None,
+            "gan/ar": None,
+        }
+        mpred2 = {
+            "seq2seq/ar": None,
+            "gan/ar": None,
+        }
         mtrue1.update(mtrue2)
         mpred1.update(mpred2)
         self.compiled_metrics.update_state(
@@ -263,23 +273,23 @@ class Model(tf_keras.Model):
 
         self.dcounter.assign_add(1)
 
-        disc_acc = tf.convert_to_tensor(0, dtype=tf.float32)
-        for e in self.metrics:
-            if (
-                e.name == "gan/ar_binary_accuracy"
-                or e.name == "gan/ttf_binary_accuracy"
-            ):
-                disc_acc += e.result()
+        # disc_acc = tf.convert_to_tensor(0, dtype=tf.float32)
+        # for e in self.metrics:
+        #     if (
+        #         e.name == "gan/ar_binary_accuracy"
+        #         or e.name == "gan/ttf_binary_accuracy"
+        #     ):
+        #         disc_acc += e.result()
 
-        disc_acc /= 2
+        # disc_acc /= 2
 
-        self.adversarial.assign(
-            tf.cond(
-                tf.math.logical_and(disc_acc < 0.98, disc_acc > 0.8),
-                lambda: tf.convert_to_tensor(True),
-                lambda: tf.convert_to_tensor(False),
-            )
-        )
+        # self.adversarial.assign(
+        #     tf.cond(
+        #         tf.math.logical_and(disc_acc < 0.98, disc_acc > 0.8),
+        #         lambda: tf.convert_to_tensor(True),
+        #         lambda: tf.convert_to_tensor(False),
+        #     )
+        # )
         tf.summary.scalar(
             "gan/adversarial",
             self.adversarial,
