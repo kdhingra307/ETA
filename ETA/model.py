@@ -101,6 +101,7 @@ class Model(tf_keras.Model):
             "mse": loss_function,
             "gan": tf_keras.losses.BinaryCrossentropy(from_logits=True),
         }
+        self.adversarial = tf.convert_to_tensor(False)
 
     def build(self, input_shape):
         super().build(input_shape)
@@ -187,11 +188,13 @@ class Model(tf_keras.Model):
         )
 
         return (
-            mse_loss + gen_loss,
+            tf.cond(
+                self.adversarial, lambda: gen_loss + mse_loss, lambda: mse_loss
+            ),
             dis_loss,
             {
                 "seq2seq/ar": y_true,
-                "gan/ar": tf.zeros(tf.shape(discriminator)[0]),
+                "gan/ar": tf.ones(tf.shape(discriminator)[0]),
             },
             {
                 "seq2seq/ar": y_out,
@@ -213,7 +216,9 @@ class Model(tf_keras.Model):
             y_true=tf.zeros(tf.shape(discriminator)[0]), y_pred=discriminator
         )
         return (
-            gen_loss + mse_loss,
+            tf.cond(
+                self.adversarial, lambda: gen_loss + mse_loss, lambda: mse_loss
+            ),
             dis_loss,
             {
                 "seq2seq/ttf": y_true,
@@ -256,6 +261,21 @@ class Model(tf_keras.Model):
         )
 
         self.dcounter.assign_add(1)
+
+        disc_acc = (
+            self.metrics["gan/ar"].result() + self.metrics["gan/ttf"].result()
+        ) / 2
+
+        self.adversarial = tf.cond(
+            (disc_acc < 0.98) and (disc_acc > 0.8),
+            lambda: tf.convert_to_tensor(True),
+            lambda: tf.convert_to_tensor(False),
+        )
+        tf.summary.scalar(
+            "gan/adversarial",
+            self.adversarial,
+            step=tf.cast(self.dcounter, tf.int64),
+        )
 
         return {m.name: m.result() for m in self.metrics}
 
