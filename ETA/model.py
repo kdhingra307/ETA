@@ -222,7 +222,7 @@ class Model(tf_keras.Model):
             {
                 "seq2seq/ttf": y_out,
                 "gan/ttf": discriminator,
-            }
+            },
         )
 
     def train_step(self, data):
@@ -274,17 +274,15 @@ class Model(tf_keras.Model):
         self.compiled_metrics.update_state(
             {
                 "seq2seq/ar": y,
-                "discriminator/ar": None,
-                "generator/ar": None,
+                "gan/ar": None,
                 "seq2seq/ttf": None,
-                "discriminator/ttf": None,
+                "gan/ttf": None,
             },
             {
                 "seq2seq/ar": y_pred,
-                "discriminator/ar": None,
-                "generator/ar": None,
+                "gan/ar": None,
                 "seq2seq/ttf": None,
-                "discriminator/ttf": None,
+                "gan/ttf": None,
             },
             None,
         )
