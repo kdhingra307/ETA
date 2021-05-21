@@ -199,14 +199,14 @@ class Model(tf_keras.Model):
             mse_loss + gen_loss,
             dis_loss,
             {
-                "seq2seq": y_true,
-                "generator": tf.zeros(tf.shape(discriminator)[0]),
-                "discriminator": tf.ones(tf.shape(discriminator)[0]),
+                "seq2seq/ar": y_true,
+                "generator/ar": tf.zeros(tf.shape(discriminator)[0]),
+                "discriminator/ar": tf.ones(tf.shape(discriminator)[0]),
             },
             {
-                "seq2seq": y_out,
-                "generator": generator,
-                "discriminator": discriminator,
+                "seq2seq/ar": y_out,
+                "generator/ar": generator,
+                "discriminator/ar": discriminator,
             },
         )
 
@@ -230,14 +230,14 @@ class Model(tf_keras.Model):
             gen_loss + mse_loss,
             dis_loss,
             {
-                "seq2seq": y_true,
-                "generator": tf.ones(tf.shape(discriminator)[0]),
-                "discriminator": tf.zeros(tf.shape(discriminator)[0]),
+                "seq2seq/ttf": y_true,
+                "generator/ttf": tf.ones(tf.shape(discriminator)[0]),
+                "discriminator/ttf": tf.zeros(tf.shape(discriminator)[0]),
             },
             {
-                "seq2seq": y_out,
-                "generator": generator,
-                "discriminator": discriminator,
+                "seq2seq/ttf": y_out,
+                "generator/ttf": generator,
+                "discriminator/ttf": discriminator,
             },
         )
 
@@ -246,60 +246,25 @@ class Model(tf_keras.Model):
 
         with tf_diff.GradientTape() as tape1, tf_diff.GradientTape() as tape2:
 
-            gloss, dloss, mtrue, mpred = tf.cond(
-                self.dcounter % 2 == 0,
-                lambda: self.teacher_force(x, y, training=True),
-                lambda: self.auto_regression(x, y, training=True),
+            gloss1, dloss1, mtrue1, mpred1 = self.teacher_force(
+                x, y, training=True
+            )
+            gloss2, dloss2, mtrue2, mpred2 = self.auto_regression(
+                x, y, training=True
             )
 
         self.optimizer["generator"].minimize(
-            gloss, self.generator_variables, tape=tape1
+            gloss1 + gloss2, self.generator_variables, tape=tape1
         )
 
         self.optimizer["discriminator"].minimize(
-            dloss, self.discriminator_variables, tape=tape2
+            dloss1 + dloss2, self.discriminator_variables, tape=tape2
         )
 
-        tf.cond(
-            self.dcounter % 2 == 0,
-            lambda: self.compiled_metrics.update_state(
-                {
-                    "seq2seq/ttf": mtrue["seq2seq"],
-                    "discriminator/ttf": mtrue["discriminator"],
-                    "generator/ttf": mtrue["generator"],
-                    "seq2seq/ar": None,
-                    "discriminator/ar": None,
-                    "generator/ar": None,
-                },
-                {
-                    "seq2seq/ttf": mpred["seq2seq"],
-                    "discriminator/ttf": tf.nn.sigmoid(mpred["discriminator"]),
-                    "generator/ttf": tf.nn.sigmoid(mpred["generator"]),
-                    "seq2seq/ar": None,
-                    "discriminator/ar": None,
-                    "generator/ar": None,
-                },
-                None,
-            ),
-            lambda: self.compiled_metrics.update_state(
-                {
-                    "seq2seq/ar": mtrue["seq2seq"],
-                    "discriminator/ar": mtrue["discriminator"],
-                    "generator/ar": mtrue["generator"],
-                    "seq2seq/ttf": None,
-                    "discriminator/ttf": None,
-                    "generator/ttf": None,
-                },
-                {
-                    "seq2seq/ar": mpred["seq2seq"],
-                    "discriminator/ar": tf.nn.sigmoid(mpred["discriminator"]),
-                    "generator/ar": tf.nn.sigmoid(mpred["generator"]),
-                    "seq2seq/ttf": None,
-                    "discriminator/ttf": None,
-                    "generator/ttf": None,
-                },
-                None,
-            ),
+        self.compiled_metrics.update_state(
+            mtrue1.update(mtrue2),
+            mpred1.update(mpred2),
+            None,
         )
 
         self.dcounter.assign_add(1)
