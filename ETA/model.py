@@ -173,23 +173,14 @@ class Model(tf_keras.Model):
 
         y_out, embedding = self(x, training=training)
 
-        discriminator = tf.squeeze(
-            self.discriminator(tf.stop_gradient(embedding)), axis=-1
-        )
-        generator = tf.squeeze(self.discriminator(embedding), axis=-1)
+        discriminator = tf.squeeze(self.discriminator(embedding), axis=-1)
 
         mse_loss = self.error["mse"](y_true=y_true, y_pred=y_out)
 
         gen_loss = self.error["gan"](
             y_true=tf.zeros(tf.shape(discriminator)[0]),
-            y_pred=generator,
+            y_pred=discriminator,
         )
-
-        # total_loss = tf.cond(
-        #     self.dcounter < 4000,
-        #     lambda: mse_loss,
-        #     lambda: mse_loss + gen_loss,
-        # )
 
         dis_loss = self.error["gan"](
             y_true=tf.ones(tf.shape(discriminator)[0]), y_pred=discriminator
@@ -200,13 +191,11 @@ class Model(tf_keras.Model):
             dis_loss,
             {
                 "seq2seq/ar": y_true,
-                "generator/ar": tf.zeros(tf.shape(discriminator)[0]),
-                "discriminator/ar": tf.ones(tf.shape(discriminator)[0]),
+                "gan/ar": tf.zeros(tf.shape(discriminator)[0]),
             },
             {
                 "seq2seq/ar": y_out,
-                "generator/ar": generator,
-                "discriminator/ar": discriminator,
+                "gan/ar": discriminator,
             },
         )
 
@@ -214,14 +203,11 @@ class Model(tf_keras.Model):
 
         y_out, embedding = self(x, training=training, y=y_true[:, :, :, :1])
 
-        discriminator = tf.squeeze(
-            self.discriminator(tf.stop_gradient(embedding)), axis=-1
-        )
-        generator = tf.squeeze(self.discriminator(embedding), axis=-1)
+        discriminator = tf.squeeze(self.discriminator(embedding), axis=-1)
 
         mse_loss = self.error["mse"](y_true=y_true, y_pred=y_out)
         gen_loss = self.error["gan"](
-            y_true=tf.zeros(tf.shape(discriminator)[0]), y_pred=generator
+            y_true=tf.ones(tf.shape(discriminator)[0]), y_pred=discriminator
         )
         dis_loss = self.error["gan"](
             y_true=tf.zeros(tf.shape(discriminator)[0]), y_pred=discriminator
@@ -231,14 +217,12 @@ class Model(tf_keras.Model):
             dis_loss,
             {
                 "seq2seq/ttf": y_true,
-                "generator/ttf": tf.ones(tf.shape(discriminator)[0]),
-                "discriminator/ttf": tf.zeros(tf.shape(discriminator)[0]),
+                "gan/ttf": tf.zeros(tf.shape(discriminator)[0]),
             },
             {
                 "seq2seq/ttf": y_out,
-                "generator/ttf": generator,
-                "discriminator/ttf": discriminator,
-            },
+                "gan/ttf": discriminator,
+            }
         )
 
     def train_step(self, data):
