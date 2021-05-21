@@ -263,10 +263,11 @@ class Model(tf_keras.Model):
         self.optimizer["discriminator"].minimize(
             dloss, self.discriminator_variables, tape=tape2
         )
-
+        mtrue1.update(mtrue2)
+        mpred1.update(mpred2)
         self.compiled_metrics.update_state(
-            mtrue1.update(mtrue2),
-            mpred1.update(mpred2),
+            mtrue1,
+            mpred1,
             None,
         )
 
