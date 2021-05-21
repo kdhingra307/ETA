@@ -101,7 +101,7 @@ class Model(tf_keras.Model):
             "mse": loss_function,
             "gan": tf_keras.losses.BinaryCrossentropy(from_logits=True),
         }
-        self.adversarial = tf.convert_to_tensor(False)
+        self.adversarial = tf.Variable(False, dtype=tf.bool, trainable=False)
 
     def build(self, input_shape):
         super().build(input_shape)
@@ -230,6 +230,7 @@ class Model(tf_keras.Model):
             },
         )
 
+    @tf.function
     def train_step(self, data):
         x, y = data
 
@@ -262,14 +263,22 @@ class Model(tf_keras.Model):
 
         self.dcounter.assign_add(1)
 
-        disc_acc = (
-            self.metrics["gan/ar"].result() + self.metrics["gan/ttf"].result()
-        ) / 2
+        disc_acc = tf.convert_to_tensor(0, dtype=tf.float32)
+        for e in self.metrics:
+            if (
+                e.name == "gan/ar_binary_accuracy"
+                or e.name == "gan/ttf_binary_accuracy"
+            ):
+                disc_acc += e.result()
 
-        self.adversarial = tf.cond(
-            (disc_acc < 0.98) and (disc_acc > 0.8),
-            lambda: tf.convert_to_tensor(True),
-            lambda: tf.convert_to_tensor(False),
+        disc_acc /= 2
+
+        self.adversarial.assign(
+            tf.cond(
+                tf.math.logical_and(disc_acc < 0.98, disc_acc > 0.8),
+                lambda: tf.convert_to_tensor(True),
+                lambda: tf.convert_to_tensor(False),
+            )
         )
         tf.summary.scalar(
             "gan/adversarial",
