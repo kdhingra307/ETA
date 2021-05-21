@@ -171,7 +171,7 @@ class Model(tf_keras.Model):
 
     def auto_regression(self, x, y_true, training=False):
 
-        y_out, embedding = self(x, training=True)
+        y_out, embedding = self(x, training=training)
 
         discriminator = tf.squeeze(
             self.discriminator(tf.stop_gradient(embedding)), axis=-1
@@ -206,7 +206,7 @@ class Model(tf_keras.Model):
 
     def teacher_force(self, x, y_true, training=False):
 
-        y_out, embedding = self(x, training=True, y=y_true[:, :, :, :1])
+        y_out, embedding = self(x, training=training, y=y_true[:, :, :, :1])
 
         discriminator = tf.squeeze(
             self.discriminator(tf.stop_gradient(embedding)), axis=-1
@@ -241,8 +241,6 @@ class Model(tf_keras.Model):
                 lambda: self.teacher_force(x, y, training=True),
                 lambda: self.auto_regression(x, y, training=True),
             )
-
-        self.dcounter.assign_add(1)
 
         self.optimizer["generator"].minimize(
             gloss, self.generator_variables, tape=tape1
@@ -288,6 +286,8 @@ class Model(tf_keras.Model):
                 None,
             ),
         )
+
+        self.dcounter.assign_add(1)
 
         return {m.name: m.result() for m in self.metrics}
 
