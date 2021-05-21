@@ -246,7 +246,7 @@ class Model(tf_keras.Model):
             # gloss = gloss1 + gloss2
             gloss = gloss1
             # dloss = dloss1 + dloss2
-            dloss = dloss2
+            # dloss = dloss1
 
         self.optimizer["generator"].minimize(
             gloss, self.generator_variables, tape=tape1
