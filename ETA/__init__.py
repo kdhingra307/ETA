@@ -8,6 +8,7 @@ metrics = {
     "discriminator/ar": tf.keras.metrics.BinaryAccuracy(),
     "seq2seq/ttf": [mse, mae, mape, rmse],
     "discriminator/ttf": tf.keras.metrics.BinaryAccuracy(),
+    "generator/ttf": tf.keras.metrics.BinaryAccuracy(),
 }
 
 loss_function = mse

@@ -185,18 +185,18 @@ class Model(tf_keras.Model):
             y_pred=generator,
         )
 
-        total_loss = tf.cond(
-            self.dcounter < 4000,
-            lambda: mse_loss,
-            lambda: mse_loss + gen_loss,
-        )
+        # total_loss = tf.cond(
+        #     self.dcounter < 4000,
+        #     lambda: mse_loss,
+        #     lambda: mse_loss + gen_loss,
+        # )
 
         dis_loss = self.error["gan"](
             y_true=tf.ones(tf.shape(discriminator)[0]), y_pred=discriminator
         )
 
         return (
-            total_loss,
+            mse_loss + gen_loss,
             dis_loss,
             {
                 "seq2seq": y_true,
@@ -217,22 +217,26 @@ class Model(tf_keras.Model):
         discriminator = tf.squeeze(
             self.discriminator(tf.stop_gradient(embedding)), axis=-1
         )
+        generator = tf.squeeze(self.discriminator(embedding), axis=-1)
 
-        gen_loss = self.error["mse"](y_true=y_true, y_pred=y_out)
+        mse_loss = self.error["mse"](y_true=y_true, y_pred=y_out)
+        gen_loss = self.error["gan"](
+            y_true=tf.zeros(tf.shape(discriminator)[0]), y_pred=generator
+        )
         dis_loss = self.error["gan"](
             y_true=tf.zeros(tf.shape(discriminator)[0]), y_pred=discriminator
         )
         return (
-            gen_loss,
+            gen_loss + mse_loss,
             dis_loss,
             {
                 "seq2seq": y_true,
-                "generator": tf.zeros(tf.shape(discriminator)[0]),
+                "generator": tf.ones(tf.shape(discriminator)[0]),
                 "discriminator": tf.zeros(tf.shape(discriminator)[0]),
             },
             {
                 "seq2seq": y_out,
-                "generator": tf.zeros(tf.shape(discriminator)[0]),
+                "generator": generator,
                 "discriminator": discriminator,
             },
         )
@@ -251,7 +255,7 @@ class Model(tf_keras.Model):
         self.optimizer["generator"].minimize(
             gloss, self.generator_variables, tape=tape1
         )
-        print(self.discriminator_variables)
+
         self.optimizer["discriminator"].minimize(
             dloss, self.discriminator_variables, tape=tape2
         )
@@ -262,6 +266,7 @@ class Model(tf_keras.Model):
                 {
                     "seq2seq/ttf": mtrue["seq2seq"],
                     "discriminator/ttf": mtrue["discriminator"],
+                    "generator/ttf": mtrue["generator"],
                     "seq2seq/ar": None,
                     "discriminator/ar": None,
                     "generator/ar": None,
@@ -269,6 +274,7 @@ class Model(tf_keras.Model):
                 {
                     "seq2seq/ttf": mpred["seq2seq"],
                     "discriminator/ttf": tf.nn.sigmoid(mpred["discriminator"]),
+                    "generator/ttf": tf.nn.sigmoid(mpred["generator"]),
                     "seq2seq/ar": None,
                     "discriminator/ar": None,
                     "generator/ar": None,
@@ -282,6 +288,7 @@ class Model(tf_keras.Model):
                     "generator/ar": mtrue["generator"],
                     "seq2seq/ttf": None,
                     "discriminator/ttf": None,
+                    "generator/ttf": None,
                 },
                 {
                     "seq2seq/ar": mpred["seq2seq"],
@@ -289,6 +296,7 @@ class Model(tf_keras.Model):
                     "generator/ar": tf.nn.sigmoid(mpred["generator"]),
                     "seq2seq/ttf": None,
                     "discriminator/ttf": None,
+                    "generator/ttf": None,
                 },
                 None,
             ),
