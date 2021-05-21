@@ -178,11 +178,17 @@ class Model(tf_keras.Model):
         )
         generator = tf.squeeze(self.discriminator(embedding), axis=-1)
 
-        gen_loss = self.error["mse"](y_true=y_true, y_pred=y_out) + self.error[
-            "gan"
-        ](
+        mse_loss = self.error["mse"](y_true=y_true, y_pred=y_out)
+
+        gen_loss = self.error["gan"](
             y_true=tf.zeros(tf.shape(discriminator)[0]),
             y_pred=generator,
+        )
+
+        total_loss = tf.cond(
+            self.dcounter < 4000,
+            lambda: mse_loss,
+            lambda: mse_loss + gen_loss,
         )
 
         dis_loss = self.error["gan"](
@@ -190,7 +196,7 @@ class Model(tf_keras.Model):
         )
 
         return (
-            gen_loss,
+            total_loss,
             dis_loss,
             {
                 "seq2seq": y_true,

@@ -1,7 +1,7 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "lstm_conv1d_melr/DC/professor/3"
+  training_label: "lstm_conv1d_melr/DC/professor/4"
   num_nodes: 207
   steps_to_predict: 12
   ttr: 1
@@ -19,7 +19,7 @@ data:
     - 0.288
 
 training:
-  learning_rate: 0.00001
+  learning_rate: 0.0001
   decay: 1e+3
   log_dir: "logs/{}"
   ckpt_dir: "ckpt/{}"
