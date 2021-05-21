@@ -245,6 +245,7 @@ class Model(tf_keras.Model):
         self.optimizer["generator"].minimize(
             gloss, self.generator_variables, tape=tape1
         )
+        print(self.discriminator_variables)
         self.optimizer["discriminator"].minimize(
             dloss, self.discriminator_variables, tape=tape2
         )
@@ -261,7 +262,7 @@ class Model(tf_keras.Model):
                 },
                 {
                     "seq2seq/ttf": mpred["seq2seq"],
-                    "discriminator/ttf": mpred["discriminator"],
+                    "discriminator/ttf": tf.nn.sigmoid(mpred["discriminator"]),
                     "seq2seq/ar": None,
                     "discriminator/ar": None,
                     "generator/ar": None,
@@ -278,8 +279,8 @@ class Model(tf_keras.Model):
                 },
                 {
                     "seq2seq/ar": mpred["seq2seq"],
-                    "discriminator/ar": mpred["discriminator"],
-                    "generator/ar": mpred["generator"],
+                    "discriminator/ar": tf.nn.sigmoid(mpred["discriminator"]),
+                    "generator/ar": tf.nn.sigmoid(mpred["generator"]),
                     "seq2seq/ttf": None,
                     "discriminator/ttf": None,
                 },
