@@ -253,12 +253,15 @@ class Model(tf_keras.Model):
                 x, y, training=True
             )
 
+            gloss = gloss1 + gloss2
+            dloss = dloss1 + dloss2
+
         self.optimizer["generator"].minimize(
-            gloss1 + gloss2, self.generator_variables, tape=tape1
+            gloss, self.generator_variables, tape=tape1
         )
 
         self.optimizer["discriminator"].minimize(
-            dloss1 + dloss2, self.discriminator_variables, tape=tape2
+            dloss, self.discriminator_variables, tape=tape2
         )
 
         self.compiled_metrics.update_state(
