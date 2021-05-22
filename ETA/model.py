@@ -236,15 +236,15 @@ class Model(tf_keras.Model):
 
         with tf_diff.GradientTape() as tape1, tf_diff.GradientTape() as tape2:
 
-            gloss1, dloss1, mtrue1, mpred1 = self.teacher_force(
-                x, y, training=True
-            )
-            # gloss2, dloss2, mtrue2, mpred2 = self.auto_regression(
+            # gloss1, dloss1, mtrue1, mpred1 = self.teacher_force(
             #     x, y, training=True
             # )
+            gloss2, dloss2, mtrue2, mpred2 = self.auto_regression(
+                x, y, training=True
+            )
 
             # gloss = gloss1 + gloss2
-            gloss = gloss1
+            gloss = gloss2
             # dloss = dloss1 + dloss2
             # dloss = dloss1
 
@@ -255,13 +255,13 @@ class Model(tf_keras.Model):
         # self.optimizer["discriminator"].minimize(
         #     dloss, self.discriminator_variables, tape=tape2
         # )
-        mtrue2 = {
-            "seq2seq/ar": None,
-            "gan/ar": None,
+        mtrue1 = {
+            "seq2seq/ttf": None,
+            "gan/ttf": None,
         }
-        mpred2 = {
-            "seq2seq/ar": None,
-            "gan/ar": None,
+        mpred1 = {
+            "seq2seq/ttf": None,
+            "gan/ttf": None,
         }
         mtrue1.update(mtrue2)
         mpred1.update(mpred2)
