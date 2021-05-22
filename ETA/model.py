@@ -194,18 +194,6 @@ class Model(tf_keras.Model):
         )
         y_embed = decoded[1]
 
-        # y_embed = tf.transpose(
-        #     tf.reshape(
-        #         decoded[1],
-        #         [
-        #             -1,
-        #             config.model.num_nodes,
-        #             config.model.steps_to_predict,
-        #             128,
-        #         ],
-        #     ),
-        #     [0, 2, 1, 3],
-        # )
         return (y_out, y_embed)
 
     def auto_regression(self, x, y_true, training=False):
@@ -284,9 +272,9 @@ class Model(tf_keras.Model):
             gloss, self.generator_variables, tape=tape1
         )
 
-        self.optimizer["discriminator"].minimize(
-            dloss, self.discriminator_variables, tape=tape2
-        )
+        # self.optimizer["discriminator"].minimize(
+        #     dloss, self.discriminator_variables, tape=tape2
+        # )
         mtrue = tf.cond(
             self.dcounter % 2 == 0,
             lambda: {
@@ -323,7 +311,7 @@ class Model(tf_keras.Model):
             None,
         )
 
-        self.dcounter.assign_add(1)
+        # self.dcounter.assign_add(1)
 
         disc_acc = tf.convert_to_tensor(0, dtype=tf.float32)
         for e in self.metrics:
