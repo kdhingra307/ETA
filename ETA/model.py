@@ -16,37 +16,37 @@ class Model(tf_keras.Model):
 
         self.embedding = tf_keras.Sequential(
             [
-                tf_keras.layers.Conv1D(
+                tf_keras.layers.Conv2D(
                     filters=128,
-                    kernel_size=3,
+                    kernel_size=[3, 3],
                     padding="SAME",
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
+                tf_keras.layers.Conv2D(
                     filters=64,
-                    kernel_size=3,
+                    kernel_size=[3, 3],
                     padding="SAME",
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
+                tf_keras.layers.Conv2D(
                     filters=128,
-                    kernel_size=3,
+                    kernel_size=[3, 3],
                     padding="SAME",
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
+                tf_keras.layers.Conv2D(
                     filters=64,
-                    kernel_size=3,
+                    kernel_size=[3, 3],
                     padding="SAME",
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
+                tf_keras.layers.Conv2D(
                     filters=128,
-                    kernel_size=3,
+                    kernel_size=[3, 3],
                     padding="SAME",
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
@@ -87,12 +87,12 @@ class Model(tf_keras.Model):
                 ),
                 tf_keras.layers.BatchNormalization(),
                 tf_keras.layers.Dense(
-                    units=256,
+                    units=32,
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.BatchNormalization(),
                 tf_keras.layers.Dense(
-                    units=207,
+                    units=1,
                 ),
             ]
         )
@@ -127,7 +127,7 @@ class Model(tf_keras.Model):
         if init is None:
             num_nodes = config.model.num_nodes
             init = tf_array_ops.zeros(
-                [tf_array_ops.shape(state[0])[0], num_nodes],
+                [tf_array_ops.shape(state[0])[0], 1],
                 dtype=tf_dtype.float32,
             )
 
@@ -155,7 +155,7 @@ class Model(tf_keras.Model):
                 output = self.post_process(output, training=training)
                 to_return = to_return.write(i, output)
 
-                init = tf_array_ops.squeeze(x_targ[:, i], axis=-1)
+                init = tf_array_ops.reshape(x_targ[:, i], [-1, 1])
 
         return (
             tf_array_ops.transpose(to_return.stack(), [1, 0, 2]),
@@ -163,12 +163,50 @@ class Model(tf_keras.Model):
         )
 
     def call(self, x, training=False, y=None):
+        x_shape = x.shape
 
         embedding = self.embedding(x, training=training)
-        otpt = self.encoder(embedding, training=training)
+
+        embedding = tf.reshape(
+            tf.transpose(embedding, [0, 2, 1, 3]),
+            [
+                -1,
+                config.model.steps_to_predict,
+                embedding.shape[-1],
+            ],
+        )
+
+        otpt = self.encoder(
+            embedding,
+            training=training,
+        )
+
         encoded = otpt[1:]
+
         decoded = self.decode(state=encoded, x_targ=y, training=training)
-        return decoded
+
+        y_out = tf.transpose(
+            tf.reshape(
+                decoded[0],
+                [-1, config.model.num_nodes, config.model.steps_to_predict],
+            ),
+            [0, 2, 1],
+        )
+        y_embed = decoded[1]
+
+        # y_embed = tf.transpose(
+        #     tf.reshape(
+        #         decoded[1],
+        #         [
+        #             -1,
+        #             config.model.num_nodes,
+        #             config.model.steps_to_predict,
+        #             128,
+        #         ],
+        #     ),
+        #     [0, 2, 1, 3],
+        # )
+        return (y_out, y_embed)
 
     def auto_regression(self, x, y_true, training=False):
 
