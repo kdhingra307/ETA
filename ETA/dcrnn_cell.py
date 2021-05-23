@@ -63,8 +63,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             )
 
     def build(self, inp_shape):
-
-        inpt_features = (inp_shape[-1] + 128) * 2
+        
+        inpt_features = (inp_shape[-1] + self._num_units) * 2
 
         kernel_initializer = tf_keras.initializers.GlorotUniform()
         bias_initializer = tf_keras.initializers.Zeros()
