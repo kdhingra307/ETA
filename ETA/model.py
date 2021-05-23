@@ -37,7 +37,6 @@ class Model(tf_keras.Model):
     def call(self, x, training=False, y=None, adj=None):
 
         encoded = self.encoder(x=x, adj=adj, state=None, training=training)
-        print(encoded)
         decoded = self.decoder(adj=adj, state=encoded, x=y, training=training)
         return tf_squeeze(decoded, axis=-1)
 

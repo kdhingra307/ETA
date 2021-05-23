@@ -137,17 +137,21 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     @tf.function
     def _gconv(self, inputs, state, support, output_size, bias_start=0.0):
 
+        print(inputs.shape)
         batch_size = tf.shape(inputs)[0]
         inputs_and_state = tf.concat([inputs, state], axis=2)
         num_inpt_features = inputs_and_state.shape[-1]
 
         x = inputs_and_state
-
+        print(x.shape, inputs.shape, support.shape)
         x1 = tf.tensordot(x, support, axes=[1, 0])
+        print(x1.shape)
 
         x = tf.transpose(x1, [0, 2, 1, 3])
+        print(x.shape)
 
         x = tf.reshape(x, [batch_size, self._num_nodes, -1])
+        print(x.shape)
 
         if output_size == self._num_units:
             x = tf.matmul(x, self.w2) + self.b2
