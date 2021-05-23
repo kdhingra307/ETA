@@ -31,7 +31,9 @@ optimizer = tf_keras.optimizers.Adam(
 )
 model = Model()
 model.compile(
-    optimizer=optimizer, loss=loss_function, metrics={"seq2seq/ar": metrics}
+    optimizer=optimizer,
+    loss=loss_function,
+    metrics={"seq2seq/ar": metrics},
 )
 
 train_split = config.data.split_prefix.format("train")
@@ -58,7 +60,9 @@ def scheduler(epoch, lr):
 
 
 ckpt_manager = CheckpointManager(optimizer, model, ckpt_dir)
-log_manager = TensorBoard(log_dir=log_dir, update_freq=20)
+log_manager = TensorBoard(
+    log_dir=log_dir, update_freq=20, embeddings_freq=1, histogram_freq=1
+)
 lr_manager = LearningRateScheduler(scheduler)
 ckpt_manager.ckpt_manager.restore_or_initialize()
 
