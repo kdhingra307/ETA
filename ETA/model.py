@@ -60,7 +60,7 @@ class Model(tf_keras.Model):
 
         self.optimizer.apply_gradients(
             zip(
-                [tf.clip_by_norm(e, 0.5) for e in gradients],
+                [tf.clip_by_value(e, 0.5) for e in gradients],
                 self.trainable_variables,
             )
         )
