@@ -36,14 +36,14 @@ class Model(tf_keras.Model):
     def call(self, x, training=False, y=None, adj=None):
 
         encoded = self.encoder(x=x, adj=adj, state=None)
-        decoded = self.decoder(adj=adj, state=encoded)
+        decoded = self.decoder(adj=adj, state=encoded, x=y)
         return tf_squeeze(decoded, axis=-1)
 
     def train_step(self, data):
         adj, x, y = data
 
         with tf_diff.GradientTape() as tape:
-            y_pred = self(x, training=True, y=y[:, :, :, :1], adj=adj)
+            y_pred = self(x, training=True, adj=adj)
             loss = self.compiled_loss(
                 y, y_pred, None, regularization_losses=self.losses
             )
