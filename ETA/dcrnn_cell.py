@@ -90,7 +90,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         [type]
             [description]
         """
-        self.batch_size = tf.shape(inputs)[0]
+
         state = tf.reshape(state, [-1, self._num_nodes, self._num_units])
         support = constants[0]
 
@@ -120,6 +120,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     @tf.function
     def _gconv(self, inputs, state, support, output_size, bias_start=0.0):
 
+        batch_size = tf.shape(inputs)[0]
         inputs_and_state = tf.concat([inputs, state], axis=2)
         num_inpt_features = inputs_and_state.shape[-1]
 
@@ -131,7 +132,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
         x = tf.transpose(x1, [0, 2, 1, 3])
 
-        x = tf.reshape(x, [self.batch_size, self._num_nodes, -1])
+        x = tf.reshape(x, [batch_size, self._num_nodes, -1])
 
         if output_size == self._num_units:
             x = tf.matmul(x, self.w2) + self.b2
@@ -156,9 +157,6 @@ class DCGRUBlock(tf_keras.layers.Layer):
         if encode:
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
 
-    def build(self, x_shape):
-        self.batch_size = x_shape[0]
-
     def encode(self, x, adj):
         state = self.block(x, constants=[adj])
         return state[-1]
@@ -179,9 +177,11 @@ class DCGRUBlock(tf_keras.layers.Layer):
     @tf.function
     def decode(self, state, adj, x_targ=None):
 
-        init = tf.zeros([self.batch_size, self.num_nodes, 1], dtype=tf.float32)
+        batch_size = tf.shape(state)[0]
+        print(batch_size)
+        init = tf.zeros([batch_size, self.num_nodes, 1], dtype=tf.float32)
         nstate = self.cells.get_initial_state(
-            batch_size=self.batch_size, dtype=tf.float32
+            batch_size=batch_size, dtype=tf.float32
         )
         state = [state, nstate[1]]
 
