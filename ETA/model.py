@@ -4,6 +4,7 @@ from tensorflow import squeeze as tf_squeeze
 from tensorflow.python.keras.engine import data_adapter
 from ETA import DCGRUBlock, DCGRUCell, config
 import numpy as np
+import tensorflow as tf
 
 
 class Model(tf_keras.Model):
