@@ -50,7 +50,10 @@ class Model(tf_keras.Model):
             )
 
         gradients = tape.gradient(loss, self.trainable_variables)
-        zipped_gradients = zip(gradients, self.trainable_variables)
+        zipped_gradients = zip(
+            [tf.clip_by_value(e, -0.5, 0.5) for e in gradients],
+            self.trainable_variables,
+        )
 
         for i, e in zipped_gradients:
             tf.summary.histogram("grads/" + e.name, i)
