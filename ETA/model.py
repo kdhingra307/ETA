@@ -53,12 +53,20 @@ class Model(tf_keras.Model):
         zipped_gradients = zip(gradients, self.trainable_variables)
 
         for i, e in zipped_gradients:
-            tf.summary.histogram("grads/" + e.name, i)
-            tf.summary.scalar("grads/" + e.name + "/max", tf.reduce_max(i))
-            tf.summary.scalar("grads/" + e.name + "/min", tf.reduce_min(i))
-            tf.summary.scalar("grads/" + e.name + "/mean", tf.reduce_mean(i))
+            tf.summary.histogram("grads/" + e.name, i.value)
+            tf.summary.scalar(
+                "grads/" + e.name + "/max", tf.reduce_max(i.value)
+            )
+            tf.summary.scalar(
+                "grads/" + e.name + "/min", tf.reduce_min(i.value)
+            )
+            tf.summary.scalar(
+                "grads/" + e.name + "/mean", tf.reduce_mean(i.value)
+            )
 
-        self.optimizer.apply_gradients(zipped_gradients)
+        self.optimizer.apply_gradients(
+            zip(gradients, self.trainable_variables)
+        )
 
         self.compiled_metrics.update_state(
             {"seq2seq/ar": y}, {"seq2seq/ar": y_pred}, None
