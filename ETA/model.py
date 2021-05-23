@@ -96,7 +96,7 @@ class Model(tf_keras.Model):
                 ),
             ]
         )
-        self.dcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
+        self.dcounter = tf.Variable(1, dtype=tf.int64, trainable=False)
         self.error = {
             "mse": loss_function,
             "gan": tf_keras.losses.BinaryCrossentropy(from_logits=True),
