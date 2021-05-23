@@ -59,7 +59,10 @@ class Model(tf_keras.Model):
             tf.summary.scalar("grads/" + e.name + "/mean", tf.reduce_mean(i))
 
         self.optimizer.apply_gradients(
-            zip(gradients, self.trainable_variables)
+            zip(
+                [tf.clip_by_norm(e) for e in gradients],
+                self.trainable_variables,
+            )
         )
 
         self.compiled_metrics.update_state(

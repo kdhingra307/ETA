@@ -27,7 +27,7 @@ if gpus:
 
 
 optimizer = tf_keras.optimizers.Adam(
-    learning_rate=config.training.learning_rate, clipnorm=1.0
+    learning_rate=config.training.learning_rate, clipvalue=1.0
 )
 model = Model()
 model.compile(
