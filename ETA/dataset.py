@@ -3,6 +3,7 @@ from glob import glob
 import tensorflow as tf
 import numpy as np
 from ETA import config
+from scipy.sparse.linalg.eigen.arpack import eigsh
 
 #%%
 
@@ -13,11 +14,11 @@ std_expanded = np.array(std).reshape([1, 1, -1])
 
 def calculate_random_walk_matrix(adj_mx):
     d = np.array(adj_mx.sum(1))
-    d_inv = np.power(d, -1).flatten()
+    d_inv = np.power(d, -0.5).flatten()
     d_inv[np.isinf(d_inv)] = 0.0
     d_mat_inv = np.diag(d_inv)
-    random_walk_mx = d_mat_inv.dot(adj_mx)
-    return random_walk_mx
+
+    return adj_mx.dot(d_mat_inv).transpose().dot(d_mat_inv)
 
 
 def get_data(split_label):
@@ -70,9 +71,6 @@ def get_data(split_label):
 
         # adj_mx /= norm
         # adj_mx *= batch_sampler.probab[positions].reshape([1, -1])
-        print(type(adj_mx), np.isnan(adj_mx).shape)
-        adj_mx[np.isnan(adj_mx)] = 0
-        adj_mx[np.isinf(adj_mx)] = 0
 
         adj_mx = tf.convert_to_tensor(adj_mx, dtype=tf.float32)
         # x = tf.gather(x, indices=positions, axis=2)
@@ -91,7 +89,7 @@ def get_data(split_label):
 class sampling:
     def __init__(self, sampler="random"):
 
-        self.adjacency_matrix = calculate_random_walk_matrix(
+        adjacency_matrix = calculate_random_walk_matrix(
             np.load(
                 "{}/{}/metr_adj_matrix.npz".format(
                     config.model.working_dir, config.model.static_data_dir
@@ -99,16 +97,7 @@ class sampling:
             )["arr_0"].astype(np.float32)
         )
 
-        self.adjacency_matrix = np.stack(
-            [
-                self.adjacency_matrix,
-                (
-                    2 * np.matmul(self.adjacency_matrix, self.adjacency_matrix)
-                    - np.eye(len(self.adjacency_matrix))
-                ),
-            ],
-            axis=-1,
-        )
+        self.adjacency_matrix = chebyshev_polynomials(adjacency_matrix, 4)
 
         self.n_init = config.model.graph_batch_size
         self.probab_individ = self.adjacency_matrix ** 2
@@ -124,3 +113,24 @@ class sampling:
 
 
 # %%
+def chebyshev_polynomials(adj, k):
+    """Calculate Chebyshev polynomials up to order k. Return a list of sparse matrices (tuple representation)."""
+    print("Calculating Chebyshev polynomials up to order {}...".format(k))
+
+    laplacian = np.eye(adj.shape[0]) - adj
+    largest_eigval, _ = eigsh(laplacian, 1, which="LM")
+    scaled_laplacian = (2.0 / largest_eigval[0]) * laplacian - np.eye(
+        adj.shape[0]
+    )
+
+    t_k = list()
+    t_k.append(np.eye(adj.shape[0]))
+    t_k.append(scaled_laplacian)
+
+    def chebyshev_recurrence(t_k_minus_one, t_k_minus_two, scaled_lap):
+        return 2 * scaled_lap.dot(t_k_minus_one) - t_k_minus_two
+
+    for i in range(2, k + 1):
+        t_k.append(chebyshev_recurrence(t_k[-1], t_k[-2], scaled_laplacian))
+
+    return np.stack(t_k, axis=-1)

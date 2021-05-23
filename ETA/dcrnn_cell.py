@@ -64,7 +64,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
     def build(self, inp_shape):
 
-        inpt_features = (inp_shape[-1] + self._num_units) * 2
+        inpt_features = inp_shape[-1] + self._num_units
 
         kernel_initializer = tf_keras.initializers.GlorotUniform()
         bias_initializer = tf_keras.initializers.Zeros()
@@ -146,10 +146,14 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         x = inputs_and_state
 
         x1 = tf.tensordot(x, support, axes=[1, 0])
+        print(x1.shape)
+        x = tf.reduce_sum(x1, axis=-1)
 
-        x = tf.transpose(x1, [0, 2, 1, 3])
+        # x = tf.transpose(x1, [0, 2, 1, 3])
+        print(x.shape)
 
-        x = tf.reshape(x, [batch_size, self._num_nodes, -1])
+        # x = tf.reshape(x, [batch_size, self._num_nodes, -1])
+        print(x.shape)
 
         if output_size == self._num_units:
             x = tf.matmul(x, self.w2) + self.b2
