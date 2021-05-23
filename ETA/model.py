@@ -48,7 +48,14 @@ class Model(tf_keras.Model):
                 y, y_pred, None, regularization_losses=self.losses
             )
 
-        self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
+        gradients = tape.gradient(loss, self.trainable_variables)
+        zipped_gradients = zip(gradients, self.trainable_variables)
+
+        for i, e in zipped_gradients:
+            tf.summary.histogram(e.name, i)
+
+        self.optimizer.apply_gradients(zipped_gradients)
+
         self.compiled_metrics.update_state(
             {"seq2seq/ar": y}, {"seq2seq/ar": y_pred}, None
         )
