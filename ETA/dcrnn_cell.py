@@ -183,7 +183,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         nstate = self.cells.get_initial_state(
             batch_size=batch_size, dtype=tf.float32
         )
-        state = [state, nstate[1]]
+        state = (state, nstate[1])
 
         to_return = tf.TensorArray(
             size=self.steps_to_predict, dtype=tf.float32
