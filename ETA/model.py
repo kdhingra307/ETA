@@ -24,7 +24,7 @@ class Model(tf_keras.Model):
     def call(self, x, training=False, y=None, adj=None):
 
         encoded = self.encoder(x=x, adj=adj,  state=None)
-        decoded = self.decoder(adj=adj, state=encoded, x=y)
+        decoded = self.decoder(adj=adj, state=encoded)
         return tf_squeeze(decoded, axis=-1)
     
     def train_step(self, data):
