@@ -78,8 +78,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             trainable=True,
         )
 
-        self.batch_size = inp_shape[0]
-
     @tf.function
     def call(self, inputs, state, constants, scope=None):
 
@@ -92,7 +90,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         [type]
             [description]
         """
-
+        self.batch_size = tf.shape(inputs)[0]
         state = tf.reshape(state, [-1, self._num_nodes, self._num_units])
         support = constants[0]
 
