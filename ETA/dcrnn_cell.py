@@ -96,6 +96,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
     @tf.function
     def call(self, inputs, state, constants, scope=None):
+        tf.print(self._num_units, inputs.shape)
 
         """
             inputs_shape [BatchSize, Num_Nodes, Inp_features]
@@ -126,6 +127,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
         if self._num_proj is not None:
             output = self.projection_layer(output)
+
         return output, new_state
 
     @staticmethod
@@ -141,10 +143,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         num_inpt_features = inputs_and_state.shape[-1]
 
         x = inputs_and_state
-        # x - [B, num_nodes, num_features]
 
         x1 = tf.tensordot(x, support, axes=[1, 0])
-        # x1 - [B, num_features, num_nodes, kernel]
 
         x = tf.transpose(x1, [0, 2, 1, 3])
 
@@ -223,6 +223,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
             return tf.transpose(to_return.stack(), [1, 0, 2, 3])
 
     def call(self, x, state, adj):
+        tf.print(self.is_encoder)
         if self.is_encoder:
             return self.encode(x, adj)
         else:
