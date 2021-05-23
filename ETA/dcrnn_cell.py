@@ -44,7 +44,23 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._use_gc_for_ru = use_gc_for_ru
 
         if num_proj != None:
-            self.projection_layer = tf_keras.layers.Dense(units=num_proj)
+            self.projection_layer = tf_keras.Sequential(
+                [
+                    tf_keras.layers.Dense(
+                        units=128,
+                        activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+                    ),
+                    tf_keras.layers.BatchNormalization(),
+                    tf_keras.layers.Dense(
+                        units=32,
+                        activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+                    ),
+                    tf_keras.layers.BatchNormalization(),
+                    tf_keras.layers.Dense(
+                        units=1,
+                    ),
+                ]
+            )
 
     def build(self, inp_shape):
 
@@ -159,7 +175,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
     def encode(self, x, adj):
         state = self.block(x, constants=[adj])
-        return state[-1]
+        return state[1:]
 
     @tf.function
     def decay_teacher_coefficient(self):
@@ -177,13 +193,11 @@ class DCGRUBlock(tf_keras.layers.Layer):
     @tf.function
     def decode(self, state, adj, x_targ=None):
 
-        batch_size = tf.shape(state)[0]
-        print(batch_size)
+        batch_size = tf.shape(state[0])[0]
+
         init = tf.zeros([batch_size, self.num_nodes, 1], dtype=tf.float32)
-        nstate = self.cells.get_initial_state(
-            batch_size=batch_size, dtype=tf.float32
-        )
-        state = (state, nstate[1])
+
+        state = tuple(state)
 
         to_return = tf.TensorArray(
             size=self.steps_to_predict, dtype=tf.float32
