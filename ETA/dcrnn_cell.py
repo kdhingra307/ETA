@@ -228,7 +228,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         for i in range(self.steps_to_predict):
             init, state = self.cells(init, states=state)
             to_return = to_return.write(i, init)
-        return tf.transpose(tf.squeeze(to_return.stack()), [1, 0, 2])
+        return tf.transpose(to_return.stack(), [1, 0, 2])
 
     def call(self, x, state):
         if self.is_encoder:
