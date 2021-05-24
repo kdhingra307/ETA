@@ -151,7 +151,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             output.append(x1)
 
             for k in range(2, self._max_diffusion_step + 1):
-            x2 = 2 * tf.sparse.sparse_dense_matmul(support, x1) - x0
+                x2 = 2 * tf.sparse.sparse_dense_matmul(support, x1) - x0
                 output.append(x2)
                 x1, x0 = x2, x1
 
