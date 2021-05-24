@@ -70,7 +70,18 @@ class Model(tf_keras.Model):
             ]
         )
 
-        self.post_process = tf_keras.layers.Dense(units=1)
+        self.post_process = self.post_process = tf_keras.Sequential(
+            [
+                tf_keras.layers.Dense(
+                    units=256,
+                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+                ),
+                tf_keras.layers.BatchNormalization(),
+                tf_keras.layers.Dense(
+                    units=207,
+                ),
+            ]
+        )
         self.dcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
         self.error = {
             "mse": loss_function,
@@ -93,8 +104,9 @@ class Model(tf_keras.Model):
 
         state = tuple(state)
 
+        num_nodes = config.model.num_nodes
         init = tf_array_ops.zeros(
-            [tf_array_ops.shape(state[0])[0], 1],
+            [tf_array_ops.shape(state[0])[0], num_nodes],
             dtype=tf_dtype.float32,
         )
 
