@@ -229,6 +229,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
             init, state = self.cells(init, states=state)
             to_return = to_return.write(i, init)
         tf.print(to_return.stack().shape)
+        print(to_return.stack().shape)
         return tf.transpose(tf.squeeze(to_return.stack(), axis=-1), [1, 0, 2])
 
     def call(self, x, state):
