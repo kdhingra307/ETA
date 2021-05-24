@@ -51,7 +51,7 @@ def mape(y_true, y_pred):
 
 
 class CheckpointManager(tf_keras.callbacks.Callback):
-    def __init__(self, optimizer, model, ckpt_dir, label="val_seq2seq/ar_mse"):
+    def __init__(self, optimizer, model, ckpt_dir, label="val_loss"):
 
         self.loss = inf
         self.label = label
