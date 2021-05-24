@@ -145,6 +145,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         num_inpt_features = inputs_and_state.shape[-1]
 
         x0 = inputs_and_state
+        print(x0.shape)
+        print(self._supports[0].shape)
         output = []
 
         for support in self._supports:
