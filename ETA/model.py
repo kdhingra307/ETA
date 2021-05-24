@@ -113,54 +113,27 @@ class Model(tf_keras.Model):
             + self.post_process.trainable_variables
         )
 
-        self.discriminator.build(
-            tf.TensorShape([input_shape[0], input_shape[1], 128])
-        )
-
-        self.discriminator_variables = self.discriminator.trainable_variables
-
     @tf_function
     def decode(self, state, x_targ=None, init=None, training=False):
 
         state = tuple(state)
 
-        if init is None:
-            num_nodes = config.model.num_nodes
-            init = tf_array_ops.zeros(
-                [tf_array_ops.shape(state[0])[0], num_nodes],
-                dtype=tf_dtype.float32,
-            )
+        num_nodes = config.model.num_nodes
+        init = tf_array_ops.zeros(
+            [tf_array_ops.shape(state[0])[0], num_nodes],
+            dtype=tf_dtype.float32,
+        )
 
         num_steps = config.model.steps_to_predict
         to_return = tf.TensorArray(size=num_steps, dtype=tf.float32)
-        embedding = tf.TensorArray(size=num_steps, dtype=tf.float32)
 
-        if x_targ is None:
-            for i in tf.range(num_steps):
-                init, state = self.decoder(
-                    init, states=state, training=training
-                )
+        for i in tf.range(num_steps):
+            init, state = self.decoder(init, states=state, training=training)
 
-                embedding = embedding.write(i, init)
-                init = self.post_process(init, training=training)
-                to_return = to_return.write(i, init)
+            init = self.post_process(init, training=training)
+            to_return = to_return.write(i, init)
 
-        else:
-            for i in tf.range(num_steps):
-                output, state = self.decoder(
-                    init, states=state, training=training
-                )
-
-                embedding = embedding.write(i, output)
-                output = self.post_process(output, training=training)
-                to_return = to_return.write(i, output)
-
-                init = tf_array_ops.squeeze(x_targ[:, i], axis=-1)
-
-        return (
-            tf_array_ops.transpose(to_return.stack(), [1, 0, 2]),
-            tf_array_ops.transpose(embedding.stack(), [1, 0, 2]),
-        )
+        return (tf_array_ops.transpose(to_return.stack(), [1, 0, 2]),)
 
     def call(self, x, training=False, y=None):
 
@@ -170,36 +143,21 @@ class Model(tf_keras.Model):
         decoded = self.decode(state=encoded, x_targ=y, training=training)
         return decoded
 
-    def auto_regression(self, x, y_true, training=False):
+    def auto_regression(self, x, y_label, training=False):
 
-        y_out, embedding = self(x, training=training)
+        y_out = self(x, training=training)
 
-        discriminator = tf.squeeze(self.discriminator(embedding), axis=-1)
-
-        mse_loss = self.error["mse"](y_true=y_true, y_pred=y_out)
-
-        gen_loss = self.error["gan"](
-            y_true=tf.zeros(tf.shape(discriminator)[0]),
-            y_pred=discriminator,
-        )
-
-        dis_loss = self.error["gan"](
-            y_true=tf.ones(tf.shape(discriminator)[0]), y_pred=discriminator
+        gen_loss = self.compiled_loss(
+            y_true=y_label,
+            y_pred=y_out,
+            sample_weight=None,
+            regularization_losses=self.losses,
         )
 
         return (
-            tf.cond(
-                self.adversarial, lambda: gen_loss + mse_loss, lambda: mse_loss
-            ),
-            dis_loss,
-            {
-                "seq2seq/ar": y_true,
-                "gan/ar": tf.ones(tf.shape(discriminator)[0]),
-            },
-            {
-                "seq2seq/ar": y_out,
-                "gan/ar": discriminator,
-            },
+            gen_loss,
+            y_label,
+            y_out,
         )
 
     def teacher_force(self, x, y_true, training=False):
@@ -234,97 +192,34 @@ class Model(tf_keras.Model):
     def train_step(self, data):
         x, y = data
 
-        with tf_diff.GradientTape() as tape1, tf_diff.GradientTape() as tape2:
+        with tf_diff.GradientTape() as tape1:
 
-            # gloss1, dloss1, mtrue1, mpred1 = self.teacher_force(
-            #     x, y, training=True
-            # )
-            gloss2, dloss2, mtrue2, mpred2 = self.auto_regression(
-                x, y, training=True
-            )
+            gloss2, mtrue2, mpred2 = self.auto_regression(x, y, training=True)
 
-            # gloss = gloss1 + gloss2
             gloss = gloss2
-            # dloss = dloss1 + dloss2
-            # dloss = dloss1
 
         self.optimizer["generator"].minimize(
             gloss, self.generator_variables, tape=tape1
         )
 
-        # self.optimizer["discriminator"].minimize(
-        #     dloss, self.discriminator_variables, tape=tape2
-        # )
-        mtrue1 = {
-            "seq2seq/ttf": None,
-            "gan/ttf": None,
-        }
-        mpred1 = {
-            "seq2seq/ttf": None,
-            "gan/ttf": None,
-        }
-        mtrue1.update(mtrue2)
-        mpred1.update(mpred2)
         self.compiled_metrics.update_state(
-            mtrue1,
-            mpred1,
+            mtrue2,
+            mpred2,
             None,
         )
 
         self.dcounter.assign_add(1)
 
-        # disc_acc = tf.convert_to_tensor(0, dtype=tf.float32)
-        # for e in self.metrics:
-        #     if (
-        #         e.name == "gan/ar_binary_accuracy"
-        #         or e.name == "gan/ttf_binary_accuracy"
-        #     ):
-        #         disc_acc += e.result()
-
-        # disc_acc /= 2
-
-        # self.adversarial.assign(
-        #     tf.cond(
-        #         tf.math.logical_and(disc_acc < 0.98, disc_acc > 0.8),
-        #         lambda: tf.convert_to_tensor(True),
-        #         lambda: tf.convert_to_tensor(False),
-        #     )
-        # )
-        tf.summary.scalar(
-            "gan/adversarial",
-            self.adversarial,
-            step=tf.cast(self.dcounter, tf.int64),
-        )
-
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
         x, y = data
-        y_pred, _ = self(x, training=False)
+        y_pred = self(x, training=False)
         # Updates stateful loss metrics.
-        # loss = self.compiled_loss(
-        #     {"mse": y, "generator": None, "discriminator": None},
-        #     {"mse": y_pred, "generator": None, "discriminator": None},
-        #     None,
-        #     regularization_losses=self.losses,
-        # )
+        self.compiled_loss(y, y_pred, None, regularization_losses=self.losses)
 
         # # self.q_update_val(loss)
-        self.compiled_metrics.update_state(
-            {
-                "seq2seq/ar": y,
-                "gan/ar": None,
-                "seq2seq/ttf": None,
-                "gan/ttf": None,
-            },
-            {
-                "seq2seq/ar": y_pred,
-                "gan/ar": None,
-                "seq2seq/ttf": None,
-                "gan/ttf": None,
-            },
-            None,
-        )
+        self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}
 
     def predict_step(self, data):

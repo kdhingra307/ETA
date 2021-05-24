@@ -23,6 +23,7 @@ gen_optimizer = tf_keras.optimizers.Adam(
 model = Model()
 model.compile(
     optimizer={"discriminator": disc_optimizer, "generator": gen_optimizer},
+    loss=loss_function,
     metrics=metrics,
 )
 
