@@ -56,6 +56,5 @@ model.fit(
     epochs=config.training.epochs,
     callbacks=[ckpt_manager, log_manager],
     validation_data=Dataset(validation_split),
-    initial_epoch=28,
     verbose=2,
 )
