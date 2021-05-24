@@ -43,8 +43,8 @@ class Model(tf_keras.Model):
 
     def call(self, x, training=False, y=None):
 
-        encoded = self.encoder(x, state=None)
-        decoded = self.decoder(state=encoded, x=y)
+        encoded = self.encoder(x, state=None, training=training)
+        decoded = self.decoder(state=encoded, x=y, training=training)
         return decoded
 
     def train_step(self, data):

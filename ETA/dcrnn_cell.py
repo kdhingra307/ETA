@@ -158,10 +158,10 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         batch_size = tf.shape(inputs)[0]
         x = tf.reshape(
             tf.concat(output, axis=-1),
-            [self._num_nodes, num_inpt_features, batch_size, -1],
+            [self._num_nodes, batch_size, num_inpt_features, -1],
         )
 
-        x = tf.transpose(x, [2, 0, 3, 1])
+        x = tf.transpose(x, [1, 0, 3, 2])
         x = tf.reshape(x, [batch_size, self._num_nodes, -1])
 
         if output_size == self._num_units:
