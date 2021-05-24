@@ -1,19 +1,18 @@
 model:
-  working_dir: './data'
+  working_dir: "./data"
   batch_size: 64
-  training_label: "melr_dcrnn_one_support"
-  static_data_dir: 'static'
+  training_label: "dcrnn/1"
+  static_data_dir: "static"
   num_nodes: 207
   counter_position: 0
   teacher_decay_rate: 2000
-
 
 data:
   shuffle: 1000
   prefetch: 10
   path_pattern: "training_files"
   split_prefix: "melr_{}"
-  mean: 
+  mean:
     - 54.405
     - 0.497
   std:
@@ -23,7 +22,7 @@ data:
 training:
   learning_rate: 0.01
   decay: 1e+3
-  log_dir: 'logs/{}'
-  ckpt_dir: 'ckpt/{}'
+  log_dir: "logs/{}"
+  ckpt_dir: "ckpt/{}"
   epochs: 50
   reset: False
