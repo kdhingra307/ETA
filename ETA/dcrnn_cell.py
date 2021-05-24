@@ -199,7 +199,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
     def encode(self, x):
         state = self.block(x)
-        return state[-1]
+        return state[1:]
 
     @tf.function
     def decay_teacher_coefficient(self):
