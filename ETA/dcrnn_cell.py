@@ -217,7 +217,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
     def decode(self, state, x_targ=None):
 
         init = tf.zeros(
-            [tf.shape(state)[0], self.num_nodes, 1], dtype=tf.float32
+            [tf.shape(state[0])[0], self.num_nodes, 1], dtype=tf.float32
         )
 
         state = tuple(state)
