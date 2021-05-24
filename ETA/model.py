@@ -56,8 +56,8 @@ class Model(tf_keras.Model):
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
                 [
-                    tf_keras.layers.GRUCell(units=64),
-                    tf_keras.layers.GRUCell(units=64),
+                    tf_keras.layers.GRUCell(units=256),
+                    tf_keras.layers.GRUCell(units=128),
                 ]
             ),
             return_state=True,
@@ -65,17 +65,17 @@ class Model(tf_keras.Model):
 
         self.decoder = tf_keras.layers.StackedRNNCells(
             [
-                tf_keras.layers.GRUCell(units=64),
-                tf_keras.layers.GRUCell(units=64),
+                tf_keras.layers.GRUCell(units=256),
+                tf_keras.layers.GRUCell(units=128),
             ]
         )
 
         self.post_process = self.post_process = tf_keras.Sequential(
             [
-                # tf_keras.layers.Dense(
-                #     units=128,
-                #     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                # ),
+                tf_keras.layers.Dense(
+                    units=128,
+                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+                ),
                 tf_keras.layers.BatchNormalization(),
                 tf_keras.layers.Dense(
                     units=256,
@@ -83,7 +83,7 @@ class Model(tf_keras.Model):
                 ),
                 tf_keras.layers.BatchNormalization(),
                 tf_keras.layers.Dense(
-                    units=207,
+                    units=1,
                 ),
             ]
         )
@@ -111,7 +111,7 @@ class Model(tf_keras.Model):
 
         num_nodes = config.model.num_nodes
         init = tf_array_ops.zeros(
-            [tf_array_ops.shape(state[0])[0], num_nodes],
+            [tf_array_ops.shape(state[0])[0], 1],
             dtype=tf_dtype.float32,
         )
 
@@ -124,15 +124,38 @@ class Model(tf_keras.Model):
             init = self.post_process(init, training=training)
             to_return = to_return.write(i, init)
 
-        return (tf_array_ops.transpose(to_return.stack(), [1, 0, 2]),)
+        return tf_array_ops.transpose(to_return.stack(), [1, 0, 2])
 
     def call(self, x, training=False, y=None):
-
+        x_shape = x.shape
+        x_tf_shape = tf.shape(x)
+        x = tf.reshape(x, [-1, x_shape[2], x.shape[3]])
         embedding = self.embedding(x, training=training)
+        embedding = tf.reshape(
+            embedding,
+            [
+                x_tf_shape[0],
+                x_tf_shape[1],
+                x_shape[2],
+                embedding.shape[-1],
+            ],
+        )
+
+        embedding = tf.transpose(embedding, [0, 2, 1, 3])
+
+        embedding = tf.reshape(
+            embedding,
+            [-1, x_tf_shape[1], embedding.shape[-1]],
+        )
         otpt = self.encoder(embedding, training=training)
+
         encoded = otpt[1:]
         decoded = self.decode(state=encoded, x_targ=y, training=training)
-        return decoded
+
+        return tf.transpose(
+            tf.reshape(decoded, [x_tf_shape[0], x_shape[2], x_tf_shape[1]]),
+            [0, 2, 1],
+        )
 
     def auto_regression(self, x, y_label, training=False):
 
