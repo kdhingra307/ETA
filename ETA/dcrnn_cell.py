@@ -2,6 +2,7 @@ import tensorflow.keras as tf_keras
 import numpy as np
 import tensorflow as tf
 import scipy.sparse as sp
+from tensorflow.python.keras.layers.advanced_activations import LeakyReLU
 from ETA import config
 
 
@@ -53,7 +54,19 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             self._supports.append(self._build_sparse_matrix(support))
 
         if num_proj != None:
-            self.projection_layer = tf_keras.layers.Dense(units=num_proj)
+            self.projection_layer = tf_keras.Sequential(
+                [
+                    tf_keras.layers.Dense(
+                        units=32, activation=tf.nn.LeakyReLU(0.2)
+                    ),
+                    tf_keras.layers.BatchNormalization(),
+                    tf_keras.layers.Dense(
+                        units=16, activation=tf.nn.LeakyReLU(0.2)
+                    ),
+                    tf_keras.layers.BatchNormalization(),
+                    tf_keras.layers.Dense(units=num_proj),
+                ]
+            )
 
     @staticmethod
     def _build_sparse_matrix(L):
@@ -93,9 +106,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             ),
             trainable=True,
         )
-
-        # self.gconv_layer1 = tf_keras.layers.Dense(units=2*self._num_units, kernel_initializer=tf_keras.initializers.Constant(w1), bias_initializer=tf_keras.initializers.Constant(b1))
-        # self.gconv_layer2 = tf_keras.layers.Dense(units=self._num_units, kernel_initializer=tf_keras.initializers.Constant(w2), bias_initializer=tf_keras.initializers.Constant(b2))
 
         self.batch_size = inp_shape[0]
 
