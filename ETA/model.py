@@ -56,8 +56,8 @@ class Model(tf_keras.Model):
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
                 [
-                    tf_keras.layers.GRUCell(units=64),
-                    tf_keras.layers.GRUCell(units=64),
+                    tf_keras.layers.GRUCell(units=256),
+                    tf_keras.layers.GRUCell(units=128),
                 ]
             ),
             return_state=True,
@@ -65,17 +65,17 @@ class Model(tf_keras.Model):
 
         self.decoder = tf_keras.layers.StackedRNNCells(
             [
-                tf_keras.layers.GRUCell(units=64),
-                tf_keras.layers.GRUCell(units=64),
+                tf_keras.layers.GRUCell(units=256),
+                tf_keras.layers.GRUCell(units=128),
             ]
         )
 
         self.post_process = self.post_process = tf_keras.Sequential(
             [
-                # tf_keras.layers.Dense(
-                #     units=128,
-                #     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                # ),
+                tf_keras.layers.Dense(
+                    units=128,
+                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+                ),
                 tf_keras.layers.BatchNormalization(),
                 tf_keras.layers.Dense(
                     units=256,
