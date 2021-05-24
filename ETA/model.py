@@ -45,7 +45,7 @@ class Model(tf_keras.Model):
 
         encoded = self.encoder(x, state=None)
         decoded = self.decoder(state=encoded, x=y)
-        return tf_squeeze(decoded, axis=-1)
+        return decoded
 
     def train_step(self, data):
         data = data_adapter.expand_1d(data)
