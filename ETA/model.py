@@ -56,8 +56,8 @@ class Model(tf_keras.Model):
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
                 [
-                    tf_keras.layers.GRUCell(units=256),
-                    tf_keras.layers.GRUCell(units=128),
+                    tf_keras.layers.GRUCell(units=64),
+                    tf_keras.layers.GRUCell(units=64),
                 ]
             ),
             return_state=True,
@@ -65,37 +65,12 @@ class Model(tf_keras.Model):
 
         self.decoder = tf_keras.layers.StackedRNNCells(
             [
-                tf_keras.layers.GRUCell(units=256),
-                tf_keras.layers.GRUCell(units=128),
+                tf_keras.layers.GRUCell(units=64),
+                tf_keras.layers.GRUCell(units=64),
             ]
         )
 
-        self.discriminator = tf_keras.layers.RNN(
-            tf_keras.layers.StackedRNNCells(
-                [
-                    tf_keras.layers.GRUCell(units=32),
-                    tf_keras.layers.GRUCell(units=1),
-                ]
-            )
-        )
-
-        self.post_process = tf_keras.Sequential(
-            [
-                tf_keras.layers.Dense(
-                    units=128,
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-                tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Dense(
-                    units=256,
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-                tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Dense(
-                    units=207,
-                ),
-            ]
-        )
+        self.post_process = tf_keras.layers.Dense(units=1)
         self.dcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
         self.error = {
             "mse": loss_function,

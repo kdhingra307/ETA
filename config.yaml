@@ -1,7 +1,7 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "final/lstm"
+  training_label: "final/lstm_same_size"
   num_nodes: 207
   steps_to_predict: 12
   ttr: 1
