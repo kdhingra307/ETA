@@ -93,9 +93,8 @@ class Model(tf_keras.Model):
 
         state = tuple(state)
 
-        num_nodes = config.model.num_nodes
         init = tf_array_ops.zeros(
-            [tf_array_ops.shape(state[0])[0], num_nodes],
+            [tf_array_ops.shape(state[0])[0], 1],
             dtype=tf_dtype.float32,
         )
 
