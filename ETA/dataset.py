@@ -26,7 +26,6 @@ def get_data(split_label):
     batch_sampler = sampling()
 
     def tf_map(file_name):
-        print(file_name)
 
         data = np.load(file_name)
         x, y = data["x"], data["y"][:, :, 0]
