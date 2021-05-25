@@ -73,12 +73,12 @@ class Model(tf_keras.Model):
         self.post_process = self.post_process = tf_keras.Sequential(
             [
                 tf_keras.layers.Dense(
-                    units=128,
+                    units=64,
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.BatchNormalization(),
                 tf_keras.layers.Dense(
-                    units=256,
+                    units=32,
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.BatchNormalization(),
