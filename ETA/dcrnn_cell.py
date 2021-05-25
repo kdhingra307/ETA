@@ -47,7 +47,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             self.projection_layer = tf_keras.Sequential(
                 [
                     tf_keras.layers.Dense(
-                        units=128,
+                        units=64,
                         activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                     ),
                     tf_keras.layers.BatchNormalization(),
@@ -70,13 +70,14 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         bias_initializer = tf_keras.initializers.Zeros()
         self.w1 = tf.Variable(
             initial_value=kernel_initializer(
-                shape=(inpt_features, 2 * self._num_units), dtype=tf.float32
+                shape=(5 * inpt_features, 2 * self._num_units),
+                dtype=tf.float32,
             ),
             trainable=True,
         )
         self.w2 = tf.Variable(
             initial_value=kernel_initializer(
-                shape=(inpt_features, self._num_units), dtype=tf.float32
+                shape=(5 * inpt_features, self._num_units), dtype=tf.float32
             ),
             trainable=True,
         )
@@ -106,9 +107,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         [type]
             [description]
         """
-        old_state = state
-        state = tf.reshape(state, [-1, self._num_nodes, self._num_units])
         support = constants[0]
+        state = state[0]
 
         output_size = 2 * self._num_units
         value = tf.sigmoid(
@@ -137,18 +137,15 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     @tf.function
     def _gconv(self, inputs, state, support, output_size, bias_start=0.0):
 
-        batch_size = tf.shape(inputs)[0]
         inputs_and_state = tf.concat([inputs, state], axis=2)
-        num_inpt_features = inputs_and_state.shape[-1]
 
         x = inputs_and_state
 
-        # x1 = tf.tensordot(x, support, axes=[1, 0])
-        # x = tf.reduce_sum(x1, axis=-1)
+        x1 = tf.tensordot(support, x, axes=[1, 1])
 
-        # x = tf.transpose(x, [0, 2, 1])
+        x = tf.transpose(x1, [2, 0, 3, 1])
 
-        # x = tf.reshape(x, [batch_size, self._num_nodes, -1])
+        x = tf.reshape(x, [tf.shape(inputs_and_state)[0], self._num_nodes, -1])
 
         if output_size == self._num_units:
             x = tf.matmul(x, self.w2) + self.b2

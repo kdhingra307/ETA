@@ -33,7 +33,7 @@ model = Model()
 model.compile(
     optimizer=optimizer,
     loss=loss_function,
-    metrics={"seq2seq/ar": metrics},
+    metrics=metrics,
 )
 
 train_split = config.data.split_prefix.format("train")
@@ -53,7 +53,7 @@ ckpt_dir = join_directory(
 
 def scheduler(epoch, lr):
     if epoch >= 20 and epoch <= 50 and epoch % 10 == 0:
-        lr *= 0.1
+        lr *= 0.9
 
     print(tf_summary.scalar("LearningRate", data=lr))
     return lr
@@ -61,13 +61,13 @@ def scheduler(epoch, lr):
 
 ckpt_manager = CheckpointManager(optimizer, model, ckpt_dir)
 log_manager = TensorBoard(
-    log_dir=log_dir, update_freq=20, embeddings_freq=1, histogram_freq=1
+    log_dir=log_dir, update_freq="batch", embeddings_freq=1, histogram_freq=1
 )
 lr_manager = LearningRateScheduler(scheduler)
 ckpt_manager.ckpt_manager.restore_or_initialize()
 
 model.fit(
-    Dataset(train_split),
+    x=Dataset(train_split),
     epochs=config.training.epochs,
     callbacks=[ckpt_manager, log_manager, lr_manager],
     validation_data=Dataset(validation_split),

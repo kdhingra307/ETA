@@ -41,6 +41,7 @@ class Model(tf_keras.Model):
         return tf_squeeze(decoded, axis=-1)
 
     def train_step(self, data):
+        print("ts", data)
         adj, x, y = data
 
         with tf_diff.GradientTape() as tape:
@@ -68,9 +69,7 @@ class Model(tf_keras.Model):
             )
         )
 
-        self.compiled_metrics.update_state(
-            {"seq2seq/ar": y}, {"seq2seq/ar": y_pred}, None
-        )
+        self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
@@ -78,9 +77,7 @@ class Model(tf_keras.Model):
         y_pred = self(x, training=False, adj=adj)
         # Updates stateful loss metrics.
         self.compiled_loss(y, y_pred, None, regularization_losses=self.losses)
-        self.compiled_metrics.update_state(
-            {"seq2seq/ar": y}, {"seq2seq/ar": y_pred}, None
-        )
+        self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}
 
     def predict_step(self, data):

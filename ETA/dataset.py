@@ -26,6 +26,7 @@ def get_data(split_label):
     batch_sampler = sampling()
 
     def tf_map(file_name):
+        print(file_name)
 
         data = np.load(file_name)
         x, y = data["x"], data["y"][:, :, 0]
@@ -60,7 +61,7 @@ def get_data(split_label):
     )
 
     tf_dataset = tf_dataset.batch(
-        batch_size=config.model.batch_size, drop_remainder=True
+        batch_size=config.model.batch_size,
     )
 
     def second_map(x, y):
