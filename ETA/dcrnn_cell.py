@@ -199,25 +199,10 @@ class DCGRUBlock(tf_keras.layers.Layer):
         to_return = tf.TensorArray(
             size=self.steps_to_predict, dtype=tf.float32
         )
-        if x_targ is None:
-            for i in tf.range(self.steps_to_predict):
-                init, state = self.cells(init, states=state, constants=[adj])
-                to_return = to_return.write(i, init)
-            return tf.transpose(to_return.stack(), [1, 0, 2, 3])
-        else:
-            for i in range(self.steps_to_predict):
-                output, state = self.cells(init, states=state, constants=[adj])
-                to_return = to_return.write(i, init)
-
-                if (
-                    tf.random.uniform(shape=[])
-                    > self.decay_teacher_coefficient()
-                ):
-                    init = output
-                else:
-                    init = x_targ[:, i]
-
-            return tf.transpose(to_return.stack(), [1, 0, 2, 3])
+        for i in tf.range(self.steps_to_predict):
+            init, state = self.cells(init, states=state, constants=[adj])
+            to_return = to_return.write(i, init)
+        return tf.transpose(to_return.stack(), [1, 0, 2, 3])
 
     def call(self, x, state, adj):
         if self.is_encoder:

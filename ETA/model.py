@@ -41,7 +41,6 @@ class Model(tf_keras.Model):
         return tf_squeeze(decoded, axis=-1)
 
     def train_step(self, data):
-        print("ts", data)
         adj, x, y = data
 
         with tf_diff.GradientTape() as tape:
@@ -51,22 +50,19 @@ class Model(tf_keras.Model):
             )
 
         gradients = tape.gradient(loss, self.trainable_variables)
-        zipped_gradients = zip(
-            [tf.clip_by_value(e, -0.5, 0.5) for e in gradients],
-            self.trainable_variables,
-        )
+        # zipped_gradients = zip(
+        #     [tf.clip_by_value(e, -0.5, 0.5) for e in gradients],
+        #     self.trainable_variables,
+        # )
 
-        for i, e in zipped_gradients:
+        for i, e in zip(gradients, self.trainable_variables):
             tf.summary.histogram("grads/" + e.name, i)
             tf.summary.scalar("grads/" + e.name + "/max", tf.reduce_max(i))
             tf.summary.scalar("grads/" + e.name + "/min", tf.reduce_min(i))
             tf.summary.scalar("grads/" + e.name + "/mean", tf.reduce_mean(i))
 
         self.optimizer.apply_gradients(
-            zip(
-                [tf.clip_by_value(e, -0.5, 0.5) for e in gradients],
-                self.trainable_variables,
-            )
+            zip(gradients, self.trainable_variables)
         )
 
         self.compiled_metrics.update_state(y, y_pred, None)

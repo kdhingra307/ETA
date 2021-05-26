@@ -39,13 +39,15 @@ def get_data(split_label):
 
         return x.astype(np.float32), y
 
-    files = glob(
-        "{}/{}/{}/*.npz".format(
-            config.model.working_dir, config.data.path_pattern, split_label
+    files = sorted(
+        glob(
+            "{}/{}/{}/*.npz".format(
+                config.model.working_dir, config.data.path_pattern, split_label
+            )
         )
     )
     tf_dataset = tf.data.Dataset.from_tensor_slices(files)
-    tf_dataset = tf_dataset.shuffle(config.data.shuffle)
+    tf_dataset = tf_dataset.shuffle(config.data.shuffle, seed=1234)
     tf_dataset = tf_dataset.map(
         lambda x: tf.numpy_function(
             tf_map, [x], [tf.float32, tf.float32], name="load_each_file"
@@ -94,8 +96,8 @@ class sampling:
             )
         )["arr_0"].astype(np.float32)
 
-        adjacency_matrix = calculate_random_walk_matrix(mat)
-        adjacency_matrix1 = calculate_random_walk_matrix(mat.T)
+        adjacency_matrix = calculate_random_walk_matrix(mat).T
+        adjacency_matrix1 = calculate_random_walk_matrix(mat.T).T
         support = []
         support.append(adjacency_matrix)
         support.append(adjacency_matrix1)
@@ -110,6 +112,7 @@ class sampling:
         )
 
         self.adjacency_matrix = np.stack(support, axis=-1)
+        print(self.adjacency_matrix.shape)
 
         self.n_init = config.model.graph_batch_size
         self.probab_individ = self.adjacency_matrix ** 2
