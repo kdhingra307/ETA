@@ -48,17 +48,13 @@ ckpt_dir = join_directory(
     config.training.ckpt_dir.format(config.model.training_label),
 )
 
-ckpt_manager = CheckpointManager(
-    (disc_optimizer, gen_optimizer), model, ckpt_dir
-)
+ckpt_manager = CheckpointManager(optimizer, model, ckpt_dir)
 log_manager = TensorBoard(
     log_dir=log_dir, update_freq="batch", histogram_freq=1, embeddings_freq=5
 )
 
 lr_manager = LearningRateScheduler(scheduler)
 ckpt_manager.ckpt_manager.restore_or_initialize()
-gen_optimizer.learning_rate = config.training.learning_rate
-disc_optimizer.learning_rate = config.training.learning_rate
 
 model.fit(
     Dataset(train_split),

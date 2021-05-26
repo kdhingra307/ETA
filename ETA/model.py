@@ -189,9 +189,7 @@ class Model(tf_keras.Model):
 
             gloss = gloss2
 
-        self.optimizer["generator"].minimize(
-            gloss, self.generator_variables, tape=tape1
-        )
+        self.optimizer.minimize(gloss, self.generator_variables, tape=tape1)
 
         self.compiled_metrics.update_state(
             mtrue2,
