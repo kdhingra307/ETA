@@ -7,6 +7,8 @@ from ETA import (
     CheckpointManager,
 )
 from datetime import datetime
+from tensorflow import summary as tf_summary
+
 import tensorflow.keras as tf_keras
 from tensorflow.keras.callbacks import TensorBoard, LearningRateScheduler
 from os.path import join as join_directory
@@ -65,7 +67,7 @@ disc_optimizer.learning_rate = config.training.learning_rate
 model.fit(
     Dataset(train_split),
     epochs=config.training.epochs,
-    callbacks=[ckpt_manager, log_manager],
+    callbacks=[ckpt_manager, log_manager, lr_manager],
     validation_data=Dataset(validation_split),
     verbose=2,
 )
