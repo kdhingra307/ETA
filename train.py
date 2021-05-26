@@ -8,7 +8,7 @@ from ETA import (
 )
 from datetime import datetime
 import tensorflow.keras as tf_keras
-from tensorflow.keras.callbacks import TensorBoard
+from tensorflow.keras.callbacks import TensorBoard, LearningRateScheduler
 from os.path import join as join_directory
 
 
@@ -31,6 +31,15 @@ train_split = config.data.split_prefix.format("train")
 validation_split = config.data.split_prefix.format("val")
 test_split = config.data.split_prefix.format("test")
 
+
+def scheduler(epoch, lr):
+    if epoch >= 20 and epoch <= 50 and epoch % 10 == 0:
+        lr *= 0.9
+
+    print(tf_summary.scalar("LearningRate", data=lr))
+    return lr
+
+
 log_dir = join_directory(
     config.model.working_dir,
     config.training.log_dir.format(config.model.training_label),
@@ -47,6 +56,8 @@ ckpt_manager = CheckpointManager(
 log_manager = TensorBoard(
     log_dir=log_dir, update_freq="batch", histogram_freq=1, embeddings_freq=5
 )
+
+lr_manager = LearningRateScheduler(scheduler)
 ckpt_manager.ckpt_manager.restore_or_initialize()
 gen_optimizer.learning_rate = config.training.learning_rate
 disc_optimizer.learning_rate = config.training.learning_rate
