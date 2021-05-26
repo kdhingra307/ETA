@@ -14,17 +14,13 @@ from tensorflow.keras.callbacks import TensorBoard, LearningRateScheduler
 from os.path import join as join_directory
 
 
-disc_optimizer = tf_keras.optimizers.Adam(
-    learning_rate=config.training.learning_rate
-)
-
-gen_optimizer = tf_keras.optimizers.Adam(
+optimizer = tf_keras.optimizers.Adam(
     learning_rate=config.training.learning_rate
 )
 
 model = Model()
 model.compile(
-    optimizer={"discriminator": disc_optimizer, "generator": gen_optimizer},
+    optimizer=optimizer,
     loss=loss_function,
     metrics=metrics,
 )
