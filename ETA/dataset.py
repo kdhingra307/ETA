@@ -111,7 +111,8 @@ class sampling:
             - np.eye(len(adjacency_matrix))
         )
 
-        self.adjacency_matrix = np.stack(support, axis=-1)
+        # self.adjacency_matrix = np.stack(support, axis=-1)
+        self.adjacency_matrix = chebyshev_polynomials(mat, 3)
         print(self.adjacency_matrix.shape)
 
         self.n_init = config.model.graph_batch_size
