@@ -1,7 +1,7 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "final/gcn/cheb"
+  training_label: "final/gcn/cheb/2"
   static_data_dir: "static"
   num_nodes: 207
   counter_position: 0
