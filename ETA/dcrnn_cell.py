@@ -43,7 +43,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._max_diffusion_step = max_diffusion_step
         self._use_gc_for_ru = use_gc_for_ru
 
-        self.first_layer = [GConv(num_units), GConv(num_units * 2)]
+        self.first_layer = [GConv(num_units * 2), GConv(num_units * 2)]
         self.second_layer = [GConv(num_units), GConv(num_units)]
 
         if num_proj != None:
