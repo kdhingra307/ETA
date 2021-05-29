@@ -14,11 +14,11 @@ std_expanded = np.array(std).reshape([1, 1, -1])
 
 def calculate_random_walk_matrix(adj_mx):
     d = np.array(adj_mx.sum(1))
-    d_inv = np.power(d, -0.5).flatten()
+    d_inv = np.power(d, -1).flatten()
     d_inv[np.isinf(d_inv)] = 0.0
     d_mat_inv = np.diag(d_inv)
 
-    return adj_mx.dot(d_mat_inv).T.dot(d_mat_inv)
+    return (d_mat_inv).dot(adj_mx)
 
 
 def get_data(split_label):
@@ -90,38 +90,35 @@ def get_data(split_label):
 #%%
 class sampling:
     def __init__(self, sampler="random"):
-        mat = (
-            np.load(
-                "{}/{}/metr_adj_matrix.npz".format(
-                    config.model.working_dir, config.model.static_data_dir
-                )
-            )["arr_0"].astype(np.float32)
-            > 0
-        )
+        mat = np.load(
+            "{}/{}/metr_adj_matrix.npz".format(
+                config.model.working_dir, config.model.static_data_dir
+            )
+        )["arr_0"].astype(np.float32)
 
         mat = mat.astype(np.float32)
 
         adjacency_matrix = calculate_random_walk_matrix(mat)
-        self.adjacency_matrix = (
-            adjacency_matrix.dot(adjacency_matrix)
-            .dot(adjacency_matrix)
-            .dot(adjacency_matrix)
-        )
+        # self.adjacency_matrix = (
+        #     adjacency_matrix.dot(adjacency_matrix)
+        #     # .dot(adjacency_matrix)
+        #     # .dot(adjacency_matrix)
+        # )
         # adjacency_matrix1 = calculate_random_walk_matrix(mat.T).T
-        # support = []
-        # support.append(adjacency_matrix)
-        # support.append(adjacency_matrix1)
+        support = []
+        support.append(adjacency_matrix)
+        support.append(adjacency_matrix)
 
-        # support.append(
-        #     2 * adjacency_matrix.dot(adjacency_matrix)
-        #     - np.eye(len(adjacency_matrix))
-        # )
-        # support.append(
-        #     2 * adjacency_matrix1.dot(adjacency_matrix1)
-        #     - np.eye(len(adjacency_matrix))
-        # )
+        support.append(
+            2 * adjacency_matrix.dot(adjacency_matrix)
+            - np.eye(len(adjacency_matrix))
+        )
+        support.append(
+            2 * adjacency_matrix.dot(adjacency_matrix)
+            - np.eye(len(adjacency_matrix))
+        )
 
-        # self.adjacency_matrix = np.stack(support, axis=-1)
+        self.adjacency_matrix = np.stack(support, axis=-1)
         # self.adjacency_matrix = chebyshev_polynomials(adjacency_matrix, 3)
         print(self.adjacency_matrix.shape)
 
