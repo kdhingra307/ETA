@@ -101,7 +101,12 @@ class sampling:
 
         mat = mat.astype(np.float32)
 
-        self.adjacency_matrix = calculate_random_walk_matrix(mat)
+        adjacency_matrix = calculate_random_walk_matrix(mat)
+        self.adjacency_matrix = (
+            adjacency_matrix.dot(adjacency_matrix)
+            .dot(adjacency_matrix)
+            .dot(adjacency_matrix)
+        )
         # adjacency_matrix1 = calculate_random_walk_matrix(mat.T).T
         # support = []
         # support.append(adjacency_matrix)
