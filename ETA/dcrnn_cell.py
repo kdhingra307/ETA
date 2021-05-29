@@ -95,13 +95,14 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         inputs_and_state = tf.concat([inputs, state], axis=2)
 
         x = self.first_layer[0](inputs_and_state, support)
-        value = tf.sigmoid(self.first_layer[1](x, support))
+        # value = tf.sigmoid(self.first_layer[1](x, support))
+        value = tf.sigmoid(x)
 
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
         inputs_and_state = tf.concat([inputs, r * state], axis=2)
         x = self.second_layer[0](inputs_and_state, support)
-        c = self.second_layer[1](x, support)
+        c = x
 
         if self._activation is not None:
             c = self._activation(c)
