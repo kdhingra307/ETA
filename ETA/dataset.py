@@ -14,11 +14,11 @@ std_expanded = np.array(std).reshape([1, 1, -1])
 
 def calculate_random_walk_matrix(adj_mx):
     d = np.array(adj_mx.sum(1))
-    d_inv = np.power(d, -1).flatten()
+    d_inv = np.power(d, -0.5).flatten()
     d_inv[np.isinf(d_inv)] = 0.0
     d_mat_inv = np.diag(d_inv)
 
-    return (d_mat_inv).dot(adj_mx)
+    return adj_mx.dot(d_mat_inv).transpose().dot(d_mat_inv)
 
 
 def get_data(split_label):
