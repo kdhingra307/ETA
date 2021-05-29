@@ -107,7 +107,7 @@ class sampling:
         adjacency_matrix1 = calculate_random_walk_matrix(mat.T).T
         support = []
         support.append(adjacency_matrix)
-        # support.append(adjacency_matrix1)
+        support.append(adjacency_matrix1)
 
         support.append(
             2 * adjacency_matrix.dot(adjacency_matrix)
