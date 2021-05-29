@@ -43,6 +43,9 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._max_diffusion_step = max_diffusion_step
         self._use_gc_for_ru = use_gc_for_ru
 
+        self.first_layer = [GConv(num_units), GConv(num_units * 2)]
+        self.second_layer = [GConv(num_units), GConv(num_units)]
+
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
                 [
@@ -62,38 +65,17 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                 ]
             )
 
-    def build(self, inp_shape):
+    # def build(self, inp_shape):
+    #     inp_shape = list(inp_shape)
+    #     inp_shape[-1] += self._num_units
 
-        inpt_features = inp_shape[-1] + self._num_units
+    #     self.first_layer[0].build(inp_shape)
+    #     inp_shape[-1] = self._num_units
+    #     self.first_layer[1].build(inp_shape)
 
-        kernel_initializer = tf_keras.initializers.GlorotUniform()
-        bias_initializer = tf_keras.initializers.Zeros()
-        self.w1 = tf.Variable(
-            initial_value=kernel_initializer(
-                shape=(inpt_features, 2 * self._num_units),
-                dtype=tf.float32,
-            ),
-            trainable=True,
-        )
-        self.w2 = tf.Variable(
-            initial_value=kernel_initializer(
-                shape=(inpt_features, self._num_units), dtype=tf.float32
-            ),
-            trainable=True,
-        )
-
-        self.b1 = tf.Variable(
-            initial_value=bias_initializer(
-                shape=(2 * self._num_units,), dtype=tf.float32
-            ),
-            trainable=True,
-        )
-        self.b2 = tf.Variable(
-            initial_value=bias_initializer(
-                shape=(self._num_units,), dtype=tf.float32
-            ),
-            trainable=True,
-        )
+    #     self.second_layer[0].build(inp_shape)
+    #     inp_shape[-1] = self._num_units
+    #     self.second_layer[1].build(inp_shape)
 
     @tf.function
     def call(self, inputs, state, constants, scope=None):
@@ -110,14 +92,16 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         support = constants[0]
         state = state[0]
 
-        output_size = 2 * self._num_units
-        value = tf.sigmoid(
-            self._gconv(inputs, state, support, output_size, bias_start=1.0)
-        )
-        value = tf.reshape(value, (-1, self._num_nodes, output_size))
+        inputs_and_state = tf.concat([inputs, state], axis=2)
+
+        x = self.first_layer[0](inputs_and_state, support)
+        value = tf.sigmoid(self.first_layer[1](x, support))
+
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
-        c = self._gconv(inputs, r * state, support, self._num_units)
+        inputs_and_state = tf.concat([inputs, r * state], axis=2)
+        x = self.second_layer[0](inputs_and_state, support)
+        c = self.second_layer[1](x, support)
 
         if self._activation is not None:
             c = self._activation(c)
@@ -134,28 +118,17 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         x_ = tf.expand_dims(x_, 0)
         return tf.concat([x, x_], axis=0)
 
-    @tf.function
-    def _gconv(self, inputs, state, support, output_size, bias_start=0.0):
+    # @tf.function
+    # def _gconv(self, inputs, state, support, output_size, bias_start=0.0):
 
-        inputs_and_state = tf.concat([inputs, state], axis=2)
+    #     print(output_size, self._num_units)
+    #     if output_size == self._num_units:
 
-        x = inputs_and_state
+    #     else:
+    #         x = self.second_layer[0](inputs_and_state, support)
+    #         x = self.second_layer[1](x, support)
 
-        print(x.shape, support.shape)
-        x = tf.tensordot(support, x, axes=[1, 1])
-
-        x = tf.transpose(x, [1, 0, 2])
-
-        # x = tf.reshape(x, [tf.shape(inputs_and_state)[0], self._num_nodes, -1])
-
-        if output_size == self._num_units:
-            x = tf.matmul(x, self.w2) + self.b2
-            # x = self.gconv_layer2(x)
-        else:
-            x = tf.matmul(x, self.w1) + self.b1
-            # x = self.gconv_layer1(x)
-
-        return x
+    #     return x
 
 
 class DCGRUBlock(tf_keras.layers.Layer):
@@ -210,3 +183,25 @@ class DCGRUBlock(tf_keras.layers.Layer):
             return self.encode(x, adj)
         else:
             return self.decode(state, adj, x)
+
+
+class GConv(tf_keras.layers.Layer):
+    def __init__(self, units):
+        super(GConv, self).__init__()
+
+        self.layer = tf.keras.Sequential(
+            [
+                tf.keras.layers.Dense(
+                    units=32, activation=tf.keras.layers.LeakyReLU()
+                ),
+                tf.keras.layers.BatchNormalization(),
+                tf.keras.layers.Dense(units),
+            ]
+        )
+
+    def call(self, x, support, training=False):
+
+        x = self.layer(x, training=training)
+        x = tf.tensordot(support, x, axes=[1, 1])
+        x = tf.transpose(x, [1, 0, 2])
+        return x
