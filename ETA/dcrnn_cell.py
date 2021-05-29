@@ -70,14 +70,14 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         bias_initializer = tf_keras.initializers.Zeros()
         self.w1 = tf.Variable(
             initial_value=kernel_initializer(
-                shape=(4 * inpt_features, 2 * self._num_units),
+                shape=(inpt_features, 2 * self._num_units),
                 dtype=tf.float32,
             ),
             trainable=True,
         )
         self.w2 = tf.Variable(
             initial_value=kernel_initializer(
-                shape=(4 * inpt_features, self._num_units), dtype=tf.float32
+                shape=(inpt_features, self._num_units), dtype=tf.float32
             ),
             trainable=True,
         )
@@ -141,11 +141,12 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
         x = inputs_and_state
 
+        print(x.shape, support.shape)
         x1 = tf.tensordot(support, x, axes=[1, 1])
 
-        x = tf.transpose(x1, [2, 0, 3, 1])
+        # x = tf.transpose(x1, [2, 0, 3, 1])
 
-        x = tf.reshape(x, [tf.shape(inputs_and_state)[0], self._num_nodes, -1])
+        # x = tf.reshape(x, [tf.shape(inputs_and_state)[0], self._num_nodes, -1])
 
         if output_size == self._num_units:
             x = tf.matmul(x, self.w2) + self.b2
