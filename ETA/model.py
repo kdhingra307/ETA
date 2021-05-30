@@ -151,34 +151,6 @@ class Model(tf_keras.Model):
             y_out,
         )
 
-    def teacher_force(self, x, y_true, training=False):
-
-        y_out, embedding = self(x, training=training, y=y_true[:, :, :, :1])
-
-        discriminator = tf.squeeze(self.discriminator(embedding), axis=-1)
-
-        mse_loss = self.error["mse"](y_true=y_true, y_pred=y_out)
-        gen_loss = self.error["gan"](
-            y_true=tf.ones(tf.shape(discriminator)[0]), y_pred=discriminator
-        )
-        dis_loss = self.error["gan"](
-            y_true=tf.zeros(tf.shape(discriminator)[0]), y_pred=discriminator
-        )
-        return (
-            tf.cond(
-                self.adversarial, lambda: gen_loss + mse_loss, lambda: mse_loss
-            ),
-            dis_loss,
-            {
-                "seq2seq/ttf": y_true,
-                "gan/ttf": tf.zeros(tf.shape(discriminator)[0]),
-            },
-            {
-                "seq2seq/ttf": y_out,
-                "gan/ttf": discriminator,
-            },
-        )
-
     @tf.function
     def train_step(self, data):
         x, y = data
