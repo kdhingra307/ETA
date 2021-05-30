@@ -204,13 +204,14 @@ class GConv(tf_keras.layers.Layer):
         output = []
         for i in range(2):
             x1 = tf.tensordot(support[:, :, i], x0, [1, 1])
+            x1 = tf.transpose(x1, [1, 0, 2])
             output.append(x1)
-            x2 = 2 * tf.tensordot(support[:, :, i], x1, [1, 1]) - x0
+            x2 = 2 * tf.tensordot(support[:, :, i], x1, [1, 1])
+            x2 = tf.transpose(x2, [1, 0, 2]) - x0
             output.append(x2)
             x1, x0 = x2, x1
 
         x = tf.concat(output, axis=-1)
-        print(x.shape)
         # x = tf.transpose(x, [2, 0, 1, 3])
         # x = tf.reshape(x, [tf.shape(x)[0], 207, 4 * x.shape[-1]])
         x = self.layer(x, training=training)
