@@ -45,7 +45,7 @@ def get_data(split_label):
     )
 
     tf_dataset = tf_dataset.cache(
-        "{}/cache_.".format(config.model.working_dir, split_label)
+        "{}/cache_{}".format(config.model.working_dir, split_label)
     )
     tf_dataset = tf_dataset.batch(
         batch_size=config.model.batch_size,
