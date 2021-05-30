@@ -46,9 +46,7 @@ def get_data(split_label):
             tf.ensure_shape(y, [None, config.model.num_nodes, 2]),
         )
     )
-    tf_dataset = tf_dataset.batch(
-        batch_size=config.model.batch_size, drop_remainder=True
-    )
+    tf_dataset = tf_dataset.batch(batch_size=config.model.batch_size)
 
     tf_dataset = tf_dataset.prefetch(config.data.prefetch)
 
