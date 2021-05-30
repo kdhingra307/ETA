@@ -81,6 +81,9 @@ def get_data(split_label):
         return adj_mx, x, y
 
     tf_dataset = tf_dataset.map(second_map)
+    tf_dataset = tf_dataset.cache(
+        "{}/cache_{}".format(config.model.working_dir, split_label)
+    )
 
     tf_dataset = tf_dataset.prefetch(config.data.prefetch)
 
