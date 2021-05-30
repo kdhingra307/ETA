@@ -153,13 +153,13 @@ def chebyshev_polynomials(adj, k):
     # )
 
     t_k = list()
-    # t_k.append(np.eye(adj.shape[0]))
+    t_k.append(np.eye(adj.shape[0]))
     t_k.append(adj)
 
     def chebyshev_recurrence(t_k_minus_one, t_k_minus_two):
         return 2 * adj.dot(t_k_minus_one) - t_k_minus_two
 
-    for i in range(1, k + 1):
+    for i in range(2, k + 1):
         t_k.append(chebyshev_recurrence(t_k[-1], t_k[-2]))
 
     return np.stack(t_k, axis=-1)
