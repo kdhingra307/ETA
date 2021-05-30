@@ -50,7 +50,7 @@ class Model(tf_keras.Model):
         decoded = self.decoder(state=encoded, x=y, training=training)
         return decoded
 
-def train_step(self, data):
+    def train_step(self, data):
         adj, x, y = data
 
         with tf_diff.GradientTape() as tape:
