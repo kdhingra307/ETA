@@ -38,7 +38,9 @@ def get_data(split_label):
             tf_map, [x], [tf.float32, tf.float32], name="load_each_file"
         )
     )
-    tf_dataset = tf_dataset.cache("{}/cache".format(config.model.working_dir))
+    tf_dataset = tf_dataset.cache(
+        "{}/cache_{}".format(config.model.working_dir, split_label)
+    )
 
     tf_dataset = tf_dataset.map(
         lambda x, y: (
