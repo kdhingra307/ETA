@@ -14,33 +14,43 @@ class Model(tf_keras.Model):
         num_nodes = config.model.graph_batch_size
         steps_to_predict = config.model.steps_to_predict
 
+        adjacency_matrix = np.load(
+            "{}/{}/metr_adj_matrix.npz".format(
+                config.model.working_dir, config.model.static_data_dir
+            )
+        )["arr_0"].astype(np.float32)
+        num_nodes = config.model.num_nodes
+
         self.encoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
-                [DCGRUCell(64, 2, num_nodes), DCGRUCell(64, 2, num_nodes)]
+                [
+                    DCGRUCell(64, adjacency_matrix, 2, num_nodes)
+                    for _ in range(2)
+                ]
             ),
             num_nodes=num_nodes,
-            steps_to_predict=steps_to_predict,
+            steps_to_predict=12,
         )
 
         self.decoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
                 [
-                    DCGRUCell(64, 2, num_nodes),
-                    DCGRUCell(64, 2, num_nodes, num_proj=1),
+                    DCGRUCell(64, adjacency_matrix, 2, num_nodes),
+                    DCGRUCell(64, adjacency_matrix, 2, num_nodes, num_proj=1),
                 ]
             ),
             num_nodes=num_nodes,
-            steps_to_predict=steps_to_predict,
+            steps_to_predict=12,
             encode=False,
         )
 
     def call(self, x, training=False, y=None, adj=None):
 
-        encoded = self.encoder(x=x, adj=adj, state=None, training=training)
-        decoded = self.decoder(adj=adj, state=encoded, x=y, training=training)
-        return tf_squeeze(decoded, axis=-1)
+        encoded = self.encoder(x=x, state=None, training=training)
+        decoded = self.decoder(state=encoded, x=y, training=training)
+        return decoded
 
-    def train_step(self, data):
+def train_step(self, data):
         adj, x, y = data
 
         with tf_diff.GradientTape() as tape:
