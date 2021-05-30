@@ -51,31 +51,15 @@ class Model(tf_keras.Model):
         return decoded
 
     def train_step(self, data):
-        adj, x, y = data
+        data = data_adapter.expand_1d(data)
+        x, y, sample_weight = data_adapter.unpack_x_y_sample_weight(data)
 
         with tf_diff.GradientTape() as tape:
-            y_pred = self(x, training=True, adj=adj)
+            y_pred = self(x, training=True, y=y[:, :, :, :1])
             loss = self.compiled_loss(
-                y, y_pred, None, regularization_losses=self.losses
+                y, y_pred, sample_weight, regularization_losses=self.losses
             )
 
-        gradients = tape.gradient(loss, self.trainable_variables)
-
-        self.optimizer.apply_gradients(
-            zip(gradients, self.trainable_variables)
-        )
-
-        self.compiled_metrics.update_state(y, y_pred, None)
+        self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
+        self.compiled_metrics.update_state(y, y_pred, sample_weight)
         return {m.name: m.result() for m in self.metrics}
-
-    def test_step(self, data):
-        adj, x, y = data
-        y_pred = self(x, training=False, adj=adj)
-
-        self.compiled_loss(y, y_pred, None, regularization_losses=self.losses)
-        self.compiled_metrics.update_state(y, y_pred, None)
-        return {m.name: m.result() for m in self.metrics}
-
-    def predict_step(self, data):
-        adj, x, _ = data
-        return self(x, training=False, adj=adj)
