@@ -14,11 +14,11 @@ std_expanded = np.array(std).reshape([1, 1, -1])
 
 def calculate_random_walk_matrix(adj_mx):
     d = np.array(adj_mx.sum(1))
-    d_inv = np.power(d, -0.5).flatten()
+    d_inv = np.power(d, -1).flatten()
     d_inv[np.isinf(d_inv)] = 0.0
     d_mat_inv = np.diag(d_inv)
 
-    return adj_mx.dot(d_mat_inv).transpose().dot(d_mat_inv)
+    return d_mat_inv.dot(adj_mx)
 
 
 def get_data(split_label):
@@ -99,7 +99,7 @@ class sampling:
         mat = mat.astype(np.float32)
 
         adjacency_matrix = calculate_random_walk_matrix(mat).T
-        # adjacency_matrix1 = calculate_random_walk_matrix(mat.T).T
+        adjacency_matrix1 = calculate_random_walk_matrix(mat.T).T
 
         # self.adjacency_matrix = (
         #     adjacency_matrix.dot(adjacency_matrix)
@@ -108,19 +108,23 @@ class sampling:
         # )
         # adjacency_matrix1 = calculate_random_walk_matrix(mat.T).T
         # support = chebyshev_polynomials(adjacency_matrix, 3)
-        # support.append(adjacency_matrix)
+        support = []
+        support.append(adjacency_matrix)
+        support.append(adjacency_matrix1)
 
-        # support.append(
-        #     2 * adjacency_matrix.dot(adjacency_matrix)
-        #     - np.eye(len(adjacency_matrix))
-        # )
-        # support.append(
-        #     2 * adjacency_matrix.dot(adjacency_matrix)
-        #     - np.eye(len(adjacency_matrix))
-        # )
+        support.append(
+            2 * adjacency_matrix.dot(adjacency_matrix)
+            - np.eye(len(adjacency_matrix))
+        )
+
+        support.append(
+            2 * adjacency_matrix1.dot(adjacency_matrix1)
+            - np.eye(len(adjacency_matrix))
+        )
+
         # print(support.shape)
-        # self.adjacency_matrix = support
-        self.adjacency_matrix = chebyshev_polynomials(adjacency_matrix, 3)
+        self.adjacency_matrix = np.stack(support, axis=-1)
+        # self.adjacency_matrix = chebyshev_polynomials(adjacency_matrix, 3)
         print(self.adjacency_matrix.shape)
 
         self.n_init = config.model.graph_batch_size
