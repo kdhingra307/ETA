@@ -98,14 +98,16 @@ class sampling:
 
         mat = mat.astype(np.float32)
 
-        adjacency_matrix = calculate_random_walk_matrix(mat)
+        adjacency_matrix = calculate_random_walk_matrix(mat).T
+        # adjacency_matrix1 = calculate_random_walk_matrix(mat.T).T
+
         # self.adjacency_matrix = (
         #     adjacency_matrix.dot(adjacency_matrix)
         #     # .dot(adjacency_matrix)
         #     # .dot(adjacency_matrix)
         # )
         # adjacency_matrix1 = calculate_random_walk_matrix(mat.T).T
-        support = chebyshev_polynomials(adjacency_matrix, 3)
+        # support = chebyshev_polynomials(adjacency_matrix, 3)
         # support.append(adjacency_matrix)
 
         # support.append(
@@ -116,9 +118,9 @@ class sampling:
         #     2 * adjacency_matrix.dot(adjacency_matrix)
         #     - np.eye(len(adjacency_matrix))
         # )
-        print(support.shape)
-        self.adjacency_matrix = support
-        # self.adjacency_matrix = chebyshev_polynomials(adjacency_matrix, 3)
+        # print(support.shape)
+        # self.adjacency_matrix = support
+        self.adjacency_matrix = chebyshev_polynomials(adjacency_matrix, 3)
         print(self.adjacency_matrix.shape)
 
         self.n_init = config.model.graph_batch_size
