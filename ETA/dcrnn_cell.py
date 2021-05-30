@@ -192,10 +192,10 @@ class GConv(tf_keras.layers.Layer):
 
         self.layer = tf.keras.Sequential(
             [
-                tf.keras.layers.Dense(
-                    units=32, activation=tf.keras.layers.LeakyReLU()
-                ),
-                tf.keras.layers.BatchNormalization(),
+                # tf.keras.layers.Dense(
+                #     units=32, activation=tf.keras.layers.LeakyReLU()
+                # ),
+                # tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Dense(units),
             ]
         )
