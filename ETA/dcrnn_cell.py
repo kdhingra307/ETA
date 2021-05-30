@@ -204,6 +204,6 @@ class GConv(tf_keras.layers.Layer):
 
         x = tf.tensordot(support, x0, axes=[1, 1])
         x = tf.transpose(x, [2, 0, 1, 3])
-        x = tf.reshape(x, [tf.shape(x0)[0], 207, -1])
+        x = tf.reshape(x, [tf.shape(x0)[0], 207, tf.shape(x0)[-1] * 4])
         x = self.layer(x, training=training)
         return x
