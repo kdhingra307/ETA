@@ -67,7 +67,7 @@ lr_manager = LearningRateScheduler(scheduler)
 ckpt_manager.ckpt_manager.restore_or_initialize()
 
 model.fit(
-    x=Dataset(train_split),
+    Dataset(train_split),
     epochs=config.training.epochs,
     callbacks=[ckpt_manager, log_manager, lr_manager],
     validation_data=Dataset(validation_split),
