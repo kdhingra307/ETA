@@ -51,12 +51,6 @@ class Model(tf_keras.Model):
 
         gradients = tape.gradient(loss, self.trainable_variables)
 
-        for i, e in zip(gradients, self.trainable_variables):
-            tf.summary.histogram("grads/" + e.name, i)
-            tf.summary.scalar("grads/" + e.name + "/max", tf.reduce_max(i))
-            tf.summary.scalar("grads/" + e.name + "/min", tf.reduce_min(i))
-            tf.summary.scalar("grads/" + e.name + "/mean", tf.reduce_mean(i))
-
         self.optimizer.apply_gradients(
             zip(gradients, self.trainable_variables)
         )
@@ -67,7 +61,7 @@ class Model(tf_keras.Model):
     def test_step(self, data):
         adj, x, y = data
         y_pred = self(x, training=False, adj=adj)
-        # Updates stateful loss metrics.
+
         self.compiled_loss(y, y_pred, None, regularization_losses=self.losses)
         self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}

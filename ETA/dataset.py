@@ -105,20 +105,19 @@ class sampling:
         #     # .dot(adjacency_matrix)
         # )
         # adjacency_matrix1 = calculate_random_walk_matrix(mat.T).T
-        support = []
-        support.append(adjacency_matrix)
-        support.append(adjacency_matrix)
+        support = chebyshev_polynomials(adjacency_matrix, 3)
+        # support.append(adjacency_matrix)
 
-        support.append(
-            2 * adjacency_matrix.dot(adjacency_matrix)
-            - np.eye(len(adjacency_matrix))
-        )
-        support.append(
-            2 * adjacency_matrix.dot(adjacency_matrix)
-            - np.eye(len(adjacency_matrix))
-        )
-
-        self.adjacency_matrix = np.stack(support, axis=-1)
+        # support.append(
+        #     2 * adjacency_matrix.dot(adjacency_matrix)
+        #     - np.eye(len(adjacency_matrix))
+        # )
+        # support.append(
+        #     2 * adjacency_matrix.dot(adjacency_matrix)
+        #     - np.eye(len(adjacency_matrix))
+        # )
+        print(support.shape)
+        self.adjacency_matrix = support
         # self.adjacency_matrix = chebyshev_polynomials(adjacency_matrix, 3)
         print(self.adjacency_matrix.shape)
 
@@ -140,20 +139,20 @@ def chebyshev_polynomials(adj, k):
     """Calculate Chebyshev polynomials up to order k. Return a list of sparse matrices (tuple representation)."""
     print("Calculating Chebyshev polynomials up to order {}...".format(k))
 
-    laplacian = np.eye(adj.shape[0]) - adj
-    largest_eigval, _ = eigsh(laplacian, 1, which="LM")
-    scaled_laplacian = (2.0 / largest_eigval[0]) * laplacian - np.eye(
-        adj.shape[0]
-    )
+    # laplacian = np.eye(adj.shape[0]) - adj
+    # largest_eigval, _ = eigsh(laplacian, 1, which="LM")
+    # scaled_laplacian = (2.0 / largest_eigval[0]) * laplacian - np.eye(
+    #     adj.shape[0]
+    # )
 
     t_k = list()
     t_k.append(np.eye(adj.shape[0]))
-    t_k.append(scaled_laplacian)
+    t_k.append(adj)
 
-    def chebyshev_recurrence(t_k_minus_one, t_k_minus_two, scaled_lap):
-        return 2 * scaled_lap.dot(t_k_minus_one) - t_k_minus_two
+    def chebyshev_recurrence(t_k_minus_one, t_k_minus_two):
+        return 2 * adj.dot(t_k_minus_one) - t_k_minus_two
 
     for i in range(2, k + 1):
-        t_k.append(chebyshev_recurrence(t_k[-1], t_k[-2], scaled_laplacian))
+        t_k.append(chebyshev_recurrence(t_k[-1], t_k[-2]))
 
     return np.stack(t_k, axis=-1)
