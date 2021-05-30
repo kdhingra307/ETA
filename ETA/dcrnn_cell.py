@@ -192,17 +192,18 @@ class GConv(tf_keras.layers.Layer):
 
         self.layer = tf.keras.Sequential(
             [
-                tf.keras.layers.Dense(
-                    units=32, activation=tf.keras.layers.LeakyReLU()
-                ),
-                tf.keras.layers.BatchNormalization(),
+                # tf.keras.layers.Dense(
+                #     units=32, activation=tf.keras.layers.LeakyReLU()
+                # ),
+                # tf.keras.layers.BatchNormalization(),
                 tf.keras.layers.Dense(units),
             ]
         )
 
-    def call(self, x, support, training=False):
+    def call(self, x0, support, training=False):
 
+        x = tf.tensordot(support, x0, axes=[1, 1])
+        x = tf.transpose(x, [2, 0, 1, 3])
+        x = tf.reshape(x, [tf.shape(x0)[0], 207, -1])
         x = self.layer(x, training=training)
-        x = tf.tensordot(support, x, axes=[1, 1])
-        x = tf.transpose(x, [1, 0, 2])
         return x
