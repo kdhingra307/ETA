@@ -101,8 +101,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
         inputs_and_state = tf.concat([inputs, r * state], axis=2)
-        x = self.second_layer[0](inputs_and_state, support)
-        c = x
+        c = self.second_layer[0](inputs_and_state, support)
 
         if self._activation is not None:
             c = self._activation(c)
@@ -145,7 +144,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         if encode:
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
 
-    def encode(self, x, adj):
+    def encode(self, x, adj, training=False):
         state = self.block(x, constants=[adj])
         return state[1:]
 
@@ -163,7 +162,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return teacher_coeff
 
     @tf.function
-    def decode(self, state, adj, x_targ=None):
+    def decode(self, state, adj, x_targ=None, training=False):
 
         batch_size = tf.shape(state[0])[0]
 
@@ -179,11 +178,11 @@ class DCGRUBlock(tf_keras.layers.Layer):
             to_return = to_return.write(i, init)
         return tf.transpose(to_return.stack(), [1, 0, 2, 3])
 
-    def call(self, x, state, adj):
+    def call(self, x, state, adj, training=False):
         if self.is_encoder:
-            return self.encode(x, adj)
+            return self.encode(x, adj, training=training)
         else:
-            return self.decode(state, adj, x)
+            return self.decode(state, adj, x, training=training)
 
 
 class GConv(tf_keras.layers.Layer):
@@ -200,11 +199,20 @@ class GConv(tf_keras.layers.Layer):
             ]
         )
 
-    def call(self, x, support, training=False):
+    def call(self, x0, support, training=False):
 
-        x = tf.tensordot(support, x, axes=[1, 1])
-        x = tf.transpose(x, [2, 0, 1, 3])
-        x = tf.reshape(x, [tf.shape(x)[0], 207, 4 * x.shape[-1]])
+        output = []
+        for i in range(2):
+            x1 = tf.tensordot(support[:, :, i], x0, [1, 1])
+            output.append(x1)
+            x2 = 2 * tf.tensordot(support[:, :, i], x1, [1, 1]) - x0
+            output.append(x2)
+            x1, x0 = x2, x1
+
+        x = tf.concat(output, axis=-1)
+        print(x.shape)
+        # x = tf.transpose(x, [2, 0, 1, 3])
+        # x = tf.reshape(x, [tf.shape(x)[0], 207, 4 * x.shape[-1]])
         x = self.layer(x, training=training)
 
         return x

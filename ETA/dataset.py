@@ -112,15 +112,15 @@ class sampling:
         support.append(adjacency_matrix)
         support.append(adjacency_matrix1)
 
-        support.append(
-            2 * adjacency_matrix.dot(adjacency_matrix)
-            - np.eye(len(adjacency_matrix))
-        )
+        # support.append(
+        #     2 * adjacency_matrix.dot(adjacency_matrix)
+        #     - np.eye(len(adjacency_matrix))
+        # )
 
-        support.append(
-            2 * adjacency_matrix1.dot(adjacency_matrix1)
-            - np.eye(len(adjacency_matrix))
-        )
+        # support.append(
+        #     2 * adjacency_matrix1.dot(adjacency_matrix1)
+        #     - np.eye(len(adjacency_matrix))
+        # )
 
         # print(support.shape)
         self.adjacency_matrix = np.stack(support, axis=-1)
