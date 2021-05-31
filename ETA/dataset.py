@@ -93,16 +93,11 @@ def get_data(split_label):
 #%%
 class sampling:
     def __init__(self, sampler="random"):
-        mat = (
-            np.load(
-                "{}/{}/metr_adj_matrix.npz".format(
-                    config.model.working_dir, config.model.static_data_dir
-                )
-            )["arr_0"].astype(np.float32)
-            > 0
-        )
-
-        mat = mat.astype(np.float32)
+        mat = np.load(
+            "{}/{}/metr_adj_matrix.npz".format(
+                config.model.working_dir, config.model.static_data_dir
+            )
+        )["arr_0"].astype(np.float32)
 
         adjacency_matrix = calculate_random_walk_matrix(mat).T
         # self.adjacency_matrix = (
