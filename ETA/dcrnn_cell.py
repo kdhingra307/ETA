@@ -78,7 +78,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     #     self.second_layer[1].build(inp_shape)
 
     @tf.function
-    def call(self, inputs, state, constants, scope=None):
+    def call(self, inputs, state, constants, training=False):
 
         """
             inputs_shape [BatchSize, Num_Nodes, Inp_features]
@@ -94,14 +94,14 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
         inputs_and_state = tf.concat([inputs, state], axis=2)
 
-        x = self.first_layer[0](inputs_and_state, support)
+        x = self.first_layer[0](inputs_and_state, support, training=training)
         # value = tf.sigmoid(self.first_layer[1](x, support))
         value = tf.sigmoid(x)
 
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
         inputs_and_state = tf.concat([inputs, r * state], axis=2)
-        x = self.second_layer[0](inputs_and_state, support)
+        x = self.second_layer[0](inputs_and_state, support, training=training)
         c = x
 
         if self._activation is not None:
@@ -145,8 +145,8 @@ class DCGRUBlock(tf_keras.layers.Layer):
         if encode:
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
 
-    def encode(self, x, adj):
-        state = self.block(x, constants=[adj])
+    def encode(self, x, adj, training=False):
+        state = self.block(x, constants=[adj], training=training)
         return state[1:]
 
     @tf.function
@@ -163,7 +163,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return teacher_coeff
 
     @tf.function
-    def decode(self, state, adj, x_targ=None):
+    def decode(self, state, adj, x_targ=None, training=False):
 
         batch_size = tf.shape(state[0])[0]
 
@@ -175,35 +175,46 @@ class DCGRUBlock(tf_keras.layers.Layer):
             size=self.steps_to_predict, dtype=tf.float32
         )
         for i in tf.range(self.steps_to_predict):
-            init, state = self.cells(init, states=state, constants=[adj])
+            init, state = self.cells(
+                init, states=state, constants=[adj], training=training
+            )
             to_return = to_return.write(i, init)
         return tf.transpose(to_return.stack(), [1, 0, 2, 3])
 
-    def call(self, x, state, adj):
+    def call(self, x, state, adj, training=False):
         if self.is_encoder:
-            return self.encode(x, adj)
+            return self.encode(x, adj, training=training)
         else:
-            return self.decode(state, adj, x)
+            return self.decode(state, adj, x, training=training)
 
 
 class GConv(tf_keras.layers.Layer):
     def __init__(self, units):
         super(GConv, self).__init__()
 
-        self.layer = tf.keras.Sequential(
-            [
-                # tf.keras.layers.Dense(
-                #     units=32, activation=tf.keras.layers.LeakyReLU()
-                # ),
-                # tf.keras.layers.BatchNormalization(),
-                tf.keras.layers.Dense(units),
-            ]
-        )
+        self.layer = [
+            tf.keras.Sequential(
+                [
+                    tf.keras.layers.Dense(
+                        units=units // 2,
+                        activation=tf.keras.layers.LeakyReLU(),
+                    ),
+                    tf.keras.layers.BatchNormalization(),
+                ]
+            )
+            for _ in range(5)
+        ]
+        self.otpt = tf.keras.layers.Dense(units=units)
+
+    def operation(self, x0, support, layer, training=False):
+        x = tf.tensordot(support, x0, axes=[1, 1])
+        x = tf.transpose(x, [1, 0, 2])
+        return layer(x, training=training)
 
     def call(self, x0, support, training=False):
 
-        x = tf.tensordot(support, x0, axes=[1, 1])
-        x = tf.transpose(x, [2, 0, 1, 3])
-        x = tf.reshape(x, [tf.shape(x0)[0], 207, x0.shape[-1] * 4])
-        x = self.layer(x, training=training)
-        return x
+        x = self.operation(x0, support, self.layer[0], training=training)
+        for each_layer in self.layer[1:]:
+            x += self.operation(x0, support, each_layer, training=training)
+
+        return self.operation(x0, support, self.otpt, training=training)

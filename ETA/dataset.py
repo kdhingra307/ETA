@@ -99,11 +99,10 @@ class sampling:
             )
         )["arr_0"].astype(np.float32)
 
-        nmat = calculate_random_walk_matrix(mat).T
-        adjacency_matrix = [np.eye(len(mat))]
-        for e in range(3):
-            adjacency_matrix.append(adjacency_matrix[-1].dot(nmat))
-        
+        self.adjacency_matrix = calculate_random_walk_matrix(mat).T
+        # adjacency_matrix = [np.eye(len(mat))]
+        # for e in range(3):
+        #     adjacency_matrix.append(adjacency_matrix[-1].dot(nmat))
 
         # adjacency_matrix1 = calculate_random_walk_matrix(mat.T).T
         # support = []
@@ -119,7 +118,7 @@ class sampling:
         #     - np.eye(len(adjacency_matrix))
         # )
 
-        self.adjacency_matrix = np.stack(adjacency_matrix, axis=-1)
+        # self.adjacency_matrix = np.stack(adjacency_matrix, axis=-1)
         # self.adjacency_matrix = chebyshev_polynomials(adjacency_matrix, 3)
         print(self.adjacency_matrix.shape)
 
