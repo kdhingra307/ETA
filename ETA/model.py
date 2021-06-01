@@ -1,4 +1,5 @@
 import tensorflow.keras as tf_keras
+from tensorflow.python.keras.engine.sequential import Sequential
 import tensorflow.autodiff as tf_diff
 from tensorflow import squeeze as tf_squeeze
 from tensorflow.python.keras.engine import data_adapter
@@ -12,10 +13,18 @@ class GConv(tf_keras.layers.Layer):
         super(GConv, self).__init__()
 
         self.layer = [
-            tf.keras.layers.Dense(
-                units=units, activation=tf.keras.layers.LeakyReLU()
+            tf.keras.Sequential(
+                [
+                    tf.keras.layers.Dense(
+                        units=units, activation=tf.keras.layers.LeakyReLU()
+                    ),
+                    tf.keras.layers.BatchNormalization(),
+                    tf.keras.layers.Dense(
+                        units=units, activation=tf.keras.layers.LeakyReLU()
+                    ),
+                ]
             )
-            for _ in range(8)
+            for _ in range(4)
         ]
 
     def operation(self, x0, support, layer, training=False):
@@ -26,7 +35,7 @@ class GConv(tf_keras.layers.Layer):
 
     def call(self, x, support, training=False):
 
-        for i in range(8):
+        for i in range(4):
             x += self.operation(
                 x, support[i], self.layer[i], training=training
             )
