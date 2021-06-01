@@ -23,7 +23,7 @@ def calculate_random_walk_matrix(adj_mx):
 
 def get_data(split_label):
 
-    batch_sampler = sampling()
+    # batch_sampler = sampling()
 
     def tf_map(file_name):
 
@@ -80,7 +80,7 @@ def get_data(split_label):
 
         return adj_mx, x, y
 
-    tf_dataset = tf_dataset.map(second_map)
+    # tf_dataset = tf_dataset.map(second_map)
     tf_dataset = tf_dataset.cache(
         "{}/cache_{}".format(config.model.working_dir, split_label)
     )
@@ -93,13 +93,7 @@ def get_data(split_label):
 #%%
 class sampling:
     def __init__(self, sampler="random"):
-        mat = np.load(
-            "{}/{}/metr_adj_matrix.npz".format(
-                config.model.working_dir, config.model.static_data_dir
-            )
-        )["arr_0"].astype(np.float32)
 
-        self.adjacency_matrix = calculate_random_walk_matrix(mat).T
         # adjacency_matrix = [np.eye(len(mat))]
         # for e in range(3):
         #     adjacency_matrix.append(adjacency_matrix[-1].dot(nmat))
@@ -120,7 +114,7 @@ class sampling:
 
         # self.adjacency_matrix = np.stack(adjacency_matrix, axis=-1)
         # self.adjacency_matrix = chebyshev_polynomials(adjacency_matrix, 3)
-        print(self.adjacency_matrix.shape)
+        # print(self.adjacency_matrix.shape)
 
         self.n_init = config.model.graph_batch_size
         self.probab_individ = self.adjacency_matrix ** 2

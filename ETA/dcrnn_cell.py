@@ -5,6 +5,15 @@ import scipy.sparse as sp
 from ETA import config
 
 
+def calculate_random_walk_matrix(adj_mx):
+    d = np.array(adj_mx.sum(1))
+    d_inv = np.power(d, -0.5).flatten()
+    d_inv[np.isinf(d_inv)] = 0.0
+    d_mat_inv = np.diag(d_inv)
+
+    return adj_mx.dot(d_mat_inv).T.dot(d_mat_inv)
+
+
 class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     def get_initial_state(self, inputs, batch_size, dtype):
         return tf.zeros(
@@ -65,6 +74,23 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                 ]
             )
 
+        mat = np.load(
+            "{}/{}/metr_adj_matrix.npz".format(
+                config.model.working_dir, config.model.static_data_dir
+            )
+        )["arr_0"].astype(np.float32)
+
+        nmat = calculate_random_walk_matrix(mat).T
+
+        adjacency_matrix = [np.eye(len(mat))]
+
+        for _ in range(3):
+            adjacency_matrix.append(adjacency_matrix[-1].dot(nmat))
+
+        self.adjacency_matrix = [
+            tf.convert_to_tensor(x, dtype=tf.float32) for x in adjacency_matrix
+        ]
+
     # def build(self, inp_shape):
     #     inp_shape = list(inp_shape)
     #     inp_shape[-1] += self._num_units
@@ -89,19 +115,23 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         [type]
             [description]
         """
-        support = constants[0]
+        # support = constants[0]
         state = state[0]
 
         inputs_and_state = tf.concat([inputs, state], axis=2)
 
-        x = self.first_layer[0](inputs_and_state, support, training=training)
+        x = self.first_layer[0](
+            inputs_and_state, self.adjacency_matrix, training=training
+        )
         # value = tf.sigmoid(self.first_layer[1](x, support))
         value = tf.sigmoid(x)
 
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
         inputs_and_state = tf.concat([inputs, r * state], axis=2)
-        x = self.second_layer[0](inputs_and_state, support, training=training)
+        x = self.second_layer[0](
+            inputs_and_state, self.adjacency_matrix, training=training
+        )
         c = x
 
         if self._activation is not None:
@@ -146,7 +176,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
 
     def encode(self, x, adj, training=False):
-        state = self.block(x, constants=[adj], training=training)
+        state = self.block(x, training=training)
         return state[1:]
 
     @tf.function
@@ -163,7 +193,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return teacher_coeff
 
     @tf.function
-    def decode(self, state, adj, x_targ=None, training=False):
+    def decode(self, state, adj=None, x_targ=None, training=False):
 
         batch_size = tf.shape(state[0])[0]
 
@@ -175,13 +205,11 @@ class DCGRUBlock(tf_keras.layers.Layer):
             size=self.steps_to_predict, dtype=tf.float32
         )
         for i in tf.range(self.steps_to_predict):
-            init, state = self.cells(
-                init, states=state, constants=[adj], training=training
-            )
+            init, state = self.cells(init, states=state, training=training)
             to_return = to_return.write(i, init)
         return tf.transpose(to_return.stack(), [1, 0, 2, 3])
 
-    def call(self, x, state, adj, training=False):
+    def call(self, x, state, adj=None, training=False):
         if self.is_encoder:
             return self.encode(x, adj, training=training)
         else:
@@ -202,9 +230,11 @@ class GConv(tf_keras.layers.Layer):
 
     def call(self, x0, support, training=False):
 
-        x = self.operation(x0, support, self.layer[0], training=training)
-        for each_layer in self.layer[1:]:
+        x = self.operation(x0, support[0], self.layer[0], training=training)
+        for i in range(1, 4):
             x = tf.nn.leaky_relu(x)
-            x += self.operation(x, support, each_layer, training=training)
+            x += self.operation(
+                x, support[i], self.layer[i], training=training
+            )
 
         return x
