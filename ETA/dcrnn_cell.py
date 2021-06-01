@@ -215,6 +215,6 @@ class GConv(tf_keras.layers.Layer):
 
         x = self.operation(x0, support, self.layer[0], training=training)
         for each_layer in self.layer[1:]:
-            x += self.operation(x0, support, each_layer, training=training)
+            x += self.operation(x, support, each_layer, training=training)
 
-        return self.operation(x0, support, self.otpt, training=training)
+        return self.operation(x, support, self.otpt, training=training)
