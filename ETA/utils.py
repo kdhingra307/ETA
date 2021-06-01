@@ -16,16 +16,16 @@ def get_config(config_filename):
     munched.model.temporal_label = datetime.now().strftime("%Y%m%d-%H%M%S")
     return munched
 
+
 class CheckpointManager(tf_keras.callbacks.Callback):
-    
     def __init__(self, optimizer, model, ckpt_dir, label="val_loss"):
 
         self.loss = inf
         self.label = label
         checkpoint = tf_train.Checkpoint(optimizer=optimizer, model=model)
-        self.ckpt_manager = tf_train.CheckpointManager(checkpoint=checkpoint,
-                                                       directory=ckpt_dir, max_to_keep=5)
-    
+        self.ckpt_manager = tf_train.CheckpointManager(
+            checkpoint=checkpoint, directory=ckpt_dir, max_to_keep=5
+        )
 
     def on_epoch_end(self, epoch, logs):
         if logs[self.label] < self.loss:
