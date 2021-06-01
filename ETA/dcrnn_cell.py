@@ -5,15 +5,6 @@ import scipy.sparse as sp
 from ETA import config
 
 
-def calculate_random_walk_matrix(adj_mx):
-    d = np.array(adj_mx.sum(1))
-    d_inv = np.power(d, -0.5).flatten()
-    d_inv[np.isinf(d_inv)] = 0.0
-    d_mat_inv = np.diag(d_inv)
-
-    return adj_mx.dot(d_mat_inv).T.dot(d_mat_inv)
-
-
 class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     def get_initial_state(self, inputs, batch_size, dtype):
         return tf.zeros(
@@ -52,8 +43,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._max_diffusion_step = max_diffusion_step
         self._use_gc_for_ru = use_gc_for_ru
 
-        self.first_layer = [GConv(num_units * 2)]
-        self.second_layer = [GConv(num_units)]
+        self.first_layer = [tf.keras.layers.Dense(units=num_units * 2)]
+        self.second_layer = [tf.keras.layers.Dense(num_units)]
 
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
@@ -73,23 +64,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                     ),
                 ]
             )
-
-        mat = np.load(
-            "{}/{}/metr_adj_matrix.npz".format(
-                config.model.working_dir, config.model.static_data_dir
-            )
-        )["arr_0"].astype(np.float32)
-
-        nmat = calculate_random_walk_matrix(mat).T
-
-        adjacency_matrix = [np.eye(len(mat))]
-
-        for _ in range(3):
-            adjacency_matrix.append(adjacency_matrix[-1].dot(nmat))
-
-        self.adjacency_matrix = [
-            tf.convert_to_tensor(x, dtype=tf.float32) for x in adjacency_matrix
-        ]
 
     # def build(self, inp_shape):
     #     inp_shape = list(inp_shape)
@@ -120,18 +94,14 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
         inputs_and_state = tf.concat([inputs, state], axis=2)
 
-        x = self.first_layer[0](
-            inputs_and_state, self.adjacency_matrix, training=training
-        )
+        x = self.first_layer[0](inputs_and_state, training=training)
         # value = tf.sigmoid(self.first_layer[1](x, support))
         value = tf.sigmoid(x)
 
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
         inputs_and_state = tf.concat([inputs, r * state], axis=2)
-        x = self.second_layer[0](
-            inputs_and_state, self.adjacency_matrix, training=training
-        )
+        x = self.second_layer[0](inputs_and_state, training=training)
         c = x
 
         if self._activation is not None:
@@ -214,27 +184,3 @@ class DCGRUBlock(tf_keras.layers.Layer):
             return self.encode(x, adj, training=training)
         else:
             return self.decode(state, adj, x, training=training)
-
-
-class GConv(tf_keras.layers.Layer):
-    def __init__(self, units):
-        super(GConv, self).__init__()
-
-        self.layer = [tf.keras.layers.Dense(units=units) for _ in range(4)]
-
-    def operation(self, x0, support, layer, training=False):
-        x = tf.tensordot(support, x0, axes=[1, 1])
-        x = tf.transpose(x, [1, 0, 2])
-
-        return layer(x, training=training)
-
-    def call(self, x0, support, training=False):
-
-        x = self.operation(x0, support[0], self.layer[0], training=training)
-        for i in range(1, 4):
-            x = tf.nn.leaky_relu(x)
-            x += self.operation(
-                x, support[i], self.layer[i], training=training
-            )
-
-        return x

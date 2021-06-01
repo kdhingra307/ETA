@@ -7,6 +7,39 @@ import numpy as np
 import tensorflow as tf
 
 
+class GConv(tf_keras.layers.Layer):
+    def __init__(self, units):
+        super(GConv, self).__init__()
+
+        self.layer = [tf.keras.layers.Dense(units=units) for _ in range(4)]
+
+    def operation(self, x0, support, layer, training=False):
+        x = tf.tensordot(support, x0, axes=[1, 1])
+        x = tf.transpose(x, [1, 0, 2])
+
+        return layer(x, training=training)
+
+    def call(self, x0, support, training=False):
+
+        x = self.operation(x0, support[0], self.layer[0], training=training)
+        for i in range(1, 4):
+            x = tf.nn.leaky_relu(x)
+            x += self.operation(
+                x, support[i], self.layer[i], training=training
+            )
+
+        return x
+
+
+def calculate_random_walk_matrix(adj_mx):
+    d = np.array(adj_mx.sum(1))
+    d_inv = np.power(d, -0.5).flatten()
+    d_inv[np.isinf(d_inv)] = 0.0
+    d_mat_inv = np.diag(d_inv)
+
+    return adj_mx.dot(d_mat_inv).T.dot(d_mat_inv)
+
+
 class Model(tf_keras.Model):
     def __init__(self):
 
@@ -33,10 +66,34 @@ class Model(tf_keras.Model):
             steps_to_predict=steps_to_predict,
             encode=False,
         )
+        mat = np.load(
+            "{}/{}/metr_adj_matrix.npz".format(
+                config.model.working_dir, config.model.static_data_dir
+            )
+        )["arr_0"].astype(np.float32)
+
+        nmat = calculate_random_walk_matrix(mat).T
+
+        adjacency_matrix = [np.eye(len(mat))]
+
+        for _ in range(3):
+            adjacency_matrix.append(adjacency_matrix[-1].dot(nmat))
+
+        self.adjacency_matrix = [
+            tf.convert_to_tensor(x, dtype=tf.float32) for x in adjacency_matrix
+        ]
+
+        self.gconv = GConv(64)
+        self.gconv1 = GConv(64)
 
     def call(self, x, training=False, y=None, adj=None):
 
         encoded = self.encoder(x=x, adj=adj, state=None, training=training)
+
+        encoded = [
+            self.gconv(encoded[0], self.adjacency_matrix, training=training),
+            self.gconv(encoded[1], self.adjacency_matrix, training=training),
+        ]
         decoded = self.decoder(adj=adj, state=encoded, x=y, training=training)
         return tf_squeeze(decoded, axis=-1)
 
