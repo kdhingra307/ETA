@@ -16,7 +16,7 @@ class GConv(tf_keras.layers.Layer):
             tf.keras.Sequential(
                 [
                     tf.keras.layers.Dense(
-                        units=units, activation=tf.keras.layers.LeakyReLU()
+                        units=2 * units, activation=tf.keras.layers.LeakyReLU()
                     ),
                     tf.keras.layers.BatchNormalization(),
                     tf.keras.layers.Dense(
@@ -88,7 +88,7 @@ class Model(tf_keras.Model):
 
         adjacency_matrix = [np.eye(len(mat))]
 
-        for _ in range(7):
+        for _ in range(3):
             adjacency_matrix.append(adjacency_matrix[-1].dot(nmat))
 
         self.adjacency_matrix = [
