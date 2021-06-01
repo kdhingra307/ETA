@@ -100,14 +100,22 @@ class Model(tf_keras.Model):
 
     def call(self, x, training=False, y=None, adj=None):
 
-        encoded = self.encoder(x=x, adj=adj, state=None, training=training)
+        with tf.name_scope("f_call"):
 
-        encoded = [
-            self.gconv(encoded[0], self.adjacency_matrix, training=training),
-            self.gconv(encoded[1], self.adjacency_matrix, training=training),
-        ]
-        decoded = self.decoder(adj=adj, state=encoded, x=y, training=training)
-        return tf_squeeze(decoded, axis=-1)
+            encoded = self.encoder(x=x, adj=adj, state=None, training=training)
+
+            encoded = [
+                self.gconv(
+                    encoded[0], self.adjacency_matrix, training=training
+                ),
+                self.gconv(
+                    encoded[1], self.adjacency_matrix, training=training
+                ),
+            ]
+            decoded = self.decoder(
+                adj=adj, state=encoded, x=y, training=training
+            )
+            return tf_squeeze(decoded, axis=-1)
 
     def train_step(self, data):
         x, y = data
