@@ -11,7 +11,12 @@ class GConv(tf_keras.layers.Layer):
     def __init__(self, units):
         super(GConv, self).__init__()
 
-        self.layer = [tf.keras.layers.Dense(units=units) for _ in range(4)]
+        self.layer = [
+            tf.keras.layers.Dense(
+                units=units, activation=tf.keras.layers.LeakyReLU()
+            )
+            for _ in range(8)
+        ]
 
     def operation(self, x0, support, layer, training=False):
         x = tf.tensordot(support, x0, axes=[1, 1])
@@ -19,11 +24,9 @@ class GConv(tf_keras.layers.Layer):
 
         return layer(x, training=training)
 
-    def call(self, x0, support, training=False):
+    def call(self, x, support, training=False):
 
-        x = self.operation(x0, support[0], self.layer[0], training=training)
-        for i in range(1, 4):
-            x = tf.nn.leaky_relu(x)
+        for i in range(8):
             x += self.operation(
                 x, support[i], self.layer[i], training=training
             )
@@ -76,7 +79,7 @@ class Model(tf_keras.Model):
 
         adjacency_matrix = [np.eye(len(mat))]
 
-        for _ in range(3):
+        for _ in range(7):
             adjacency_matrix.append(adjacency_matrix[-1].dot(nmat))
 
         self.adjacency_matrix = [
