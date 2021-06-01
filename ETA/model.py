@@ -108,7 +108,7 @@ class Model(tf_keras.Model):
                 self.gconv(
                     encoded[0], self.adjacency_matrix, training=training
                 ),
-                self.gconv(
+                self.gconv1(
                     encoded[1], self.adjacency_matrix, training=training
                 ),
             ]
