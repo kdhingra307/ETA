@@ -43,6 +43,29 @@ class GConv(tf_keras.layers.Layer):
         return x
 
 
+def random_walk_restart(adj):
+    d = adj.sum(axis=1)
+    d = np.asarray(d).flatten()
+    d = np.maximum(d, np.ones(len(adj)))
+
+    invd = np.diag(1.0 / d)
+    T = invd.dot(adj)
+
+    output = []
+    R = 0.05
+    for i in np.identity(len(adj)):
+        cp = i.copy()
+        for _ in range(200):
+            x = (1 - R) * (T.dot(i)) + (R * cp)
+            err = np.linalg.norm(x - i, 1)
+            if err <= 1e-6:
+                break
+            i = x
+        output.append(i)
+
+    return np.array(output)
+
+
 def calculate_random_walk_matrix(adj_mx):
     d = np.array(adj_mx.sum(1))
     d_inv = np.power(d, -0.5).flatten()
@@ -61,7 +84,10 @@ class Model(tf_keras.Model):
 
         self.encoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
-                [DCGRUCell(64, 2, num_nodes), DCGRUCell(64, 2, num_nodes)]
+                [
+                    DCGRUCell(64, 2, num_nodes),
+                    DCGRUCell(64, 2, num_nodes),
+                ]
             ),
             num_nodes=num_nodes,
             steps_to_predict=steps_to_predict,
@@ -83,6 +109,8 @@ class Model(tf_keras.Model):
                 config.model.working_dir, config.model.static_data_dir
             )
         )["arr_0"].astype(np.float32)
+
+        mat = random_walk_restart(mat)
 
         nmat = calculate_random_walk_matrix(mat).T
 
