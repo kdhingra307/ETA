@@ -59,7 +59,7 @@ class Model(tf_keras.Model):
                 [
                     tf_keras.layers.GRUCell(units=64),
                     tf_keras.layers.GRUCell(
-                        units=64, dropout=0.5, recurrent_dropout=0.5
+                        units=64, dropout=0.25, recurrent_dropout=0.25
                     ),
                 ]
             ),
@@ -71,7 +71,7 @@ class Model(tf_keras.Model):
             [
                 tf_keras.layers.GRUCell(units=64),
                 tf_keras.layers.GRUCell(
-                    units=64, dropout=0.5, recurrent_dropout=0.5
+                    units=64, dropout=0.25, recurrent_dropout=0.25
                 ),
             ],
             name="decoding",
@@ -90,7 +90,7 @@ class Model(tf_keras.Model):
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Dropout(0.5),
+                tf_keras.layers.Dropout(0.3),
                 tf_keras.layers.Dense(
                     units=207,
                 ),
