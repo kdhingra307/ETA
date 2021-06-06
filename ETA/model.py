@@ -212,7 +212,7 @@ class Model(tf_keras.Model):
         )
         tf.summary.scalar(
             name="Q/assert",
-            data=self.counter,
+            data=epsilon,
             step=self.gcounter,
         )
         tf.summary.scalar(
