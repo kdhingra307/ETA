@@ -155,7 +155,6 @@ class Model(tf_keras.Model):
         action = tf.cond(
             tf.logical_or(
                 (tf.random.uniform(shape=[]) < epsilon),
-                (tf.reduce_max(self.q_table[self.prev_q_state]) == 0),
             ),
             lambda: tf.random.uniform(
                 shape=[], minval=0, maxval=3, dtype=tf.int32
