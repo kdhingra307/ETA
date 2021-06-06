@@ -153,9 +153,7 @@ class Model(tf_keras.Model):
         epsilon = 0.9 / tf.cast(10 * self.gcounter, tf.float32)
 
         action = tf.cond(
-            tf.logical_or(
-                (tf.random.uniform(shape=[]) < epsilon),
-            ),
+            tf.random.uniform(shape=[]) < epsilon,
             lambda: tf.random.uniform(
                 shape=[], minval=0, maxval=3, dtype=tf.int32
             ),
