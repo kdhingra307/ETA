@@ -58,7 +58,9 @@ class Model(tf_keras.Model):
             tf_keras.layers.StackedRNNCells(
                 [
                     tf_keras.layers.GRUCell(units=64),
-                    tf_keras.layers.GRUCell(units=64),
+                    tf_keras.layers.GRUCell(
+                        units=64, dropout=0.5, recurrent_dropout=0.5
+                    ),
                 ]
             ),
             return_state=True,
@@ -68,7 +70,9 @@ class Model(tf_keras.Model):
         self.decoder = tf_keras.layers.StackedRNNCells(
             [
                 tf_keras.layers.GRUCell(units=64),
-                tf_keras.layers.GRUCell(units=64),
+                tf_keras.layers.GRUCell(
+                    units=64, dropout=0.5, recurrent_dropout=0.5
+                ),
             ],
             name="decoding",
         )
@@ -79,12 +83,14 @@ class Model(tf_keras.Model):
                     units=128,
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
-                # tf_keras.layers.BatchNormalization(),
+                tf_keras.layers.BatchNormalization(),
+                tf_keras.layers.Dropout(0.5),
                 tf_keras.layers.Dense(
                     units=256,
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
-                # tf_keras.layers.BatchNormalization(),
+                tf_keras.layers.BatchNormalization(),
+                tf_keras.layers.Dropout(0.5),
                 tf_keras.layers.Dense(
                     units=207,
                 ),
