@@ -117,7 +117,7 @@ class Model(tf_keras.Model):
 
         self.counter = tf.Variable(0, dtype=tf.float32, trainable=False)
         self.avg_train = tf.Variable(0, dtype=tf.float32, trainable=False)
-        self.gcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
+        self.gcounter = tf.Variable(1, dtype=tf.int64, trainable=False)
         self.current_reward = tf.Variable(0, dtype=tf.int64, trainable=False)
         self.dcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
         self.accuracy_metric = tf.keras.metrics.Accuracy()
@@ -127,6 +127,9 @@ class Model(tf_keras.Model):
 
     @tf.function
     def q_update_train(self, loss):
+
+        if self.gcounter < 2000:
+            return
 
         self.ttf_loss.assign(
             tf.cond(
@@ -147,9 +150,11 @@ class Model(tf_keras.Model):
 
     def q_update_val(self, loss):
 
+        epsilon = 0.9 / (10 * self.gcounter)
+
         action = tf.cond(
             tf.logical_or(
-                (tf.random.uniform(shape=[]) < 0.01),
+                (tf.random.uniform(shape=[]) < epsilon),
                 (tf.reduce_max(self.q_table[self.prev_q_state]) == 0),
             ),
             lambda: tf.random.uniform(
