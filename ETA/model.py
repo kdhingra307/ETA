@@ -147,7 +147,7 @@ class Model(tf_keras.Model):
 
     def q_update_val(self, loss):
 
-        epsilon = 0.9 / tf.cast(10 * self.gcounter, tf.float32)
+        epsilon = 0.9 / (1 + tf.cast(10 * self.gcounter, tf.float32) / 10000)
 
         action = tf.cond(
             tf.random.uniform(shape=[]) < epsilon,
