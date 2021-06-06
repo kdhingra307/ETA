@@ -99,7 +99,16 @@ class Model(tf_keras.Model):
         self.q_table = tf.Variable(
             tf.zeros([101, 3]), dtype=tf.float32, trainable=False
         )
-        self.ttr_param = config.model.ttr
+        self.ttr_param2 = tf.Variable(
+            tf.cast(config.model.ttr, tf.float32),
+            dtype=tf.float32,
+            trainable=False,
+        )
+        self.ttr_param = tf.Variable(
+            tf.cast(config.model.ttr, tf.float32),
+            dtype=tf.float32,
+            trainable=False,
+        )
         self.prev_q_state = tf.Variable(
             tf.cast(100 * config.model.ttr, tf.int32),
             dtype=tf.int32,
@@ -113,12 +122,28 @@ class Model(tf_keras.Model):
         self.dcounter = tf.Variable(0, dtype=tf.int64, trainable=False)
         self.accuracy_metric = tf.keras.metrics.Accuracy()
         self.disc_loss = tf_keras.losses.BinaryCrossentropy(from_logits=True)
+        self.ttf_loss = tf.Variable(0.0, dtype=tf.float32, trainable=False)
+        self.ar_loss = tf.Variable(0.0, dtype=tf.float32, trainable=False)
 
     @tf.function
     def q_update_train(self, loss):
 
-        self.counter.assign_add(1)
-        self.avg_train.assign_add(loss)
+        self.ttf_loss.assign(
+            tf.cond(
+                self.gcounter % 3 == 1, lambda: loss, lambda: self.ttf_loss
+            )
+        )
+        self.ar_loss.assign(
+            tf.cond(self.gcounter % 3 == 0, lambda: loss, lambda: self.ar_loss)
+        )
+
+        tf.cond(
+            self.gcounter % 3 == 2,
+            lambda: self.q_update_val(loss),
+            lambda: None,
+        )
+
+        self.gcounter.assign_add(1)
 
     def q_update_val(self, loss):
 
@@ -148,7 +173,16 @@ class Model(tf_keras.Model):
         next_state = tf.cond(next_state < 0, lambda: 1, lambda: next_state)
         next_state = tf.cond(next_state >= 100, lambda: 98, lambda: next_state)
 
-        average_train = self.avg_train / self.counter
+        self.ttr_param2.assign(tf.cast(next_state / 100, tf.float32))
+
+        relative_ttf = tf.abs(loss - self.ttf_loss)
+        relative_ar = tf.abs(loss - self.ar_loss)
+
+        relative = tf.cond(
+            relative_ttf > relative_ar,
+            lambda: relative_ttf / relative_ar,
+            lambda: relative_ar / relative_ttf,
+        )
 
         self.q_table.scatter_nd_add(
             tf.expand_dims(
@@ -157,9 +191,7 @@ class Model(tf_keras.Model):
             tf.expand_dims(
                 0.6
                 * (
-                    tf.clip_by_value(
-                        (average_train - loss) / average_train, -1, 0
-                    )
+                    -1 * (relative - 1)
                     + 0.95 * tf.reduce_max(self.q_table[next_state])
                     - self.q_table[self.prev_q_state, action]
                 ),
@@ -168,10 +200,6 @@ class Model(tf_keras.Model):
         )
 
         self.prev_q_state.assign(next_state)
-
-        self.ttr_param = next_state / 100
-
-        # tf.print(next_state)
 
         tf.summary.scalar(
             name="Q/ttr",
@@ -190,14 +218,17 @@ class Model(tf_keras.Model):
         )
         tf.summary.scalar(
             name="Q/reward",
-            data=tf.clip_by_value(
-                (average_train - loss) / average_train, -1, 0
-            ),
+            data=relative,
             step=self.gcounter,
         )
         tf.summary.scalar(
-            name="Q/train",
-            data=(average_train),
+            name="Q/ttf",
+            data=(relative_ttf),
+            step=self.gcounter,
+        )
+        tf.summary.scalar(
+            name="Q/Ar",
+            data=(relative_ar),
             step=self.gcounter,
         )
         tf.summary.scalar(
@@ -255,6 +286,18 @@ class Model(tf_keras.Model):
     def train_step(self, data):
         x, y = data
 
+        self.ttr_param.assign(
+            tf.cond(
+                self.gcounter % 3 == 0,
+                lambda: 1.0,
+                lambda: tf.cond(
+                    self.gcounter % 3 == 1,
+                    lambda: 0.0,
+                    lambda: self.ttr_param2,
+                ),
+            )
+        )
+
         with tf_diff.GradientTape() as tape:
             y_pred = self(x, training=True, y=y[:, :, :, :1])
             loss = self.compiled_loss(
@@ -274,7 +317,6 @@ class Model(tf_keras.Model):
         loss = self.compiled_loss(
             y, y_pred, None, regularization_losses=self.losses
         )
-        self.q_update_val(loss)
         self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}
 
