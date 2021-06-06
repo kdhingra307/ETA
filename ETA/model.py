@@ -169,7 +169,7 @@ class Model(tf_keras.Model):
 
         self.prev_q_state.assign(next_state)
 
-        # self.ttr_param = next_state / 100
+        self.ttr_param = next_state / 100
 
         # tf.print(next_state)
 
