@@ -202,7 +202,7 @@ class Model(tf_keras.Model):
 
         tf.summary.scalar(
             name="Q/ttr",
-            data=self.ttr_param,
+            data=self.ttr_param2,
             step=self.gcounter,
         )
         tf.summary.scalar(
