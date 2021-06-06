@@ -128,9 +128,6 @@ class Model(tf_keras.Model):
     @tf.function
     def q_update_train(self, loss):
 
-        if self.gcounter < 2000:
-            return
-
         self.ttf_loss.assign(
             tf.cond(
                 self.gcounter % 3 == 1, lambda: loss, lambda: self.ttf_loss
