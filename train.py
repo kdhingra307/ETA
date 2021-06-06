@@ -10,6 +10,7 @@ from datetime import datetime
 import tensorflow.keras as tf_keras
 from tensorflow.keras.callbacks import TensorBoard, LearningRateScheduler
 from os.path import join as join_directory
+import tensorflow as tf
 
 
 optimizer = tf_keras.optimizers.Adam(
@@ -37,7 +38,7 @@ def scheduler(epoch, lr):
     if epoch >= 20 and epoch <= 50 and epoch % 10 == 0:
         lr *= 0.9
 
-    print(tf_summary.scalar("LearningRate", data=lr))
+    print(tf.summary.scalar("LearningRate", data=lr))
     return lr
 
 
