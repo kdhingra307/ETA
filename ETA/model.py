@@ -57,8 +57,8 @@ class Model(tf_keras.Model):
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
                 [
-                    tf_keras.layers.GRUCell(units=256),
-                    tf_keras.layers.GRUCell(units=128),
+                    tf_keras.layers.GRUCell(units=64),
+                    tf_keras.layers.GRUCell(units=64),
                 ]
             ),
             return_state=True,
@@ -67,8 +67,8 @@ class Model(tf_keras.Model):
 
         self.decoder = tf_keras.layers.StackedRNNCells(
             [
-                tf_keras.layers.GRUCell(units=256),
-                tf_keras.layers.GRUCell(units=128),
+                tf_keras.layers.GRUCell(units=64),
+                tf_keras.layers.GRUCell(units=64),
             ],
             name="decoding",
         )
@@ -151,7 +151,7 @@ class Model(tf_keras.Model):
                 tf.stack([self.prev_q_state, action], axis=-1), axis=0
             ),
             tf.expand_dims(
-                0.004
+                0.6
                 * (
                     tf.clip_by_value(
                         (average_train - loss) / average_train, -1, 0
