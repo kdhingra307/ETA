@@ -188,10 +188,10 @@ class Model(tf_keras.Model):
                 tf.stack([self.prev_q_state, action], axis=-1), axis=0
             ),
             tf.expand_dims(
-                0.1
+                0.6
                 * (
                     -1 * (relative - 1.25)
-                    + 0.8 * tf.reduce_max(self.q_table[next_state])
+                    + 0.9 * tf.reduce_max(self.q_table[next_state])
                     - self.q_table[self.prev_q_state, action]
                 ),
                 axis=0,
