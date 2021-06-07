@@ -285,17 +285,17 @@ class Model(tf_keras.Model):
     def train_step(self, data):
         x, y = data
 
-        self.ttr_param.assign(
-            tf.cond(
-                self.gcounter % 3 == 0,
-                lambda: 1.0,
-                lambda: tf.cond(
-                    self.gcounter % 3 == 1,
-                    lambda: 0.0,
-                    lambda: self.ttr_param2,
-                ),
-            )
-        )
+        # self.ttr_param.assign(
+        #     tf.cond(
+        #         self.gcounter % 3 == 0,
+        #         lambda: 1.0,
+        #         lambda: tf.cond(
+        #             self.gcounter % 3 == 1,
+        #             lambda: 0.0,
+        #             lambda: self.ttr_param2,
+        #         ),
+        #     )
+        # )
 
         with tf_diff.GradientTape() as tape:
             y_pred = self(x, training=True, y=y[:, :, :, :1])
@@ -303,7 +303,19 @@ class Model(tf_keras.Model):
                 y, y_pred, None, regularization_losses=self.losses
             )
 
-        self.q_update_train(loss)
+        # self.q_update_train(loss)
+
+        self.ttr_param.assign(
+            tf.cast(config.model.ttr, tf.float32)
+            / (1 + tf.cast(10 * self.gcounter, tf.float32) / 200000)
+        )
+
+        tf.summary.scalar(
+            name="Q/ttr",
+            data=self.ttr_param,
+            step=self.gcounter,
+        )
+        self.gcounter.assign_add(1)
 
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
         self.compiled_metrics.update_state(y, y_pred, None)
