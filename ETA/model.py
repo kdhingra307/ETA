@@ -179,8 +179,8 @@ class Model(tf_keras.Model):
 
         relative = tf.cond(
             relative_ttf > relative_ar,
-            lambda: tf.clip(relative_ttf / relative_ar, 1, 2)
-            lambda: tf.clip(relative_ar / relative_ttf, 1, 2)
+            lambda: tf.clip_by_value(relative_ttf / relative_ar, 1, 2),
+            lambda: tf.clip_by_value(relative_ar / relative_ttf, 1, 2),
         )
 
         self.q_table.scatter_nd_add(
