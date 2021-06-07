@@ -179,8 +179,8 @@ class Model(tf_keras.Model):
 
         relative = tf.cond(
             relative_ttf > relative_ar,
-            lambda: relative_ttf / relative_ar,
-            lambda: relative_ar / relative_ttf,
+            lambda: tf.clip(relative_ttf / relative_ar, 1, 2)
+            lambda: tf.clip(relative_ar / relative_ttf, 1, 2)
         )
 
         self.q_table.scatter_nd_add(
@@ -188,10 +188,10 @@ class Model(tf_keras.Model):
                 tf.stack([self.prev_q_state, action], axis=-1), axis=0
             ),
             tf.expand_dims(
-                0.6
+                0.1
                 * (
-                    -1 * (relative - 1)
-                    + 0.95 * tf.reduce_max(self.q_table[next_state])
+                    -1 * (relative - 1.25)
+                    + 0.8 * tf.reduce_max(self.q_table[next_state])
                     - self.q_table[self.prev_q_state, action]
                 ),
                 axis=0,
