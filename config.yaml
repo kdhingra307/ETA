@@ -1,6 +1,6 @@
 model:
   working_dir: "./data"
-  batch_size: 6
+  batch_size: 16
   training_label: "results/dcrnn/melr"
   num_nodes: 207
   steps_to_predict: 12
