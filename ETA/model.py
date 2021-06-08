@@ -260,7 +260,7 @@ class Model(tf_keras.Model):
                 output = self.post_process(output, training=training)
                 to_return = to_return.write(i, output)
 
-                if tf.random.uniform(shape=[]) > self.ttr_param:
+                if tf.random.uniform(shape=[]) < self.ttr_param:
                     init = tf.stop_gradient(output)
                 else:
                     init = tf_array_ops.squeeze(x_targ[:, i], axis=-1)
@@ -298,10 +298,10 @@ class Model(tf_keras.Model):
 
         # self.q_update_train(loss)
 
-        self.ttr_param.assign(
-            tf.cast(config.model.ttr, tf.float32)
-            / (1 + tf.cast(10 * self.gcounter, tf.float32) / 50000)
-        )
+        # self.ttr_param.assign(
+        #     tf.cast(config.model.ttr, tf.float32)
+        #     / (1 + tf.cast(10 * self.gcounter, tf.float32) / 50000)
+        # )
 
         tf.summary.scalar(
             name="Q/ttr",
