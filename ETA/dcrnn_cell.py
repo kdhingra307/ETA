@@ -164,9 +164,11 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         output = []
 
         for support in self._supports:
+
             cur_support = tf.gather(
                 tf.gather(support, pos, axis=1), pos, axis=0
             )
+            print(x0, cur_support)
             x1 = tf.matmul(cur_support, x0)
             output.append(x1)
 
