@@ -23,5 +23,5 @@ training:
   decay: 1e+3
   log_dir: "logs/{}"
   ckpt_dir: "ckpt/{}"
-  epochs: 50
+  epochs: 70
   reset: False
