@@ -51,8 +51,12 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         supports.append(calculate_random_walk_matrix(adj_mx).T)
         supports.append(calculate_random_walk_matrix(adj_mx.T).T)
 
+        probability = adj_mx ** 2
+        probability = probability / np.sum(probability)
         for support in supports:
-            self._supports.append(self._build_sparse_matrix(support))
+            self._supports.append(
+                self._build_sparse_matrix(support, probability)
+            )
 
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
@@ -69,12 +73,13 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             )
 
     @staticmethod
-    def _build_sparse_matrix(L):
-        return tf.constant(L.todense())
-        L = L.tocoo()
-        indices = np.column_stack((L.row, L.col))
-        L = tf.SparseTensor(indices, L.data, L.shape)
-        return tf.sparse.reorder(L)
+    def _build_sparse_matrix(L, fac):
+
+        return tf.constant(L.todense() / fac)
+        # L = L.tocoo()
+        # indices = np.column_stack((L.row, L.col))
+        # L = tf.SparseTensor(indices, L.data, L.shape)
+        # return tf.sparse.reorder(L)
 
     def build(self, inp_shape):
 

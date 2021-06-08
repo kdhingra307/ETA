@@ -56,6 +56,7 @@ def get_data(split_label):
 
         x = tf.gather(x, indices=positions, axis=2)
         y = tf.gather(y, indices=positions, axis=2)
+        print(x.shape, y.shape, positions.shape)
 
         return positions, x, y
 
