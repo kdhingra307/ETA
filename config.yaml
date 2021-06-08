@@ -1,16 +1,16 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "lstm_conv1d_melr/RL/final/train/curriculum_AR"
-  num_nodes: 207
-  steps_to_predict: 12
+  training_label: "results/lstm"
+  num_nodes: 6639
+  steps_to_predict: 6
   ttr: 1
 
 data:
   shuffle: 1000
   prefetch: 10
   path_pattern: "training_files"
-  split_prefix: "melr_{}"
+  split_prefix: "custom_{}"
   mean:
     - 54.405
     - 0.497
