@@ -53,6 +53,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
         probability = adj_mx ** 2
         probability = probability / np.sum(probability)
+        probability[np.zeros(probability)] = 1
         for support in supports:
             self._supports.append(
                 self._build_sparse_matrix(support, probability)
