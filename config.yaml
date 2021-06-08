@@ -3,7 +3,7 @@ model:
   batch_size: 6
   training_label: "results/dcrnn/melr"
   num_nodes: 207
-  steps_to_predict: 6
+  steps_to_predict: 12
   graph_batch_size: 64
   static_data_dir: "static"
   ttr: 1
