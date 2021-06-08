@@ -1,11 +1,12 @@
 model:
   working_dir: "./data"
-  batch_size: 16
-  training_label: "final_corrected/dcrnn/1"
-  static_data_dir: "static"
+  batch_size: 6
+  training_label: "results/dcrnn/melr"
   num_nodes: 207
-  counter_position: 0
-  teacher_decay_rate: 2000
+  steps_to_predict: 6
+  graph_batch_size: 64
+  static_data_dir: "static"
+  ttr: 1
 
 data:
   shuffle: 1000
@@ -20,9 +21,9 @@ data:
     - 0.288
 
 training:
-  learning_rate: 0.001
+  learning_rate: 0.0001
   decay: 1e+3
   log_dir: "logs/{}"
   ckpt_dir: "ckpt/{}"
-  epochs: 50
+  epochs: 100
   reset: False

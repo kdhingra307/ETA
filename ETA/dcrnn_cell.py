@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 import scipy.sparse as sp
 from tensorflow.python.keras.layers.advanced_activations import LeakyReLU
+from tensorflow.python.ops.gen_array_ops import const
 from ETA import config
 
 
@@ -70,6 +71,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
     @staticmethod
     def _build_sparse_matrix(L):
+        return tf.constant(L.todense())
         L = L.tocoo()
         indices = np.column_stack((L.row, L.col))
         L = tf.SparseTensor(indices, L.data, L.shape)
@@ -110,7 +112,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self.batch_size = inp_shape[0]
 
     @tf.function
-    def call(self, inputs, state, scope=None):
+    def call(self, inputs, state, constants=None, scope=None):
 
         """
             inputs_shape [BatchSize, Num_Nodes, Inp_features]
@@ -121,17 +123,19 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         [type]
             [description]
         """
-
+        position = constants[0]
         state = tf.reshape(state, [-1, self._num_nodes, self._num_units])
 
         output_size = 2 * self._num_units
         value = tf.sigmoid(
-            self._gconv(inputs, state, output_size, bias_start=1.0)
+            self._gconv(
+                inputs, state, output_size, bias_start=1.0, pos=position
+            )
         )
         value = tf.reshape(value, (-1, self._num_nodes, output_size))
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
-        c = self._gconv(inputs, r * state, self._num_units)
+        c = self._gconv(inputs, r * state, self._num_units, pos=position)
 
         if self._activation is not None:
             c = self._activation(c)
@@ -148,20 +152,26 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         return tf.concat([x, x_], axis=0)
 
     @tf.function
-    def _gconv(self, inputs, state, output_size, bias_start=0.0):
+    def _gconv(self, inputs, state, output_size, pos, bias_start=0.0):
 
         inputs_and_state = tf.concat([inputs, state], axis=2)
         num_inpt_features = inputs_and_state.shape[-1]
 
-        x0 = tf.reshape(tf.transpose(inputs_and_state, [1, 0, 2]), [207, -1])
+        x0 = tf.reshape(
+            tf.transpose(inputs_and_state, [1, 0, 2]),
+            [config.model.graph_batch_size, -1],
+        )
         output = []
 
         for support in self._supports:
-            x1 = tf.sparse.sparse_dense_matmul(support, x0)
+            cur_support = tf.gather(
+                tf.gather(support, pos, axis=1), pos, axis=0
+            )
+            x1 = tf.matmul(cur_support, x0)
             output.append(x1)
 
             for k in range(2, self._max_diffusion_step + 1):
-                x2 = 2 * tf.sparse.sparse_dense_matmul(support, x1) - x0
+                x2 = 2 * tf.matmul(cur_support, x1) - x0
                 output.append(x2)
                 x1, x0 = x2, x1
 
@@ -201,15 +211,15 @@ class DCGRUBlock(tf_keras.layers.Layer):
         self.cells = dcrnn_cells
         self.num_nodes = num_nodes
         self.steps_to_predict = steps_to_predict
-        self.counter = config.model.counter_position
+        # self.counter = config.model.counter_position
         if encode:
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
 
     def build(self, x_shape):
         self.batch_size = x_shape[0]
 
-    def encode(self, x):
-        state = self.block(x)
+    def encode(self, x, pos):
+        state = self.block(x, constants=[pos])
         return state[1:]
 
     @tf.function
@@ -225,7 +235,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return teacher_coeff
 
     @tf.function
-    def decode(self, state, x_targ=None):
+    def decode(self, state, pos=None, x_targ=None):
 
         init = tf.zeros(
             [tf.shape(state[0])[0], self.num_nodes, 1], dtype=tf.float32
@@ -237,12 +247,13 @@ class DCGRUBlock(tf_keras.layers.Layer):
             size=self.steps_to_predict, dtype=tf.float32
         )
         for i in range(self.steps_to_predict):
-            init, state = self.cells(init, states=state)
+            init, state = self.cells(init, states=state, constants=[pos])
             to_return = to_return.write(i, init)
+
         return tf.transpose(tf.squeeze(to_return.stack(), axis=-1), [1, 0, 2])
 
-    def call(self, x, state):
+    def call(self, x, state, pos):
         if self.is_encoder:
-            return self.encode(x)
+            return self.encode(x, pos=pos)
         else:
-            return self.decode(state, x)
+            return self.decode(state=state, x_targ=x, pos=pos)
