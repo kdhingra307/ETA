@@ -9,8 +9,9 @@ from ETA import config
 
 class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     def get_initial_state(self, inputs, batch_size, dtype):
+        print("none?? why????", inputs)
         return tf.zeros(
-            [batch_size, self._num_nodes, self._num_units], dtype=dtype
+            [batch_size, tf.shape(inputs)[1], self._num_units], dtype=dtype
         )
 
     @property
@@ -23,7 +24,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     @property
     def state_size(self):
 
-        return self._num_nodes * self._num_units
+        return None
 
     def __init__(
         self,
@@ -133,7 +134,9 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             [description]
         """
         position = constants[0]
-        state = tf.reshape(state, [-1, self._num_nodes, self._num_units])
+
+        state = tf.reshape(state, [tf.shape(state)[0], -1, self._num_units])
+        num_nodes = tf.shape(state)[1]
 
         output_size = 2 * self._num_units
         value = tf.sigmoid(
@@ -141,7 +144,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                 inputs, state, output_size, bias_start=1.0, pos=position
             )
         )
-        value = tf.reshape(value, (-1, self._num_nodes, output_size))
+        value = tf.reshape(value, (-1, num_nodes, output_size))
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
         c = self._gconv(inputs, r * state, self._num_units, pos=position)
@@ -164,11 +167,12 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     def _gconv(self, inputs, state, output_size, pos, bias_start=0.0):
 
         inputs_and_state = tf.concat([inputs, state], axis=2)
+        num_nodes = tf.shape(inputs)[1]
         num_inpt_features = inputs_and_state.shape[-1]
 
         x0 = tf.reshape(
             tf.transpose(inputs_and_state, [1, 0, 2]),
-            [config.model.graph_batch_size, -1],
+            [num_nodes, -1],
         )
         output = []
 
@@ -189,11 +193,11 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         batch_size = tf.shape(inputs)[0]
         x = tf.reshape(
             tf.stack(output, axis=-1),
-            [self._num_nodes, batch_size, num_inpt_features, -1],
+            [num_nodes, batch_size, num_inpt_features, -1],
         )
 
         x = tf.transpose(x, [1, 0, 3, 2])
-        x = tf.reshape(x, [batch_size, self._num_nodes, -1])
+        x = tf.reshape(x, [batch_size, num_nodes, -1])
 
         if output_size == self._num_units:
             x = tf.matmul(x, self.w2) + self.b2
@@ -229,7 +233,14 @@ class DCGRUBlock(tf_keras.layers.Layer):
         self.batch_size = x_shape[0]
 
     def encode(self, x, pos):
-        state = self.block(x, constants=[pos])
+        state = self.block(
+            x,
+            constants=[pos],
+            initial_state=(
+                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 64]),
+                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 64]),
+            ),
+        )
         return state[1:]
 
     @tf.function
@@ -248,7 +259,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
     def decode(self, state, pos=None, x_targ=None):
 
         init = tf.zeros(
-            [tf.shape(state[0])[0], self.num_nodes, 1], dtype=tf.float32
+            [tf.shape(state[0])[0], tf.shape(state[0])[1], 1], dtype=tf.float32
         )
 
         state = tuple(state)
