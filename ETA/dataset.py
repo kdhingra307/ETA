@@ -87,4 +87,4 @@ class sampling:
             tf.math.log(self.probab[None, :]), self.n_init
         )[0]
 
-        return samples
+        return tf.random.shuffle(np.arange(207))
