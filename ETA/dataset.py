@@ -86,5 +86,5 @@ class sampling:
         samples = tf.random.categorical(
             tf.math.log(self.probab[None, :]), self.n_init
         )[0]
-
-        return tf.random.shuffle(np.arange(207))
+        return samples
+        # return tf.random.shuffle(np.arange(207))

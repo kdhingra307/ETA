@@ -1,7 +1,7 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "results/dcrnn/melr/15"
+  training_label: "results/dcrnn/melr/16"
   num_nodes: 207
   steps_to_predict: 12
   graph_batch_size: 207
