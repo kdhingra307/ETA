@@ -78,7 +78,7 @@ class sampling:
 
         self.n_init = config.model.graph_batch_size
         self.probab_individ = adj ** 2
-        self.probab = np.sum(self.probab_individ, axis=-1)
+        self.probab = np.sum(self.probab_individ, axis=0)
         self.probab = self.probab / np.sum(self.probab)
 
     def sample(self):
