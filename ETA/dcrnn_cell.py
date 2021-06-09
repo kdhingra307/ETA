@@ -56,7 +56,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         probability = np.sum(probability, axis=-1)
         probability = probability / np.sum(probability)
 
-        probability = np.array([probability for _ in range(207)]).T
+        probability = np.array([probability for _ in range(207)])
 
         for support in supports:
             self._supports.append(
@@ -80,7 +80,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     @staticmethod
     def _build_sparse_matrix(L, fac):
 
-        return tf.constant(L.todense())
+        return tf.constant(L.todense() / fac)
         # return tf.constant(
         #     [np.arange(207) for _ in range(207)], dtype=tf.float32
         # )
