@@ -77,7 +77,10 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     @staticmethod
     def _build_sparse_matrix(L, fac):
 
-        return tf.constant(L.todense() / fac)
+        return tf.constant(L.todense())
+        # return tf.constant(
+        #     [np.arange(207) for _ in range(207)], dtype=tf.float32
+        # )
         # L = L.tocoo()
         # indices = np.column_stack((L.row, L.col))
         # L = tf.SparseTensor(indices, L.data, L.shape)
@@ -174,7 +177,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             cur_support = tf.gather(
                 tf.gather(support, pos, axis=1), pos, axis=0
             )
-            print(x0, cur_support)
             x1 = tf.matmul(cur_support, x0)
             output.append(x1)
 
@@ -184,7 +186,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                 x1, x0 = x2, x1
 
         batch_size = tf.shape(inputs)[0]
-        print(tf.stack(output, axis=-1).shape)
         x = tf.reshape(
             tf.stack(output, axis=-1),
             [self._num_nodes, batch_size, num_inpt_features, -1],

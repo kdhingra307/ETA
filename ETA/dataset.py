@@ -56,7 +56,6 @@ def get_data(split_label):
 
         x = tf.gather(x, indices=positions, axis=2)
         y = tf.gather(y, indices=positions, axis=2)
-        print(x.shape, y.shape, positions.shape)
 
         return positions, x, y
 
@@ -84,7 +83,6 @@ class sampling:
 
     def sample(self):
 
-        samples = np.random.multinomial(1, self.probab, self.n_init)
-        positions = np.argmax(samples, axis=-1)
+        samples = tf.random.categorical(self.probab[None, :], self.n_init)[0]
 
-        return positions
+        return samples
