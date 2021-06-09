@@ -53,9 +53,11 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         supports.append(calculate_random_walk_matrix(adj_mx.T).T)
 
         probability = adj_mx ** 2
+        probability = np.sum(probability, axis=-1)
         probability = probability / np.sum(probability)
-        probability *= np.sum(probability, axis=0)[None, :]
-        probability[probability == 0] = 1
+
+        probability = np.array([probability for _ in range(207)]).T
+
         for support in supports:
             self._supports.append(
                 self._build_sparse_matrix(support, probability)
@@ -78,7 +80,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     @staticmethod
     def _build_sparse_matrix(L, fac):
 
-        return tf.constant(L.todense())
+        return tf.constant(L.todense() / fac)
         # return tf.constant(
         #     [np.arange(207) for _ in range(207)], dtype=tf.float32
         # )
@@ -134,7 +136,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             [description]
         """
         position = constants[0]
-        
+
         state = tf.reshape(state, [tf.shape(state[0])[0], -1, self._num_units])
         num_nodes = tf.shape(state)[1]
 

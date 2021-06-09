@@ -35,7 +35,7 @@ def get_data(split_label):
         )
     )
     tf_dataset = tf.data.Dataset.from_tensor_slices(files)
-    tf_dataset = tf_dataset.shuffle(config.data.shuffle)
+    tf_dataset = tf_dataset.shuffle(config.data.shuffle, seed=1234)
     tf_dataset = tf_dataset.map(
         lambda x: tf.numpy_function(
             tf_map, [x], [tf.float32, tf.float32], name="load_each_file"
@@ -78,7 +78,7 @@ class sampling:
 
         self.n_init = config.model.graph_batch_size
         self.probab_individ = adj ** 2
-        self.probab = np.sum(self.probab_individ, axis=0)
+        self.probab = np.sum(self.probab_individ, axis=-1)
         self.probab = self.probab / np.sum(self.probab)
 
     def sample(self):
