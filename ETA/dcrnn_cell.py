@@ -9,7 +9,7 @@ from ETA import config
 
 class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     def get_initial_state(self, inputs, batch_size, dtype):
-        print("none?? why????", inputs)
+
         return tf.zeros(
             [batch_size, tf.shape(inputs)[1], self._num_units], dtype=dtype
         )
@@ -134,8 +134,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             [description]
         """
         position = constants[0]
-
-        state = tf.reshape(state, [tf.shape(state)[0], -1, self._num_units])
+        
+        state = tf.reshape(state, [tf.shape(state[0])[0], -1, self._num_units])
         num_nodes = tf.shape(state)[1]
 
         output_size = 2 * self._num_units
