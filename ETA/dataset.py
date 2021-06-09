@@ -83,6 +83,8 @@ class sampling:
 
     def sample(self):
 
-        samples = tf.random.categorical(self.probab[None, :], self.n_init)[0]
+        samples = tf.random.categorical(
+            tf.math.log(self.probab[None, :]), self.n_init
+        )[0]
 
         return samples
