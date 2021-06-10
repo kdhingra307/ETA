@@ -52,7 +52,7 @@ def get_data(split_label):
     tf_dataset = tf_dataset.batch(batch_size=config.model.batch_size)
 
     def second_map(x, y):
-        positions = batch_sampler.sample()
+        positions = batch_sampler.sampler[split_label]()
 
         x = tf.gather(x, indices=positions, axis=2)
         y = tf.gather(y, indices=positions, axis=2)
@@ -80,6 +80,11 @@ class sampling:
         self.probab_individ = adj ** 2
         self.probab = np.sum(self.probab_individ, axis=-1)
         self.probab = self.probab / np.sum(self.probab)
+
+        self.sampler = {
+            "melr_train": self.sample,
+            "melr_val": lambda: np.arange(207),
+        }
 
     def sample(self):
 
