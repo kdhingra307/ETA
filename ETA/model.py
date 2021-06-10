@@ -4,6 +4,8 @@ from tensorflow import squeeze as tf_squeeze
 from tensorflow.python.keras.engine import data_adapter
 from ETA import DCGRUBlock, DCGRUCell, config
 import numpy as np
+from ETA.metrics import loss_function
+import tensorflow as tf
 
 
 class Model(tf_keras.Model):
@@ -16,6 +18,11 @@ class Model(tf_keras.Model):
                 config.model.working_dir, config.model.static_data_dir
             )
         )["arr_0"].astype(np.float32)
+
+        probability = adjacency_matrix ** 2
+        probability = np.sum(probability, axis=-1)
+        self.probability = tf.constant(probability / np.sum(probability))
+
         num_nodes = config.model.graph_batch_size
 
         self.encoder = DCGRUBlock(
@@ -53,9 +60,7 @@ class Model(tf_keras.Model):
 
         with tf_diff.GradientTape() as tape:
             y_pred = self(x, training=True, y=y[:, :, :, :1], pos=pos)
-            loss = self.compiled_loss(
-                y, y_pred, sample_weight, regularization_losses=self.losses
-            )
+            loss = loss_function(y, y_pred, tf.gather(self.probability, pos))
 
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
         self.compiled_metrics.update_state(y, y_pred, sample_weight)

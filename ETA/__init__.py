@@ -1,4 +1,5 @@
 from ETA.utils import get_config, CheckpointManager
+
 config = get_config("./config.yaml")
 
 from ETA.metrics import mse, mae, mape, rmse
@@ -8,4 +9,3 @@ from ETA.model import Model
 
 metrics = [mse, mae, mape, rmse]
 loss_function = mse
-
