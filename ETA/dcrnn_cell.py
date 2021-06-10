@@ -4,6 +4,7 @@ import tensorflow as tf
 import scipy.sparse as sp
 from tensorflow.python.keras.layers.advanced_activations import LeakyReLU
 from tensorflow.python.ops.gen_array_ops import const
+from tensorflow.python.ops.gen_math_ops import prod_eager_fallback
 from ETA import config
 
 
@@ -45,7 +46,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._num_proj = num_proj
         self._num_units = num_units
         self._max_diffusion_step = max_diffusion_step
-        self._supports = []
+        self.train_supports = []
+        self.val_supports = []
         self._use_gc_for_ru = use_gc_for_ru
 
         supports = []
@@ -56,12 +58,14 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         probability = np.sum(probability, axis=-1)
         probability = probability / np.sum(probability)
 
-        probability = probability[:, None].dot(probability[None, :])
+        # probability = probability[:, None].dot(probability[None, :])
+        probability = np.array([probability for _ in range(207)])
 
         for support in supports:
-            self._supports.append(
+            self.train_supports.append(
                 self._build_sparse_matrix(support, probability)
             )
+            self.val_supports.append(self._build_sparse_matrix(support))
 
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
@@ -78,9 +82,11 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             )
 
     @staticmethod
-    def _build_sparse_matrix(L, fac):
-
-        return tf.constant(L.todense() / fac)
+    def _build_sparse_matrix(L, fac=None):
+        if fac is not None:
+            return tf.constant(L.todense() / fac)
+        else:
+            return tf.constant(L.todense())
         # return tf.constant(
         #     [np.arange(207) for _ in range(207)], dtype=tf.float32
         # )
@@ -124,7 +130,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self.batch_size = inp_shape[0]
 
     @tf.function
-    def call(self, inputs, state, constants=None, scope=None):
+    def call(self, inputs, state, constants=None, scope=None, training=False):
 
         """
             inputs_shape [BatchSize, Num_Nodes, Inp_features]
@@ -143,13 +149,20 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         output_size = 2 * self._num_units
         value = tf.sigmoid(
             self._gconv(
-                inputs, state, output_size, bias_start=1.0, pos=position
+                inputs,
+                state,
+                output_size,
+                bias_start=1.0,
+                pos=position,
+                training=training,
             )
         )
         value = tf.reshape(value, (-1, num_nodes, output_size))
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
-        c = self._gconv(inputs, r * state, self._num_units, pos=position)
+        c = self._gconv(
+            inputs, r * state, self._num_units, pos=position, training=training
+        )
 
         if self._activation is not None:
             c = self._activation(c)
@@ -166,7 +179,9 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         return tf.concat([x, x_], axis=0)
 
     @tf.function
-    def _gconv(self, inputs, state, output_size, pos, bias_start=0.0):
+    def _gconv(
+        self, inputs, state, output_size, pos, bias_start=0.0, training=False
+    ):
 
         inputs_and_state = tf.concat([inputs, state], axis=2)
         num_nodes = tf.shape(inputs)[1]
@@ -178,7 +193,9 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         )
         output = []
 
-        for support in self._supports:
+        supports = self.train_supports if training else self.val_supports
+
+        for support in supports:
 
             cur_support = tf.gather(
                 tf.gather(support, pos, axis=1), pos, axis=0
