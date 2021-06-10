@@ -56,8 +56,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         probability = np.sum(probability, axis=-1)
         probability = probability / np.sum(probability)
 
-        probability = np.array([probability for _ in range(207)])
-        # probability = probability[:, None].dot(probability[None, :])
+        probability = probability[:, None].dot(probability[None, :])
 
         for support in supports:
             self._supports.append(
