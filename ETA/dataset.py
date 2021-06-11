@@ -83,7 +83,7 @@ class node_sampling:
 
         self.sampler = {
             "melr_train": self.sample,
-            "melr_val": lambda: np.arange(207),
+            "melr_val": lambda: tf.range(207),
         }
 
     def sample(self):
@@ -137,4 +137,4 @@ class rwt_sampling:
 
         output = tf.numpy_function(self.dummy, [], tf.int32)
 
-        return tf.ensure_shape(output, [self.n_init])
+        return tf.ensure_shape(output, [None])
