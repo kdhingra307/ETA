@@ -267,7 +267,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
     def build(self, x_shape):
         self.batch_size = x_shape[0]
 
-    def encode(self, x, pos, is_train=is_train):
+    def encode(self, x, pos, is_train=None):
         state = self.block(
             x,
             constants=[pos, is_train],
@@ -291,7 +291,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return teacher_coeff
 
     @tf.function
-    def decode(self, state, pos=None, x_targ=None, is_train=is_train):
+    def decode(self, state, pos=None, x_targ=None, is_train=None):
 
         init = tf.zeros(
             [tf.shape(state[0])[0], tf.shape(state[0])[1], 1], dtype=tf.float32
@@ -310,7 +310,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
         return tf.transpose(tf.squeeze(to_return.stack(), axis=-1), [1, 0, 2])
 
-    def call(self, x, state, pos, is_train=is_train):
+    def call(self, x, state, pos, is_train=None):
         if self.is_encoder:
             return self.encode(x, pos=pos, is_train=is_train)
         else:
