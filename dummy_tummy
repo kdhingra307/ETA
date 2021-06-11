@@ -1,0 +1,546 @@
+[1mdiff --git a/ETA/__init__.py b/ETA/__init__.py[m
+[1mindex 7655a6a..d4d809b 100644[m
+[1m--- a/ETA/__init__.py[m
+[1m+++ b/ETA/__init__.py[m
+[36m@@ -1,4 +1,5 @@[m
+ from ETA.utils import get_config, CheckpointManager[m
+[32m+[m
+ config = get_config("./config.yaml")[m
+ [m
+ from ETA.metrics import mse, mae, mape, rmse[m
+[36m@@ -8,4 +9,3 @@[m [mfrom ETA.model import Model[m
+ [m
+ metrics = [mse, mae, mape, rmse][m
+ loss_function = mse[m
+[31m-[m
+[1mdiff --git a/ETA/dataset.py b/ETA/dataset.py[m
+[1mindex 34a6984..4c00078 100644[m
+[1m--- a/ETA/dataset.py[m
+[1m+++ b/ETA/dataset.py[m
+[36m@@ -1,14 +1,20 @@[m
+[32m+[m[32m#%%[m
+ from glob import glob[m
+ import tensorflow as tf[m
+ import numpy as np[m
+ from ETA import config[m
+ [m
+[32m+[m[32m#%%[m
+[32m+[m
+ mean, std = config.data.mean, config.data.std[m
+ mean_expanded = np.array(mean).reshape([1, 1, -1])[m
+ std_expanded = np.array(std).reshape([1, 1, -1])[m
+ [m
+ [m
+ def get_data(split_label):[m
+[32m+[m
+[32m+[m[32m    batch_sampler = rwt_sampling()[m
+[32m+[m
+     def tf_map(file_name):[m
+ [m
+         data = np.load(file_name)[m
+[36m@@ -23,14 +29,11 @@[m [mdef get_data(split_label):[m
+ [m
+         return x.astype(np.float32), y[m
+ [m
+[31m-    files = sorted([m
+[31m-        glob([m
+[31m-            "{}/{}/{}/*.npz".format([m
+[31m-                config.model.working_dir, config.data.path_pattern, split_label[m
+[31m-            )[m
+[32m+[m[32m    files = glob([m
+[32m+[m[32m        "{}/{}/{}/*.npz".format([m
+[32m+[m[32m            config.model.working_dir, config.data.path_pattern, split_label[m
+         )[m
+     )[m
+[31m-[m
+     tf_dataset = tf.data.Dataset.from_tensor_slices(files)[m
+     tf_dataset = tf_dataset.shuffle(config.data.shuffle, seed=1234)[m
+     tf_dataset = tf_dataset.map([m
+[36m@@ -38,9 +41,6 @@[m [mdef get_data(split_label):[m
+             tf_map, [x], [tf.float32, tf.float32], name="load_each_file"[m
+         )[m
+     )[m
+[31m-    tf_dataset = tf_dataset.cache([m
+[31m-        "{}/cache_{}".format(config.model.working_dir, split_label)[m
+[31m-    )[m
+ [m
+     tf_dataset = tf_dataset.map([m
+         lambda x, y: ([m
+[36m@@ -48,10 +48,93 @@[m [mdef get_data(split_label):[m
+             tf.ensure_shape(y, [None, config.model.num_nodes, 2]),[m
+         )[m
+     )[m
+[31m-    tf_dataset = tf_dataset.batch([m
+[31m-        batch_size=config.model.batch_size, drop_remainder=True[m
+[31m-    )[m
+[32m+[m
+[32m+[m[32m    tf_dataset = tf_dataset.batch(batch_size=config.model.batch_size)[m
+[32m+[m
+[32m+[m[32m    def second_map(x, y):[m
+[32m+[m[32m        positions = batch_sampler.sampler[split_label]()[m
+[32m+[m
+[32m+[m[32m        x = tf.gather(x, indices=positions, axis=2)[m
+[32m+[m[32m        y = tf.gather(y, indices=positions, axis=2)[m
+[32m+[m
+[32m+[m[32m        return positions, x, y[m
+[32m+[m
+[32m+[m[32m    tf_dataset = tf_dataset.map(second_map)[m
+ [m
+     tf_dataset = tf_dataset.prefetch(config.data.prefetch)[m
+ [m
+     return tf_dataset[m
+[32m+[m
+[32m+[m
+[32m+[m[32m#%%[m
+[32m+[m[32mclass node_sampling:[m
+[32m+[m[32m    def __init__(self, sampler="random"):[m
+[32m+[m
+[32m+[m[32m        adj = np.load([m
+[32m+[m[32m            "{}/{}/metr_adj_matrix.npz".format([m
+[32m+[m[32m                config.model.working_dir, config.model.static_data_dir[m
+[32m+[m[32m            )[m
+[32m+[m[32m        )["arr_0"].astype(np.float32)[m
+[32m+[m
+[32m+[m[32m        self.n_init = config.model.graph_batch_size[m
+[32m+[m[32m        self.probab_individ = adj ** 2[m
+[32m+[m[32m        self.probab = np.sum(self.probab_individ, axis=-1)[m
+[32m+[m[32m        self.probab = self.probab / np.sum(self.probab)[m
+[32m+[m
+[32m+[m[32m        self.sampler = {[m
+[32m+[m[32m            "melr_train": self.sample,[m
+[32m+[m[32m            "melr_val": lambda: np.arange(207),[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m    def sample(self):[m
+[32m+[m
+[32m+[m[32m        samples = tf.random.categorical([m
+[32m+[m[32m            tf.math.log(self.probab[None, :]), self.n_init[m
+[32m+[m[32m        )[0][m
+[32m+[m[32m        samples = tf.unique(samples)[0][m
+[32m+[m[32m        return samples[m
+[32m+[m[32m        # return tf.random.shuffle(np.arange(207))[m
+[32m+[m
+[32m+[m
+[32m+[m[32mclass rwt_sampling:[m
+[32m+[m[32m    def __init__(self, sampler="random"):[m
+[32m+[m
+[32m+[m[32m        self.adj = ([m
+[32m+[m[32m            np.load([m
+[32m+[m[32m                "{}/{}/metr_adj_matrix.npz".format([m
+[32m+[m[32m                    config.model.working_dir, config.model.static_data_dir[m
+[32m+[m[32m                )[m
+[32m+[m[32m            )["arr_0"].astype(np.float32)[m
+[32m+[m[32m            > 0[m
+[32m+[m[32m        )[m
+[32m+[m
+[32m+[m[32m        self.n_init = config.model.graph_batch_size[m
+[32m+[m[32m        self.n_nodes = config.model.num_nodes[m
+[32m+[m
+[32m+[m[32m        self.sampler = {[m
+[32m+[m[32m            "melr_train": self.sample,[m
+[32m+[m[32m            "melr_val": lambda: np.arange(207),[m
+[32m+[m[32m        }[m
+[32m+[m
+[32m+[m[32m    def dummy(self):[m
+[32m+[m[32m        nodes = np.array([np.random.randint(self.n_nodes), 26, 44])[m
+[32m+[m
+[32m+[m[32m        while len(nodes) < self.n_init:[m
+[32m+[m[32m            neighbours = np.array([], dtype=np.int32)[m
+[32m+[m[32m            for e in nodes:[m
+[32m+[m[32m                neighbours = np.union1d(neighbours, np.nonzero(self.adj[e])[0])[m
+[32m+[m
+[32m+[m[32m            nodes = np.union1d([m
+[32m+[m[32m                nodes,[m
+[32m+[m[32m                np.random.choice([m
+[32m+[m[32m                    neighbours, len(neighbours) // 2, replace=False[m
+[32m+[m[32m                ),[m
+[32m+[m[32m            )[m
+[32m+[m
+[32m+[m[32m        return np.array(nodes)[: self.n_init].astype(np.int32)[m
+[32m+[m
+[32m+[m[32m    def sample(self):[m
+[32m+[m
+[32m+[m[32m        output = tf.numpy_function(self.dummy, [], tf.int32)[m
+[32m+[m
+[32m+[m[32m        return tf.ensure_shape(output, [self.n_init])[m
+[1mdiff --git a/ETA/dcrnn_cell.py b/ETA/dcrnn_cell.py[m
+[1mindex de73960..8bd4458 100644[m
+[1m--- a/ETA/dcrnn_cell.py[m
+[1m+++ b/ETA/dcrnn_cell.py[m
+[36m@@ -3,13 +3,16 @@[m [mimport numpy as np[m
+ import tensorflow as tf[m
+ import scipy.sparse as sp[m
+ from tensorflow.python.keras.layers.advanced_activations import LeakyReLU[m
+[32m+[m[32mfrom tensorflow.python.ops.gen_array_ops import const[m
+[32m+[m[32mfrom tensorflow.python.ops.gen_math_ops import prod_eager_fallback[m
+ from ETA import config[m
+ [m
+ [m
+ class DCGRUCell(tf.keras.layers.AbstractRNNCell):[m
+     def get_initial_state(self, inputs, batch_size, dtype):[m
+[32m+[m
+         return tf.zeros([m
+[31m-            [batch_size, self._num_nodes, self._num_units], dtype=dtype[m
+[32m+[m[32m            [batch_size, tf.shape(inputs)[1], self._num_units], dtype=dtype[m
+         )[m
+ [m
+     @property[m
+[36m@@ -22,7 +25,7 @@[m [mclass DCGRUCell(tf.keras.layers.AbstractRNNCell):[m
+     @property[m
+     def state_size(self):[m
+ [m
+[31m-        return self._num_nodes * self._num_units[m
+[32m+[m[32m        return None[m
+ [m
+     def __init__([m
+         self,[m
+[36m@@ -63,17 +66,23 @@[m [mclass DCGRUCell(tf.keras.layers.AbstractRNNCell):[m
+                     tf_keras.layers.Dense([m
+                         units=16, activation=tf_keras.layers.LeakyReLU(0.2)[m
+                     ),[m
+[31m-                    tf_keras.layers.BatchNormalization(),[m
+                     tf_keras.layers.Dense(units=num_proj),[m
+                 ][m
+             )[m
+ [m
+     @staticmethod[m
+[31m-    def _build_sparse_matrix(L):[m
+[31m-        L = L.tocoo()[m
+[31m-        indices = np.column_stack((L.row, L.col))[m
+[31m-        L = tf.SparseTensor(indices, L.data, L.shape)[m
+[31m-        return tf.sparse.reorder(L)[m
+[32m+[m[32m    def _build_sparse_matrix(L, fac=None):[m
+[32m+[m[32m        if fac is not None:[m
+[32m+[m[32m            return tf.constant(L.todense() / fac)[m
+[32m+[m[32m        else:[m
+[32m+[m[32m            return tf.constant(L.todense())[m
+[32m+[m[32m        # return tf.constant([m
+[32m+[m[32m        #     [np.arange(207) for _ in range(207)], dtype=tf.float32[m
+[32m+[m[32m        # )[m
+[32m+[m[32m        # L = L.tocoo()[m
+[32m+[m[32m        # indices = np.column_stack((L.row, L.col))[m
+[32m+[m[32m        # L = tf.SparseTensor(indices, L.data, L.shape)[m
+[32m+[m[32m        # return tf.sparse.reorder(L)[m
+ [m
+     def build(self, inp_shape):[m
+ [m
+[36m@@ -110,7 +119,7 @@[m [mclass DCGRUCell(tf.keras.layers.AbstractRNNCell):[m
+         self.batch_size = inp_shape[0][m
+ [m
+     @tf.function[m
+[31m-    def call(self, inputs, state, scope=None):[m
+[32m+[m[32m    def call(self, inputs, state, constants=None, scope=None, training=False):[m
+ [m
+         """[m
+             inputs_shape [BatchSize, Num_Nodes, Inp_features][m
+[36m@@ -121,17 +130,32 @@[m [mclass DCGRUCell(tf.keras.layers.AbstractRNNCell):[m
+         [type][m
+             [description][m
+         """[m
+[32m+[m[32m        position = constants[0][m
+ [m
+[31m-        state = tf.reshape(state, [-1, self._num_nodes, self._num_units])[m
+[32m+[m[32m        state = tf.reshape(state, [tf.shape(state[0])[0], -1, self._num_units])[m
+[32m+[m[32m        num_nodes = tf.shape(state)[1][m
+ [m
+         output_size = 2 * self._num_units[m
+         value = tf.sigmoid([m
+[31m-            self._gconv(inputs, state, output_size, bias_start=1.0)[m
+[32m+[m[32m            self._gconv([m
+[32m+[m[32m                inputs,[m
+[32m+[m[32m                state,[m
+[32m+[m[32m                output_size,[m
+[32m+[m[32m                bias_start=1.0,[m
+[32m+[m[32m                pos=position,[m
+[32m+[m[32m                training=training,[m
+[32m+[m[32m            )[m
+         )[m
+[31m-        value = tf.reshape(value, (-1, self._num_nodes, output_size))[m
+[32m+[m[32m        value = tf.reshape(value, (-1, num_nodes, output_size))[m
+         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)[m
+ [m
+[31m-        c = self._gconv(inputs, r * state, self._num_units)[m
+[32m+[m[32m        c = self._gconv([m
+[32m+[m[32m            inputs,[m
+[32m+[m[32m            r * state,[m
+[32m+[m[32m            self._num_units,[m
+[32m+[m[32m            pos=position,[m
+[32m+[m[32m            training=training,[m
+[32m+[m[32m        )[m
+ [m
+         if self._activation is not None:[m
+             c = self._activation(c)[m
+[36m@@ -148,32 +172,48 @@[m [mclass DCGRUCell(tf.keras.layers.AbstractRNNCell):[m
+         return tf.concat([x, x_], axis=0)[m
+ [m
+     @tf.function[m
+[31m-    def _gconv(self, inputs, state, output_size, bias_start=0.0):[m
+[32m+[m[32m    def _gconv([m
+[32m+[m[32m        self,[m
+[32m+[m[32m        inputs,[m
+[32m+[m[32m        state,[m
+[32m+[m[32m        output_size,[m
+[32m+[m[32m        pos,[m
+[32m+[m[32m        bias_start=0.0,[m
+[32m+[m[32m        training=False,[m
+[32m+[m[32m    ):[m
+ [m
+         inputs_and_state = tf.concat([inputs, state], axis=2)[m
+[32m+[m[32m        num_nodes = tf.shape(inputs)[1][m
+         num_inpt_features = inputs_and_state.shape[-1][m
+ [m
+[31m-        x0 = tf.reshape(tf.transpose(inputs_and_state, [1, 0, 2]), [207, -1])[m
+[32m+[m[32m        x0 = tf.reshape([m
+[32m+[m[32m            tf.transpose(inputs_and_state, [1, 0, 2]),[m
+[32m+[m[32m            [num_nodes, -1],[m
+[32m+[m[32m        )[m
+         output = [][m
+ [m
+         for support in self._supports:[m
+[31m-            x1 = tf.sparse.sparse_dense_matmul(support, x0)[m
+[32m+[m
+[32m+[m[32m            cur_support = tf.gather([m
+[32m+[m[32m                tf.gather(support, pos, axis=1), pos, axis=0[m
+[32m+[m[32m            )[m
+[32m+[m[32m            # cur_support = support[m
+[32m+[m[32m            x1 = tf.matmul(cur_support, x0)[m
+             output.append(x1)[m
+ [m
+             for k in range(2, self._max_diffusion_step + 1):[m
+[31m-                x2 = 2 * tf.sparse.sparse_dense_matmul(support, x1) - x0[m
+[32m+[m[32m                x2 = 2 * tf.matmul(cur_support, x1) - x0[m
+                 output.append(x2)[m
+                 x1, x0 = x2, x1[m
+ [m
+         batch_size = tf.shape(inputs)[0][m
+[31m-        print(tf.stack(output, axis=-1).shape)[m
+         x = tf.reshape([m
+             tf.stack(output, axis=-1),[m
+[31m-            [self._num_nodes, batch_size, num_inpt_features, -1],[m
+[32m+[m[32m            [num_nodes, batch_size, num_inpt_features, -1],[m
+         )[m
+ [m
+         x = tf.transpose(x, [1, 0, 3, 2])[m
+[31m-        x = tf.reshape(x, [batch_size, self._num_nodes, -1])[m
+[32m+[m[32m        x = tf.reshape(x, [batch_size, num_nodes, -1])[m
+ [m
+         if output_size == self._num_units:[m
+             x = tf.matmul(x, self.w2) + self.b2[m
+[36m@@ -201,15 +241,22 @@[m [mclass DCGRUBlock(tf_keras.layers.Layer):[m
+         self.cells = dcrnn_cells[m
+         self.num_nodes = num_nodes[m
+         self.steps_to_predict = steps_to_predict[m
+[31m-        self.counter = config.model.counter_position[m
+[32m+[m[32m        # self.counter = config.model.counter_position[m
+         if encode:[m
+             self.block = tf.keras.layers.RNN(self.cells, return_state=True)[m
+ [m
+     def build(self, x_shape):[m
+         self.batch_size = x_shape[0][m
+ [m
+[31m-    def encode(self, x):[m
+[31m-        state = self.block(x)[m
+[32m+[m[32m    def encode(self, x, pos):[m
+[32m+[m[32m        state = self.block([m
+[32m+[m[32m            x,[m
+[32m+[m[32m            constants=[pos],[m
+[32m+[m[32m            initial_state=([m
+[32m+[m[32m                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 64]),[m
+[32m+[m[32m                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 64]),[m
+[32m+[m[32m            ),[m
+[32m+[m[32m        )[m
+         return state[1:][m
+ [m
+     @tf.function[m
+[36m@@ -225,10 +272,10 @@[m [mclass DCGRUBlock(tf_keras.layers.Layer):[m
+         return teacher_coeff[m
+ [m
+     @tf.function[m
+[31m-    def decode(self, state, x_targ=None):[m
+[32m+[m[32m    def decode(self, state, pos=None, x_targ=None):[m
+ [m
+         init = tf.zeros([m
+[31m-            [tf.shape(state[0])[0], self.num_nodes, 1], dtype=tf.float32[m
+[32m+[m[32m            [tf.shape(state[0])[0], tf.shape(state[0])[1], 1], dtype=tf.float32[m
+         )[m
+ [m
+         state = tuple(state)[m
+[36m@@ -237,12 +284,13 @@[m [mclass DCGRUBlock(tf_keras.layers.Layer):[m
+             size=self.steps_to_predict, dtype=tf.float32[m
+         )[m
+         for i in range(self.steps_to_predict):[m
+[31m-            init, state = self.cells(init, states=state)[m
+[32m+[m[32m            init, state = self.cells(init, states=state, constants=[pos])[m
+             to_return = to_return.write(i, init)[m
+[32m+[m
+         return tf.transpose(tf.squeeze(to_return.stack(), axis=-1), [1, 0, 2])[m
+ [m
+[31m-    def call(self, x, state):[m
+[32m+[m[32m    def call(self, x, state, pos):[m
+         if self.is_encoder:[m
+[31m-            return self.encode(x)[m
+[32m+[m[32m            return self.encode(x, pos=pos)[m
+         else:[m
+[31m-            return self.decode(state, x)[m
+[32m+[m[32m            return self.decode(state=state, x_targ=x, pos=pos)[m
+[1mdiff --git a/ETA/metrics.py b/ETA/metrics.py[m
+[1mindex 29ce9c6..61a09d1 100644[m
+[1m--- a/ETA/metrics.py[m
+[1m+++ b/ETA/metrics.py[m
+[36m@@ -9,6 +9,15 @@[m [mmean = mean[0][m
+ std = std[0][m
+ [m
+ [m
+[32m+[m[32mdef loss_function(y_true, y_pred, norm):[m
+[32m+[m[32m    mask = y_true[:, :, :, 1][m
+[32m+[m[32m    y_true = y_true[:, :, :, 0][m
+[32m+[m
+[32m+[m[32m    output = ((y_true - y_pred) ** 2) * mask[m
+[32m+[m[32m    output /= norm[None, None, :][m
+[32m+[m[32m    return tf_maths.reduce_sum(output) / tf_maths.reduce_sum(mask)[m
+[32m+[m
+[32m+[m
+ def mse(y_true, y_pred):[m
+     mask = y_true[:, :, :, 1][m
+     y_true = y_true[:, :, :, 0][m
+[36m@@ -16,8 +25,8 @@[m [mdef mse(y_true, y_pred):[m
+     # y_true = (y_true*std + mean)[m
+     # y_pred = (y_pred*std + mean)[m
+ [m
+[31m-    output = ((y_true - y_pred)**2) * mask[m
+[31m-    return tf_maths.reduce_sum(output)/tf_maths.reduce_sum(mask)[m
+[32m+[m[32m    output = ((y_true - y_pred) ** 2) * mask[m
+[32m+[m[32m    return tf_maths.reduce_sum(output) / tf_maths.reduce_sum(mask)[m
+ [m
+ [m
+ def mae(y_true, y_pred):[m
+[36m@@ -28,7 +37,7 @@[m [mdef mae(y_true, y_pred):[m
+     # y_pred = (y_pred*std + mean)[m
+ [m
+     output = (tf_maths.abs(y_true - y_pred)) * mask[m
+[31m-    return tf_maths.reduce_sum(output)/tf_maths.reduce_sum(mask)[m
+[32m+[m[32m    return tf_maths.reduce_sum(output) / tf_maths.reduce_sum(mask)[m
+ [m
+ [m
+ def rmse(y_true, y_pred):[m
+[36m@@ -38,8 +47,10 @@[m [mdef rmse(y_true, y_pred):[m
+     # y_true = (y_true*std + mean)[m
+     # y_pred = (y_pred*std + mean)[m
+ [m
+[31m-    output = ((y_true - y_pred)**2) * mask[m
+[31m-    return tf_maths.sqrt(tf_maths.reduce_sum(output)/tf_maths.reduce_sum(mask))[m
+[32m+[m[32m    output = ((y_true - y_pred) ** 2) * mask[m
+[32m+[m[32m    return tf_maths.sqrt([m
+[32m+[m[32m        tf_maths.reduce_sum(output) / tf_maths.reduce_sum(mask)[m
+[32m+[m[32m    )[m
+ [m
+ [m
+ def mape(y_true, y_pred):[m
+[36m@@ -53,4 +64,4 @@[m [mdef mape(y_true, y_pred):[m
+     output = tf_where(tf_maths.is_nan(output), mask, output)[m
+     output = tf_where(tf_maths.is_inf(output), mask, output)[m
+ [m
+[31m-    return tf_maths.reduce_sum(output)/tf_maths.reduce_sum(mask)[m
+\ No newline at end of file[m
+[32m+[m[32m    return tf_maths.reduce_sum(output) / tf_maths.reduce_sum(mask)[m
+[1mdiff --git a/ETA/model.py b/ETA/model.py[m
+[1mindex 2dac8ef..98c70f2 100644[m
+[1m--- a/ETA/model.py[m
+[1m+++ b/ETA/model.py[m
+[36m@@ -4,6 +4,8 @@[m [mfrom tensorflow import squeeze as tf_squeeze[m
+ from tensorflow.python.keras.engine import data_adapter[m
+ from ETA import DCGRUBlock, DCGRUCell, config[m
+ import numpy as np[m
+[32m+[m[32mfrom ETA.metrics import loss_function[m
+[32m+[m[32mimport tensorflow as tf[m
+ [m
+ [m
+ class Model(tf_keras.Model):[m
+[36m@@ -16,7 +18,8 @@[m [mclass Model(tf_keras.Model):[m
+                 config.model.working_dir, config.model.static_data_dir[m
+             )[m
+         )["arr_0"].astype(np.float32)[m
+[31m-        num_nodes = config.model.num_nodes[m
+[32m+[m
+[32m+[m[32m        num_nodes = config.model.graph_batch_size[m
+ [m
+         self.encoder = DCGRUBlock([m
+             tf_keras.layers.StackedRNNCells([m
+[36m@@ -41,22 +44,37 @@[m [mclass Model(tf_keras.Model):[m
+             encode=False,[m
+         )[m
+ [m
+[31m-    def call(self, x, training=False, y=None):[m
+[32m+[m[32m    def call(self, x, pos=None, training=False, y=None):[m
+ [m
+[31m-        encoded = self.encoder(x, state=None, training=training)[m
+[31m-        decoded = self.decoder(state=encoded, x=y, training=training)[m
+[32m+[m[32m        encoded = self.encoder(x, state=None, training=training, pos=pos)[m
+[32m+[m[32m        decoded = self.decoder(state=encoded, x=y, training=training, pos=pos)[m
+         return decoded[m
+ [m
+     def train_step(self, data):[m
+[31m-        data = data_adapter.expand_1d(data)[m
+[31m-        x, y, sample_weight = data_adapter.unpack_x_y_sample_weight(data)[m
+[32m+[m[32m        pos, x, y = data[m
+[32m+[m[32m        print(pos, x, y)[m
+[32m+[m[32m        sample_weight = None[m
+ [m
+         with tf_diff.GradientTape() as tape:[m
+[31m-            y_pred = self(x, training=True, y=y[:, :, :, :1])[m
+[32m+[m[32m            y_pred = self(x, training=True, y=y[:, :, :, :1], pos=pos)[m
+             loss = self.compiled_loss([m
+[31m-                y, y_pred, sample_weight, regularization_losses=self.losses[m
+[32m+[m[32m                y, y_pred, None, regularization_losses=self.losses[m
+             )[m
+ [m
+         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)[m
+         self.compiled_metrics.update_state(y, y_pred, sample_weight)[m
+         return {m.name: m.result() for m in self.metrics}[m
+[32m+[m
+[32m+[m[32m    def test_step(self, data):[m
+[32m+[m[32m        pos, x, y = data[m
+[32m+[m[32m        y_pred = self(x, training=False, pos=pos)[m
+[32m+[m[32m        # Updates stateful loss metrics.[m
+[32m+[m[32m        loss = self.compiled_loss([m
+[32m+[m[32m            y, y_pred, None, regularization_losses=self.losses[m
+[32m+[m[32m        )[m
+[32m+[m[32m        self.compiled_metrics.update_state(y, y_pred, None)[m
+[32m+[m[32m        return {m.name: m.result() for m in self.metrics}[m
+[32m+[m
+[32m+[m[32m    def predict_step(self, data):[m
+[32m+[m[32m        x, _ = data[m
+[32m+[m[32m        return self(x, training=False)[m
+[1mdiff --git a/config.yaml b/config.yaml[m
+[1mindex 6c4966c..1f443f8 100644[m
+[1m--- a/config.yaml[m
+[1m+++ b/config.yaml[m
+[36m@@ -1,11 +1,12 @@[m
+ model:[m
+   working_dir: "./data"[m
+   batch_size: 16[m
+[31m-  training_label: "final_corrected/dcrnn/1"[m
+[31m-  static_data_dir: "static"[m
+[32m+[m[32m  training_label: "results/dcrnn/melr/nodes_207"[m
+   num_nodes: 207[m
+[31m-  counter_position: 0[m
+[31m-  teacher_decay_rate: 2000[m
+[32m+[m[32m  steps_to_predict: 12[m
+[32m+[m[32m  graph_batch_size: 207[m
+[32m+[m[32m  static_data_dir: "static"[m
+[32m+[m[32m  ttr: 1[m
+ [m
+ data:[m
+   shuffle: 1000[m
+[36m@@ -20,9 +21,9 @@[m [mdata:[m
+     - 0.288[m
+ [m
+ training:[m
+[31m-  learning_rate: 0.001[m
+[32m+[m[32m  learning_rate: 0.0001[m
+   decay: 1e+3[m
+   log_dir: "logs/{}"[m
+   ckpt_dir: "ckpt/{}"[m
+[31m-  epochs: 50[m
+[32m+[m[32m  epochs: 100[m
+   reset: False[m

@@ -15,7 +15,7 @@ def loss_function(y_true, y_pred, norm):
 
     output = ((y_true - y_pred) ** 2) * mask
     output /= norm[None, None, :]
-    return tf_maths.reduce_sum(output) / tf_maths.reduce_sum(mask)
+    return tf_maths.reduce_sum(output) / (tf_maths.reduce_sum(mask) + 1e-12)
 
 
 def mse(y_true, y_pred):
@@ -26,7 +26,7 @@ def mse(y_true, y_pred):
     # y_pred = (y_pred*std + mean)
 
     output = ((y_true - y_pred) ** 2) * mask
-    return tf_maths.reduce_sum(output) / tf_maths.reduce_sum(mask)
+    return tf_maths.reduce_sum(output) / (tf_maths.reduce_sum(mask) + 1e-12)
 
 
 def mae(y_true, y_pred):
@@ -37,7 +37,7 @@ def mae(y_true, y_pred):
     # y_pred = (y_pred*std + mean)
 
     output = (tf_maths.abs(y_true - y_pred)) * mask
-    return tf_maths.reduce_sum(output) / tf_maths.reduce_sum(mask)
+    return tf_maths.reduce_sum(output) / (tf_maths.reduce_sum(mask) + 1e-12)
 
 
 def rmse(y_true, y_pred):
@@ -49,7 +49,7 @@ def rmse(y_true, y_pred):
 
     output = ((y_true - y_pred) ** 2) * mask
     return tf_maths.sqrt(
-        tf_maths.reduce_sum(output) / tf_maths.reduce_sum(mask)
+        tf_maths.reduce_sum(output) / (tf_maths.reduce_sum(mask) + 1e-12)
     )
 
 
@@ -64,4 +64,4 @@ def mape(y_true, y_pred):
     output = tf_where(tf_maths.is_nan(output), mask, output)
     output = tf_where(tf_maths.is_inf(output), mask, output)
 
-    return tf_maths.reduce_sum(output) / tf_maths.reduce_sum(mask)
+    return tf_maths.reduce_sum(output) / (tf_maths.reduce_sum(mask) + 1e-12)

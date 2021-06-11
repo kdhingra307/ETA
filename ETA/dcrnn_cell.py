@@ -53,6 +53,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         supports.append(calculate_random_walk_matrix(adj_mx).T)
         supports.append(calculate_random_walk_matrix(adj_mx.T).T)
 
+
         for support in supports:
             self._supports.append(self._build_sparse_matrix(support))
 
