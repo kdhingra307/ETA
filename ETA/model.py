@@ -48,10 +48,14 @@ class Model(tf_keras.Model):
             encode=False,
         )
 
-    def call(self, x, pos=None, training=False, y=None):
+    def call(self, x, pos=None, training=False, y=None, is_train=None):
 
-        encoded = self.encoder(x, state=None, training=training, pos=pos)
-        decoded = self.decoder(state=encoded, x=y, training=training, pos=pos)
+        encoded = self.encoder(
+            x, state=None, training=training, pos=pos, is_train=is_train
+        )
+        decoded = self.decoder(
+            state=encoded, x=y, training=training, pos=pos, is_train=is_train
+        )
         return decoded
 
     def train_step(self, data):
@@ -59,7 +63,13 @@ class Model(tf_keras.Model):
         sample_weight = None
 
         with tf_diff.GradientTape() as tape:
-            y_pred = self(x, training=True, y=y[:, :, :, :1], pos=pos)
+            y_pred = self(
+                x,
+                training=True,
+                y=y[:, :, :, :1],
+                pos=pos,
+                is_train=tf.constant(True),
+            )
             loss = loss_function(y, y_pred, tf.gather(self.probability, pos))
 
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
@@ -68,7 +78,7 @@ class Model(tf_keras.Model):
 
     def test_step(self, data):
         pos, x, y = data
-        y_pred = self(x, training=False, pos=pos)
+        y_pred = self(x, training=False, pos=pos, is_train=tf.constant(False))
         # Updates stateful loss metrics.
         loss = self.compiled_loss(
             y, y_pred, None, regularization_losses=self.losses

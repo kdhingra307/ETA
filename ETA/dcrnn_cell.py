@@ -142,6 +142,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             [description]
         """
         position = constants[0]
+        is_train = constants[1]
 
         state = tf.reshape(state, [tf.shape(state[0])[0], -1, self._num_units])
         num_nodes = tf.shape(state)[1]
@@ -151,6 +152,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             self._gconv(
                 inputs,
                 state,
+                is_train,
                 output_size,
                 bias_start=1.0,
                 pos=position,
@@ -161,7 +163,12 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
         c = self._gconv(
-            inputs, r * state, self._num_units, pos=position, training=training
+            inputs,
+            r * state,
+            is_train,
+            self._num_units,
+            pos=position,
+            training=training,
         )
 
         if self._activation is not None:
@@ -180,7 +187,14 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
     @tf.function
     def _gconv(
-        self, inputs, state, output_size, pos, bias_start=0.0, training=False
+        self,
+        inputs,
+        state,
+        is_train,
+        output_size,
+        pos,
+        bias_start=0.0,
+        training=False,
     ):
 
         inputs_and_state = tf.concat([inputs, state], axis=2)
@@ -193,7 +207,9 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         )
         output = []
 
-        supports = self.train_supports if training else self.val_supports
+        supports = tf.cond(
+            is_train, lambda: self.train_supports, lambda: self.val_supports
+        )
 
         for support in supports:
 
@@ -251,10 +267,10 @@ class DCGRUBlock(tf_keras.layers.Layer):
     def build(self, x_shape):
         self.batch_size = x_shape[0]
 
-    def encode(self, x, pos):
+    def encode(self, x, pos, is_train=is_train):
         state = self.block(
             x,
-            constants=[pos],
+            constants=[pos, is_train],
             initial_state=(
                 tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 64]),
                 tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 64]),
@@ -275,7 +291,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return teacher_coeff
 
     @tf.function
-    def decode(self, state, pos=None, x_targ=None):
+    def decode(self, state, pos=None, x_targ=None, is_train=is_train):
 
         init = tf.zeros(
             [tf.shape(state[0])[0], tf.shape(state[0])[1], 1], dtype=tf.float32
@@ -287,13 +303,17 @@ class DCGRUBlock(tf_keras.layers.Layer):
             size=self.steps_to_predict, dtype=tf.float32
         )
         for i in range(self.steps_to_predict):
-            init, state = self.cells(init, states=state, constants=[pos])
+            init, state = self.cells(
+                init, states=state, constants=[pos, is_train]
+            )
             to_return = to_return.write(i, init)
 
         return tf.transpose(tf.squeeze(to_return.stack(), axis=-1), [1, 0, 2])
 
-    def call(self, x, state, pos):
+    def call(self, x, state, pos, is_train=is_train):
         if self.is_encoder:
-            return self.encode(x, pos=pos)
+            return self.encode(x, pos=pos, is_train=is_train)
         else:
-            return self.decode(state=state, x_targ=x, pos=pos)
+            return self.decode(
+                state=state, x_targ=x, pos=pos, is_train=is_train
+            )
