@@ -68,7 +68,7 @@ class Model(tf_keras.Model):
                 training=True,
                 y=y[:, :, :, :1],
                 pos=pos,
-                is_train=tf.constant(True),
+                is_train=tf.constant(False),
             )
             loss = loss_function(y, y_pred, tf.gather(self.probability, pos))
 
