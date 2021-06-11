@@ -13,7 +13,7 @@ std_expanded = np.array(std).reshape([1, 1, -1])
 
 def get_data(split_label):
 
-    batch_sampler = sampling()
+    batch_sampler = rwt_sampling()
 
     def tf_map(file_name):
 
@@ -67,7 +67,7 @@ def get_data(split_label):
 
 
 #%%
-class sampling:
+class node_sampling:
     def __init__(self, sampler="random"):
 
         adj = np.load(
@@ -94,3 +94,47 @@ class sampling:
         samples = tf.unique(samples)[0]
         return samples
         # return tf.random.shuffle(np.arange(207))
+
+
+class rwt_sampling:
+    def __init__(self, sampler="random"):
+
+        self.adj = (
+            np.load(
+                "{}/{}/metr_adj_matrix.npz".format(
+                    config.model.working_dir, config.model.static_data_dir
+                )
+            )["arr_0"].astype(np.float32)
+            > 0
+        )
+
+        self.n_init = config.model.graph_batch_size
+        self.n_nodes = config.model.num_nodes
+
+        self.sampler = {
+            "melr_train": self.sample,
+            "melr_val": lambda: np.arange(207),
+        }
+
+    def dummy(self):
+        nodes = np.array([np.random.randint(self.n_nodes), 26, 44])
+
+        while len(nodes) < self.n_init:
+            neighbours = np.array([], dtype=np.int32)
+            for e in nodes:
+                neighbours = np.union1d(neighbours, np.nonzero(self.adj[e])[0])
+
+            nodes = np.union1d(
+                nodes,
+                np.random.choice(
+                    neighbours, len(neighbours) // 2, replace=False
+                ),
+            )
+
+        return np.array(nodes)[: self.n_init].astype(np.int32)
+
+    def sample(self):
+
+        output = tf.numpy_function(self.dummy, [], tf.int32)
+
+        return tf.ensure_shape(output, [self.n_init])

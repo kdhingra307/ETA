@@ -46,26 +46,15 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._num_proj = num_proj
         self._num_units = num_units
         self._max_diffusion_step = max_diffusion_step
-        self.train_supports = []
-        self.val_supports = []
+        self._supports = []
         self._use_gc_for_ru = use_gc_for_ru
 
         supports = []
         supports.append(calculate_random_walk_matrix(adj_mx).T)
         supports.append(calculate_random_walk_matrix(adj_mx.T).T)
 
-        probability = adj_mx ** 2
-        probability = np.sum(probability, axis=-1)
-        probability = probability / np.sum(probability)
-
-        # probability = probability[:, None].dot(probability[None, :])
-        probability = np.array([probability for _ in range(207)])
-
         for support in supports:
-            self.train_supports.append(
-                self._build_sparse_matrix(support, probability)
-            )
-            self.val_supports.append(self._build_sparse_matrix(support))
+            self._supports.append(self._build_sparse_matrix(support))
 
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
@@ -142,7 +131,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             [description]
         """
         position = constants[0]
-        is_train = constants[1]
 
         state = tf.reshape(state, [tf.shape(state[0])[0], -1, self._num_units])
         num_nodes = tf.shape(state)[1]
@@ -152,7 +140,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             self._gconv(
                 inputs,
                 state,
-                is_train,
                 output_size,
                 bias_start=1.0,
                 pos=position,
@@ -165,7 +152,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         c = self._gconv(
             inputs,
             r * state,
-            is_train,
             self._num_units,
             pos=position,
             training=training,
@@ -190,7 +176,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self,
         inputs,
         state,
-        is_train,
         output_size,
         pos,
         bias_start=0.0,
@@ -207,11 +192,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         )
         output = []
 
-        supports = tf.cond(
-            is_train, lambda: self.train_supports, lambda: self.val_supports
-        )
-
-        for support in supports:
+        for support in self._supports:
 
             cur_support = tf.gather(
                 tf.gather(support, pos, axis=1), pos, axis=0
@@ -267,10 +248,10 @@ class DCGRUBlock(tf_keras.layers.Layer):
     def build(self, x_shape):
         self.batch_size = x_shape[0]
 
-    def encode(self, x, pos, is_train=None):
+    def encode(self, x, pos):
         state = self.block(
             x,
-            constants=[pos, is_train],
+            constants=[pos],
             initial_state=(
                 tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 64]),
                 tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 64]),
@@ -291,7 +272,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return teacher_coeff
 
     @tf.function
-    def decode(self, state, pos=None, x_targ=None, is_train=None):
+    def decode(self, state, pos=None, x_targ=None):
 
         init = tf.zeros(
             [tf.shape(state[0])[0], tf.shape(state[0])[1], 1], dtype=tf.float32
@@ -303,17 +284,13 @@ class DCGRUBlock(tf_keras.layers.Layer):
             size=self.steps_to_predict, dtype=tf.float32
         )
         for i in range(self.steps_to_predict):
-            init, state = self.cells(
-                init, states=state, constants=[pos, is_train]
-            )
+            init, state = self.cells(init, states=state, constants=[pos])
             to_return = to_return.write(i, init)
 
         return tf.transpose(tf.squeeze(to_return.stack(), axis=-1), [1, 0, 2])
 
-    def call(self, x, state, pos, is_train=None):
+    def call(self, x, state, pos):
         if self.is_encoder:
-            return self.encode(x, pos=pos, is_train=is_train)
+            return self.encode(x, pos=pos)
         else:
-            return self.decode(
-                state=state, x_targ=x, pos=pos, is_train=is_train
-            )
+            return self.decode(state=state, x_targ=x, pos=pos)
