@@ -46,31 +46,14 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._num_proj = num_proj
         self._num_units = num_units
         self._max_diffusion_step = max_diffusion_step
-        self.train_supports = []
-        self.val_supports = []
+        self._supports = []
         self._use_gc_for_ru = use_gc_for_ru
 
         norm = np.load("./data/static/norm.npy")
 
-        self.train_supports = [
-            tf.constant(
-                calculate_random_walk_matrix(adj_mx * norm.T).T.todense(),
-                dtype=tf.float32,
-            ),
-            tf.constant(
-                calculate_random_walk_matrix((adj_mx * norm.T).T).T.todense(),
-                dtype=tf.float32,
-            ),
-        ]
-        self.val_supports = [
-            tf.constant(
-                calculate_random_walk_matrix(adj_mx).T.todense(),
-                dtype=tf.float32,
-            ),
-            tf.constant(
-                calculate_random_walk_matrix((adj_mx).T).T.todense(),
-                dtype=tf.float32,
-            ),
+        self._supports = [
+            tf.constant(adj_mx, dtype=tf.float32),
+            tf.constant(adj_mx.T, dtype=tf.float32),
         ]
 
         if num_proj != None:
@@ -209,16 +192,12 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         )
         output = []
 
-        if training:
-            supports = self.train_supports
-        else:
-            supports = self.val_supports
-
-        for support in supports:
+        for support in self._supports:
 
             cur_support = tf.gather(
                 tf.gather(support, pos, axis=1), pos, axis=0
             )
+            cur_support = calculate_random_walk_matrix(cur_support)
 
             x1 = tf.matmul(cur_support, x0)
             output.append(x1)
@@ -246,12 +225,13 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
 
 def calculate_random_walk_matrix(adj_mx):
-    adj_mx = sp.coo_matrix(adj_mx)
-    d = np.array(adj_mx.sum(1))
-    d_inv = np.power(d, -1).flatten()
-    d_inv[np.isinf(d_inv)] = 0.0
-    d_mat_inv = sp.diags(d_inv)
-    random_walk_mx = d_mat_inv.dot(adj_mx).tocoo()
+    d = tf.reduce_sum(adj_mx, axis=1)
+    d_inv = tf.math.pow(d, -1)
+    d_inv = tf.where(tf.math.is_inf(d_inv), tf.zeros_like(d_inv), d_inv)
+    d_mat_inv = tf.linalg.diag(d_inv)
+
+    random_walk_mx = tf.matmul(d_mat_inv, adj_mx)
+
     return random_walk_mx
 
 
