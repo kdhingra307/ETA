@@ -54,11 +54,11 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
         self.train_supports = [
             tf.constant(
-                calculate_random_walk_matrix(adj_mx * norm).T.todense(),
+                calculate_random_walk_matrix(adj_mx * norm.T).T.todense(),
                 dtype=tf.float32,
             ),
             tf.constant(
-                calculate_random_walk_matrix((adj_mx * norm).T).T.todense(),
+                calculate_random_walk_matrix((adj_mx * norm.T).T).T.todense(),
                 dtype=tf.float32,
             ),
         ]
