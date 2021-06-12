@@ -53,7 +53,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         supports.append(calculate_random_walk_matrix(adj_mx).T)
         supports.append(calculate_random_walk_matrix(adj_mx.T).T)
 
-
         for support in supports:
             self._supports.append(self._build_sparse_matrix(support))
 
@@ -197,8 +196,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
             cur_support = tf.gather(
                 tf.gather(support, pos, axis=1), pos, axis=0
-            )
-            # cur_support = support
+            ) * tf.cast(tf.shape(pos)[0] / 207, tf.float32)
+
             x1 = tf.matmul(cur_support, x0)
             output.append(x1)
 
