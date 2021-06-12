@@ -46,15 +46,32 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._num_proj = num_proj
         self._num_units = num_units
         self._max_diffusion_step = max_diffusion_step
-        self._supports = []
+        self.train_supports = []
+        self.val_supports = []
         self._use_gc_for_ru = use_gc_for_ru
 
-        supports = []
-        supports.append(calculate_random_walk_matrix(adj_mx).T)
-        supports.append(calculate_random_walk_matrix(adj_mx.T).T)
+        norm = np.load("./data/static/norm.npy")
 
-        for support in supports:
-            self._supports.append(self._build_sparse_matrix(support))
+        self.train_supports = [
+            tf.constant(
+                calculate_random_walk_matrix(adj_mx * norm).T.todense(),
+                dtype=tf.float32,
+            ),
+            tf.constant(
+                calculate_random_walk_matrix((adj_mx * norm).T).T.todense(),
+                dtype=tf.float32,
+            ),
+        ]
+        self.val_supports = [
+            tf.constant(
+                calculate_random_walk_matrix(adj_mx).T.todense(),
+                dtype=tf.float32,
+            ),
+            tf.constant(
+                calculate_random_walk_matrix((adj_mx).T).T.todense(),
+                dtype=tf.float32,
+            ),
+        ]
 
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
@@ -192,7 +209,12 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         )
         output = []
 
-        for support in self._supports:
+        if training:
+            supports = self.train_supports
+        else:
+            supports = self.val_supports
+
+        for support in supports:
 
             cur_support = tf.gather(
                 tf.gather(support, pos, axis=1), pos, axis=0
