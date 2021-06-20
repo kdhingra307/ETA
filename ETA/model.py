@@ -101,7 +101,9 @@ class Model(tf_keras.Model):
             "mse": loss_function,
             "gan": tf_keras.losses.BinaryCrossentropy(from_logits=True),
         }
-        self.adversarial = tf.convert_to_tensor(False)
+        self.adversarial = tf.Variable(
+            tf.convert_to_tensor(False), dtype=tf.bool, trainable=False
+        )
 
     def build(self, input_shape):
         super().build(input_shape)
@@ -262,15 +264,21 @@ class Model(tf_keras.Model):
 
         self.dcounter.assign_add(1)
 
-        disc_acc = (
-            self.metrics["gan/ar"].result() + self.metrics["gan/ttf"].result()
-        ) / 2
+        disc_acc = tf.constant(0, dtype=tf.float32)
+        for e in self.metrics:
+            if e.name == "gan/ar" or e.name == "gan/ttf":
+                disc_acc += e.results()
 
-        self.adversarial = tf.cond(
-            (disc_acc < 0.98) and (disc_acc > 0.8),
-            lambda: tf.convert_to_tensor(True),
-            lambda: tf.convert_to_tensor(False),
+        disc_acc /= 2
+
+        self.adversarial.assign(
+            tf.cond(
+                tf.logical_and((disc_acc < 0.98), (disc_acc > 0.8)),
+                lambda: tf.convert_to_tensor(True),
+                lambda: tf.convert_to_tensor(False),
+            )
         )
+
         tf.summary.scalar(
             "gan/adversarial",
             self.adversarial,
