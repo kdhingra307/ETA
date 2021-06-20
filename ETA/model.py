@@ -266,10 +266,16 @@ class Model(tf_keras.Model):
 
         disc_acc = tf.constant(0, dtype=tf.float32)
         for e in self.metrics:
-            if e.name == "gan/ar" or e.name == "gan/ttf":
-                disc_acc += e.results()
+            print(e.name)
+            if (
+                e.name == "gan/ar_binary_accuracy"
+                or e.name == "gan/ttf_binary_accuracy"
+            ):
+                disc_acc += e.result()
 
         disc_acc /= 2
+
+        tf.print(disc_acc)
 
         self.adversarial.assign(
             tf.cond(

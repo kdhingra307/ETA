@@ -1,7 +1,7 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "professor_training"
+  training_label: "professor_training/1"
   num_nodes: 207
   steps_to_predict: 12
   ttr: 1
