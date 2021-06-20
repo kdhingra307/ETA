@@ -266,7 +266,6 @@ class Model(tf_keras.Model):
 
         disc_acc = tf.constant(0, dtype=tf.float32)
         for e in self.metrics:
-            print(e.name)
             if (
                 e.name == "gan/ar_binary_accuracy"
                 or e.name == "gan/ttf_binary_accuracy"
@@ -274,8 +273,6 @@ class Model(tf_keras.Model):
                 disc_acc += e.result()
 
         disc_acc /= 2
-
-        tf.print(disc_acc)
 
         self.adversarial.assign(
             tf.cond(
