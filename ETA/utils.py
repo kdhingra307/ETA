@@ -63,11 +63,3 @@ class CheckpointManager(tf_keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs):
         if logs[self.label] < self.loss:
             self.ckpt_manager.save()
-
-        tf.summary.scalar(
-            name="gcounter",
-            data=self.model.gcounter,
-            step=epoch,
-        )
-        self.model.counter.assign(0)
-        self.model.avg_train.assign(0)
