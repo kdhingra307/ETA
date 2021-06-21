@@ -143,8 +143,6 @@ class Model(tf_keras.Model):
             lambda: None,
         )
 
-        self.gcounter.assign_add(1)
-
     def q_update_val(self, loss):
 
         epsilon = 0.9 / (1 + tf.cast(10 * self.gcounter, tf.float32) / 10000)
@@ -222,17 +220,22 @@ class Model(tf_keras.Model):
         )
         tf.summary.scalar(
             name="Q/ttf",
-            data=(relative_ttf),
+            data=self.ttf_loss,
             step=self.gcounter,
         )
         tf.summary.scalar(
             name="Q/Ar",
-            data=(relative_ar),
+            data=self.ar_loss,
             step=self.gcounter,
         )
         tf.summary.scalar(
             name="Q/loss",
-            data=(loss),
+            data=loss,
+            step=self.gcounter,
+        )
+        tf.summary.scalar(
+            name="Q/ttr_current",
+            data=self.ttr_param,
             step=self.gcounter,
         )
         self.gcounter.assign_add(1)
