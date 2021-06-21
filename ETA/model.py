@@ -143,6 +143,8 @@ class Model(tf_keras.Model):
             lambda: None,
         )
 
+        self.gcounter.assign_add(1)
+
     def q_update_val(self, loss):
 
         epsilon = 0.9 / (1 + tf.cast(10 * self.gcounter, tf.float32) / 10000)
@@ -238,7 +240,6 @@ class Model(tf_keras.Model):
             data=self.ttr_param,
             step=self.gcounter,
         )
-        self.gcounter.assign_add(1)
 
     @tf_function
     def decode(self, state, x_targ=None, init=None, training=False):
