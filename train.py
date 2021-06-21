@@ -35,10 +35,8 @@ ckpt_dir = join_directory(
 
 
 def scheduler(epoch, lr):
-    if epoch >= 20 and epoch <= 50 and epoch % 10 == 0:
-        lr *= 0.9
-
-    print(tf.summary.scalar("LearningRate", data=lr))
+    if epoch >= 20 and epoch <= 50 and epoch % 3 == 0:
+        lr *= 0.7
     return lr
 
 

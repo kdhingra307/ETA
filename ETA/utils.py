@@ -43,7 +43,7 @@ def rmse(y_true, y_pred):
 def mape(y_true, y_pred):
     mask = y_true[:, :, :, 1]
     y_true = y_true[:, :, :, 0]
-    output = tf_maths.abs(y_true - y_pred) / y_true
+    output = tf_maths.abs(y_true - y_pred) / tf.math.abs(y_true)
     output = tf_where(tf_maths.is_nan(output), mask, output)
     output = tf_where(tf_maths.is_inf(output), mask, output)
 
