@@ -142,6 +142,11 @@ class Model(tf_keras.Model):
             lambda: self.q_update_val(loss),
             lambda: None,
         )
+        tf.summary.scalar(
+            name="Q/ttr_current",
+            data=self.ttr_param,
+            step=self.gcounter,
+        )
 
         self.gcounter.assign_add(1)
 
@@ -233,11 +238,6 @@ class Model(tf_keras.Model):
         tf.summary.scalar(
             name="Q/loss",
             data=loss,
-            step=self.gcounter,
-        )
-        tf.summary.scalar(
-            name="Q/ttr_current",
-            data=self.ttr_param,
             step=self.gcounter,
         )
 
