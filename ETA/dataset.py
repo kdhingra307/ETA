@@ -137,4 +137,4 @@ class rwt_sampling:
 
         output = tf.numpy_function(self.dummy, [], tf.int32)
 
-        return tf.ensure_shape(output, [None])
+        return tf.ensure_shape(output, [self.n_init])
