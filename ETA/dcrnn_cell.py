@@ -200,6 +200,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             cur_support = tf.gather(
                 tf.gather(support, pos, axis=1), pos, axis=0
             )
+            tf.print(cur_support.shape)
             cur_support = calculate_random_walk_matrix(cur_support)
 
             x1 = tf.matmul(cur_support, x0)
