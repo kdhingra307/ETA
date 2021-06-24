@@ -194,6 +194,9 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
         for support in self._supports:
 
+            tf.print(pos)
+            tf.print(pos > 207)
+            tf.print(support.shape)
             cur_support = tf.gather(
                 tf.gather(support, pos, axis=1), pos, axis=0
             )
