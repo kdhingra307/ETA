@@ -89,7 +89,7 @@ class node_sampling:
 
         self.sampler = {
             "melr_train": self.sample,
-            "melr_val": lambda: tf.range(207),
+            "melr_val": lambda: tf.range(256),
         }
 
     def sample(self):
@@ -119,7 +119,7 @@ class rwt_sampling:
 
         self.sampler = {
             "custom_train": self.sample,
-            "custom_val": lambda: np.arange(207),
+            "custom_val": self.sample,
         }
 
     def dummy(self):
