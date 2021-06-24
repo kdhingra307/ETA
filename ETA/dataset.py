@@ -101,7 +101,7 @@ class rwt_sampling:
 
         self.adj = (
             np.load(
-                "{}/{}/metr_adj_matrix.npz".format(
+                "{}/{}/adj_matrix.npz".format(
                     config.model.working_dir, config.model.static_data_dir
                 )
             )["arr_0"].astype(np.float32)
@@ -112,8 +112,8 @@ class rwt_sampling:
         self.n_nodes = config.model.num_nodes
 
         self.sampler = {
-            "melr_train": self.sample,
-            "melr_val": lambda: np.arange(207),
+            "custom_train": self.sample,
+            "custom_val": lambda: np.arange(207),
         }
 
     def dummy(self):
