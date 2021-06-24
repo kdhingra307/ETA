@@ -124,12 +124,13 @@ class rwt_sampling:
         }
 
     def dummy(self):
-        nodes = np.concatenate(
-            [
-                np.array([np.random.randint(self.n_nodes)]),
-                self.roots,
-            ]
-        )
+        # nodes = np.concatenate(
+        #     [
+        #         np.array([np.random.randint(self.n_nodes)]),
+        #         self.roots,
+        #     ]
+        # )
+        nodes = np.array([np.random.randint(self.n_nodes)])
 
         while len(nodes) < self.n_init:
             neighbours = np.array([], dtype=np.int32)

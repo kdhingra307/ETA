@@ -136,13 +136,22 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         num_nodes = tf.shape(state)[1]
 
         output_size = 2 * self._num_units
+
+        _support = []
+        for support in self._supports:
+            cur_support = tf.gather(
+                tf.gather(support, position, axis=1), position, axis=0
+            )
+            cur_support = calculate_random_walk_matrix(cur_support)
+            _support.append(cur_support)
+
         value = tf.sigmoid(
             self._gconv(
                 inputs,
                 state,
                 output_size,
                 bias_start=1.0,
-                pos=position,
+                _support=_support,
                 training=training,
             )
         )
@@ -153,7 +162,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             inputs,
             r * state,
             self._num_units,
-            pos=position,
+            _support=_support,
             training=training,
         )
 
@@ -177,7 +186,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         inputs,
         state,
         output_size,
-        pos,
+        _supports,
         bias_start=0.0,
         training=False,
     ):
@@ -192,16 +201,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         )
         output = []
 
-        for support in self._supports:
-
-            tf.print(pos)
-            tf.print(pos > 207)
-            tf.print(support.shape)
-            cur_support = tf.gather(
-                tf.gather(support, pos, axis=1), pos, axis=0
-            )
-            tf.print(cur_support.shape)
-            cur_support = calculate_random_walk_matrix(cur_support)
+        for cur_support in _supports:
 
             x1 = tf.matmul(cur_support, x0)
             output.append(x1)
