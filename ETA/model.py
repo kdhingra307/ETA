@@ -29,7 +29,7 @@ class Model(tf_keras.Model):
                 ]
             ),
             num_nodes=num_nodes,
-            steps_to_predict=12,
+            steps_to_predict=config.model.steps_to_predict,
         )
 
         self.decoder = DCGRUBlock(
@@ -40,7 +40,7 @@ class Model(tf_keras.Model):
                 ]
             ),
             num_nodes=num_nodes,
-            steps_to_predict=12,
+            steps_to_predict=config.model.steps_to_predict,
             encode=False,
         )
 
