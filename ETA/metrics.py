@@ -9,18 +9,19 @@ mean = mean[0]
 std = std[0]
 
 
-def loss_function(y_true, y_pred, norm):
+def loss_function(y_true, y_pred):
     mask = y_true[:, :, :, 1]
     y_true = y_true[:, :, :, 0]
 
     output = ((y_true - y_pred) ** 2) * mask
-    output /= norm[None, None, :]
     return tf_maths.reduce_sum(output) / (tf_maths.reduce_sum(mask) + 1e-12)
 
 
 def mse(y_true, y_pred):
     mask = y_true[:, :, :, 1]
     y_true = y_true[:, :, :, 0]
+
+    print(y_pred, y_true, mask)
 
     # y_true = (y_true*std + mean)
     # y_pred = (y_pred*std + mean)
