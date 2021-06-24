@@ -151,7 +151,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                 state,
                 output_size,
                 bias_start=1.0,
-                _support=_support,
+                _supports=_support,
                 training=training,
             )
         )
@@ -162,7 +162,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             inputs,
             r * state,
             self._num_units,
-            _support=_support,
+            _supports=_support,
             training=training,
         )
 
