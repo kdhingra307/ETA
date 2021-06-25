@@ -1,7 +1,7 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "results/dcrnn/custom/dcrnn/512/2"
+  training_label: "results/dcrnn/custom/dcrnn/512/4"
   num_nodes: 6639
   steps_to_predict: 6
   graph_batch_size: 512

@@ -10,6 +10,28 @@ mean, std = config.data.mean, config.data.std
 mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
+adj_mx = np.load(
+    "{}/{}/adj_matrix.npz".format(
+        config.model.working_dir, config.model.static_data_dir
+    )
+)["arr_0"].astype(np.float32)
+
+base_supports = [
+    tf.constant(adj_mx, dtype=tf.float32),
+    tf.constant(adj_mx.T, dtype=tf.float32),
+]
+
+
+def calculate_random_walk_matrix(adj_mx):
+    d = tf.reduce_sum(adj_mx, axis=1)
+    d_inv = tf.math.pow(d, -1)
+    d_inv = tf.where(tf.math.is_inf(d_inv), tf.zeros_like(d_inv), d_inv)
+    d_mat_inv = tf.linalg.diag(d_inv)
+
+    random_walk_mx = tf.matmul(d_mat_inv, adj_mx)
+
+    return random_walk_mx
+
 
 def get_data(split_label):
 
@@ -63,7 +85,15 @@ def get_data(split_label):
         x = tf.gather(x, indices=positions, axis=2)
         y = tf.gather(y, indices=positions, axis=2)
 
-        return positions, x, y
+        final_support = []
+        for support in base_supports:
+            cur_support = tf.gather(
+                tf.gather(support, positions, axis=1), positions, axis=0
+            )
+            cur_support = calculate_random_walk_matrix(cur_support)
+            final_support.append(cur_support)
+
+        return tf.stack(final_support, axit=0), x, y
 
     tf_dataset = tf_dataset.map(second_map)
 

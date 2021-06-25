@@ -51,20 +51,15 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
         norm = np.load("./data/static/norm.npy")
 
-        self._supports = [
-            tf.constant(adj_mx, dtype=tf.float32),
-            tf.constant(adj_mx.T, dtype=tf.float32),
-        ]
-
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
                 [
                     tf_keras.layers.Dense(
-                        units=32, activation=tf_keras.layers.LeakyReLU(0.2)
+                        units=128, activation=tf_keras.layers.LeakyReLU(0.2)
                     ),
                     tf_keras.layers.BatchNormalization(),
                     tf_keras.layers.Dense(
-                        units=16, activation=tf_keras.layers.LeakyReLU(0.2)
+                        units=64, activation=tf_keras.layers.LeakyReLU(0.2)
                     ),
                     tf_keras.layers.Dense(units=num_proj),
                 ]
@@ -137,21 +132,13 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
         output_size = 2 * self._num_units
 
-        _support = []
-        for support in self._supports:
-            cur_support = tf.gather(
-                tf.gather(support, position, axis=1), position, axis=0
-            )
-            cur_support = calculate_random_walk_matrix(cur_support)
-            _support.append(cur_support)
-
         value = tf.sigmoid(
             self._gconv(
                 inputs,
                 state,
                 output_size,
                 bias_start=1.0,
-                _supports=_support,
+                _supports=position,
                 training=training,
             )
         )
@@ -162,7 +149,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             inputs,
             r * state,
             self._num_units,
-            _supports=_support,
+            _supports=position,
             training=training,
         )
 
@@ -201,13 +188,13 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         )
         output = []
 
-        for cur_support in _supports:
+        for i in range(2):
 
-            x1 = tf.matmul(cur_support, x0)
+            x1 = tf.matmul(_supports[i], x0)
             output.append(x1)
 
             for k in range(2, self._max_diffusion_step + 1):
-                x2 = 2 * tf.matmul(cur_support, x1) - x0
+                x2 = 2 * tf.matmul(_supports[i], x1) - x0
                 output.append(x2)
                 x1, x0 = x2, x1
 
@@ -226,17 +213,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             x = tf.matmul(x, self.w1) + self.b1
 
         return x
-
-
-def calculate_random_walk_matrix(adj_mx):
-    d = tf.reduce_sum(adj_mx, axis=1)
-    d_inv = tf.math.pow(d, -1)
-    d_inv = tf.where(tf.math.is_inf(d_inv), tf.zeros_like(d_inv), d_inv)
-    d_mat_inv = tf.linalg.diag(d_inv)
-
-    random_walk_mx = tf.matmul(d_mat_inv, adj_mx)
-
-    return random_walk_mx
 
 
 class DCGRUBlock(tf_keras.layers.Layer):
