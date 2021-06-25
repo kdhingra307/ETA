@@ -154,23 +154,29 @@ class rwt_sampling:
         }
 
     def dummy(self):
-        nodes = np.concatenate(
-            [
-                np.array([np.random.randint(self.n_nodes)]),
-                self.roots[:10],
-            ]
-        )
-        # nodes = np.array([np.random.randint(self.n_nodes)])
+        nodes = (np.array([np.random.randint(self.n_nodes)]),)
 
         while len(nodes) < self.n_init:
+            cur_nodes = len(nodes)
             neighbours = np.array([], dtype=np.int32)
             for e in nodes:
                 neighbours = np.union1d(neighbours, np.nonzero(self.adj[e])[0])
 
+            chosen_neighbours = (
+                neighbours
+                if len(neighbours) < 5
+                else np.random.choice(neighbours, 5, replace=False)
+            )
             nodes = np.union1d(
                 nodes,
-                np.random.choice(neighbours, 20, replace=False),
+                chosen_neighbours,
             )
+
+            if cur_nodes == len(nodes):
+                remaining_nodes = np.delete(np.arange(6639), nodes)
+                nodes = np.concatenate(
+                    [nodes, np.random.choice(remaining_nodes, 1)]
+                )
 
         return np.array(nodes)[: self.n_init].astype(np.int32)
 
