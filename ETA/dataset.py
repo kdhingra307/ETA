@@ -93,7 +93,7 @@ def get_data(split_label):
             cur_support = calculate_random_walk_matrix(cur_support)
             final_support.append(cur_support)
 
-        return tf.stack(final_support, axit=0), x, y
+        return tf.stack(final_support, axis=0), x, y
 
     tf_dataset = tf_dataset.map(second_map)
 
