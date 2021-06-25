@@ -21,7 +21,7 @@ data:
     - 0.26022761
 
 training:
-  learning_rate: 0.0001
+  learning_rate: 0.001
   decay: 1e+3
   log_dir: "logs/{}"
   ckpt_dir: "ckpt/{}"
