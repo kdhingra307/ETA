@@ -1,10 +1,10 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "results/dcrnn/custom/dcrnn/256/2"
+  training_label: "results/dcrnn/custom/dcrnn/512/2"
   num_nodes: 6639
   steps_to_predict: 6
-  graph_batch_size: 256
+  graph_batch_size: 512
   static_data_dir: "static"
   ttr: 1
 
@@ -14,11 +14,11 @@ data:
   path_pattern: "training_files"
   split_prefix: "custom_{}"
   mean:
-    - 1.3395504
-    - 0.49493809
+    - 1.45362457
+    - 0.53708629
   std:
-    - 1.64047834
-    - 0.28855661
+    - 1.65967594
+    - 0.26022761
 
 training:
   learning_rate: 0.001
