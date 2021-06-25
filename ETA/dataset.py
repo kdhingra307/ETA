@@ -95,6 +95,7 @@ def get_data(split_label):
                 tf.transpose(calculate_random_walk_matrix(cur_support), [1, 0])
             )
 
+        tf.print(positions)
         return tf.stack(final_support, axis=0), x, y
 
     tf_dataset = tf_dataset.map(second_map)

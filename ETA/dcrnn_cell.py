@@ -49,8 +49,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._supports = []
         self._use_gc_for_ru = use_gc_for_ru
 
-        norm = np.load("./data/static/norm.npy")
-
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
                 [
