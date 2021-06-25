@@ -16,11 +16,6 @@ adj_mx = np.load(
     )
 )["arr_0"].astype(np.float32)
 
-base_supports = [
-    tf.constant(calculate_random_walk_matrix(adj_mx), dtype=tf.float32),
-    tf.constant(calculate_random_walk_matrix(adj_mx.T), dtype=tf.float32),
-]
-
 
 def calculate_random_walk_matrix(adj_mx):
     d = tf.reduce_sum(adj_mx, axis=1)
@@ -31,6 +26,12 @@ def calculate_random_walk_matrix(adj_mx):
     random_walk_mx = tf.matmul(d_mat_inv, adj_mx)
 
     return random_walk_mx
+
+
+base_supports = [
+    tf.constant(calculate_random_walk_matrix(adj_mx), dtype=tf.float32),
+    tf.constant(calculate_random_walk_matrix(adj_mx.T), dtype=tf.float32),
+]
 
 
 def get_data(split_label):
