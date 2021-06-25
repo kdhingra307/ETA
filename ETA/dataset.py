@@ -94,8 +94,6 @@ def get_data(split_label):
             final_support.append(
                 tf.transpose(calculate_random_walk_matrix(cur_support), [1, 0])
             )
-
-        tf.print(positions)
         return tf.stack(final_support, axis=0), x, y
 
     tf_dataset = tf_dataset.map(second_map)
@@ -181,6 +179,7 @@ class rwt_sampling:
                     [nodes, np.random.choice(remaining_nodes, 1)]
                 )
 
+        print(np.array(nodes))
         return np.array(nodes)[: self.n_init].astype(np.int32)
 
     def sample(self):
