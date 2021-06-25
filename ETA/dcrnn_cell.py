@@ -53,11 +53,11 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             self.projection_layer = tf_keras.Sequential(
                 [
                     tf_keras.layers.Dense(
-                        units=128, activation=tf_keras.layers.LeakyReLU(0.2)
+                        units=64, activation=tf_keras.layers.LeakyReLU(0.2)
                     ),
                     tf_keras.layers.BatchNormalization(),
                     tf_keras.layers.Dense(
-                        units=64, activation=tf_keras.layers.LeakyReLU(0.2)
+                        units=32, activation=tf_keras.layers.LeakyReLU(0.2)
                     ),
                     tf_keras.layers.BatchNormalization(),
                     tf_keras.layers.Dense(
@@ -83,7 +83,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
     def build(self, inp_shape):
 
-        inpt_features = (inp_shape[-1] + 512) * 4
+        inpt_features = (inp_shape[-1] + 128) * 4
 
         kernel_initializer = tf_keras.initializers.GlorotUniform()
         bias_initializer = tf_keras.initializers.Zeros()
@@ -237,8 +237,8 @@ class DCGRUBlock(tf_keras.layers.Layer):
             x,
             constants=[pos],
             initial_state=(
-                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 512]),
-                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 512]),
+                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 128]),
+                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 128]),
             ),
         )
         return state[1:]
