@@ -157,7 +157,7 @@ class rwt_sampling:
         nodes = np.concatenate(
             [
                 np.array([np.random.randint(self.n_nodes)]),
-                self.roots[:100],
+                self.roots[:10],
             ]
         )
         # nodes = np.array([np.random.randint(self.n_nodes)])
@@ -169,9 +169,7 @@ class rwt_sampling:
 
             nodes = np.union1d(
                 nodes,
-                np.random.choice(
-                    neighbours, len(neighbours) // 2, replace=False
-                ),
+                np.random.choice(neighbours, 20, replace=False),
             )
 
         return np.array(nodes)[: self.n_init].astype(np.int32)
