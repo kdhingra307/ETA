@@ -163,8 +163,8 @@ class rwt_sampling:
 
             chosen_neighbours = (
                 neighbours
-                if len(neighbours) < 24
-                else np.random.choice(neighbours, 24, replace=False)
+                if len(neighbours) < 12
+                else np.random.choice(neighbours, 12, replace=False)
             )
             nodes = np.union1d(
                 nodes,
