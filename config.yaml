@@ -1,10 +1,10 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "results/dcrnn/custom/dcrnn/256/gaussian"
+  training_label: "results/dcrnn/custom/dcrnn/128/gaussian_re"
   num_nodes: 6639
   steps_to_predict: 6
-  graph_batch_size: 256
+  graph_batch_size: 128
   static_data_dir: "static"
   ttr: 1
 
