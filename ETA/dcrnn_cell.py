@@ -235,8 +235,8 @@ class DCGRUBlock(tf_keras.layers.Layer):
             x,
             constants=[pos],
             initial_state=(
-                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 64]),
-                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 64]),
+                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 256]),
+                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 256]),
             ),
         )
         return state[1:]
