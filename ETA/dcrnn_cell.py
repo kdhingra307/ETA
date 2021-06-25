@@ -56,10 +56,12 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                         units=64, activation=tf_keras.layers.LeakyReLU(0.2)
                     ),
                     tf_keras.layers.BatchNormalization(),
+                    tf_keras.layers.Dropout(0.5),
                     tf_keras.layers.Dense(
                         units=32, activation=tf_keras.layers.LeakyReLU(0.2)
                     ),
                     tf_keras.layers.BatchNormalization(),
+                    tf_keras.layers.Dropout(0.5),
                     tf_keras.layers.Dense(
                         units=16, activation=tf_keras.layers.LeakyReLU(0.2)
                     ),
@@ -193,7 +195,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         for i in range(2):
 
             x1 = tf.matmul(_supports[i], x0)
-            print("support", _supports[i])
             output.append(x1)
 
             for k in range(2, self._max_diffusion_step + 1):

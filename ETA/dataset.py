@@ -91,9 +91,7 @@ def get_data(split_label):
             cur_support = tf.gather(
                 tf.gather(support, positions, axis=1), positions, axis=0
             )
-            final_support.append(
-                tf.transpose(calculate_random_walk_matrix(cur_support), [1, 0])
-            )
+            final_support.append(calculate_random_walk_matrix(cur_support))
         return tf.stack(final_support, axis=0), x, y
 
     tf_dataset = tf_dataset.map(second_map)
