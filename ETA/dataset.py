@@ -29,8 +29,8 @@ def calculate_random_walk_matrix(adj_mx):
 
 
 base_supports = [
-    tf.constant(calculate_random_walk_matrix(adj_mx), dtype=tf.float32),
-    tf.constant(calculate_random_walk_matrix(adj_mx.T), dtype=tf.float32),
+    tf.constant(adj_mx, dtype=tf.float32),
+    tf.constant(adj_mx.T, dtype=tf.float32),
 ]
 
 
@@ -91,7 +91,7 @@ def get_data(split_label):
             cur_support = tf.gather(
                 tf.gather(support, positions, axis=1), positions, axis=0
             )
-            final_support.append(cur_support)
+            final_support.append(calculate_random_walk_matrix(cur_support).T)
 
         return tf.stack(final_support, axis=0), x, y
 
