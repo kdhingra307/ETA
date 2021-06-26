@@ -35,8 +35,8 @@ ckpt_dir = join_directory(
 
 
 def scheduler(epoch, lr):
-    if epoch >= 20 and epoch <= 50 and epoch % 10 == 0:
-        lr *= 0.9
+    if epoch >= 15 and epoch <= 50 and epoch % 8 == 0:
+        lr *= 0.8
 
     print(tf.summary.scalar("LearningRate", data=lr))
     return lr
@@ -54,5 +54,5 @@ model.fit(
     epochs=config.training.epochs,
     callbacks=[ckpt_manager, log_manager, lr_manager],
     validation_data=Dataset(validation_split),
-    initial_epoch=70,
+    initial_epoch=50,
 )

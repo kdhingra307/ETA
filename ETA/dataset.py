@@ -8,13 +8,15 @@ mean, std = config.data.mean, config.data.std
 mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
+non_zero_rows = np.load("./data/static/nonzero_custom.npy")
+
 
 def get_data(split_label):
     def tf_map(file_name):
 
         data = np.load(file_name)
-        x, y = data["x"], data["y"][:, :, 0]
-
+        x, y = data["x"][:, non_zero_rows], data["y"][:, non_zero_rows, 0]
+        
         mask = (y > 0) * 1
 
         y = (y - mean[0]) / std[0]

@@ -1,8 +1,8 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "results/lstm/AR"
-  num_nodes: 6639
+  training_label: "results/lstm/AR/1"
+  num_nodes: 6082
   steps_to_predict: 6
   ttr: 1
 
@@ -12,14 +12,14 @@ data:
   path_pattern: "training_files"
   split_prefix: "custom_{}"
   mean:
-    - 1.3395504
-    - 0.49493809
+    - 1.45362457
+    - 0.53708629
   std:
-    - 1.64047834
-    - 0.28855661
+    - 1.65967594
+    - 0.26022761
 
 training:
-  learning_rate: 0.0001
+  learning_rate: 0.001
   decay: 1e+3
   log_dir: "logs/{}"
   ckpt_dir: "ckpt/{}"
