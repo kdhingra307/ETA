@@ -174,7 +174,7 @@ class rwt_sampling:
             )
 
             if cur_nodes == len(nodes):
-                remaining_nodes = np.delete(np.arange(6639), nodes)
+                remaining_nodes = np.delete(np.arange(self.n_nodes), nodes)
                 nodes = np.concatenate(
                     [nodes, np.random.choice(remaining_nodes, 1)]
                 )
