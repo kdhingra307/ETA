@@ -1,7 +1,7 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "results/dcrnn/custom/dcrnn/256/correlation_adj/1"
+  training_label: "results/dcrnn/custom/dcrnn/256/correlation_adj/2"
   num_nodes: 6082
   steps_to_predict: 6
   graph_batch_size: 256
