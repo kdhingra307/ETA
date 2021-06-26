@@ -11,10 +11,10 @@ mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
 adj_mx = np.load(
-    "{}/{}/corr_adj_matrix.npz".format(
+    "{}/{}/corr_adj_matrix.npy".format(
         config.model.working_dir, config.model.static_data_dir
     )
-)["arr_0"].astype(np.float32)
+).astype(np.float32)
 
 non_zero_rows = np.load("./data/static/nonzero_custom.npy")
 
@@ -138,10 +138,10 @@ class rwt_sampling:
 
         self.adj = (
             np.load(
-                "{}/{}/corr_adj_matrix.npz".format(
+                "{}/{}/corr_adj_matrix.npy".format(
                     config.model.working_dir, config.model.static_data_dir
                 )
-            )["arr_0"].astype(np.float32)
+            ).astype(np.float32)
             > 0
         )
 
