@@ -83,7 +83,7 @@ class Model(tf_keras.Model):
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.Dense(
-                    units=6082,
+                    units=config.model.num_nodes,
                 ),
             ],
             name="post_process",
