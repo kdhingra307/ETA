@@ -9,6 +9,7 @@ mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
 non_zero_rows = np.load("./data/static/nonzero_custom.npy")
+non_zero_rows = np.arange(6639)
 
 
 def get_data(split_label):

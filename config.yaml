@@ -1,8 +1,8 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "results/lstm/AR/cross_check1"
-  num_nodes: 6082
+  training_label: "results/lstm/AR/cross_check2"
+  num_nodes: 6639
   steps_to_predict: 6
   ttr: 1
 
