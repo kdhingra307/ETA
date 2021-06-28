@@ -31,7 +31,7 @@ def get_data(split_label):
         return x, y
 
     files = glob(
-        "{}/{}/{}/*".format(
+        "{}/{}/{}/*npz".format(
             config.model.working_dir, config.data.path_pattern, split_label
         )
     )
