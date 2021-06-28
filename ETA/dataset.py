@@ -16,7 +16,7 @@ def get_data(split_label):
 
         data = np.load(file_name)
         x, y = data["x"][:, non_zero_rows], data["y"][:, non_zero_rows, 0]
-        
+
         mask = (y > 0) * 1
 
         y = (y - mean[0]) / std[0]
@@ -30,7 +30,7 @@ def get_data(split_label):
         return x, y
 
     files = glob(
-        "{}/{}/{}/*.npz".format(
+        "{}/{}/{}/*".format(
             config.model.working_dir, config.data.path_pattern, split_label
         )
     )
