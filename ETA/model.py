@@ -1,10 +1,6 @@
 import tensorflow.keras as tf_keras
-import tensorflow.autodiff as tf_diff
-import tensorflow.python.ops.array_ops as tf_array_ops
-from tensorflow.python.keras.engine import data_adapter
 import numpy as np
 from ETA import config
-import tensorflow.python.framework.dtypes as tf_dtype
 from tensorflow import function as tf_function
 import tensorflow as tf
 
@@ -238,9 +234,9 @@ class Model(tf_keras.Model):
             num_nodes = config.model.num_nodes
             import tensorflow as tf
 
-            init = tf_array_ops.zeros(
-                [tf_array_ops.shape(state[0])[0], num_nodes],
-                dtype=tf_dtype.float32,
+            init = tf.zeros(
+                [tf.shape(state[0])[0], num_nodes],
+                dtype=tf.float32,
             )
 
         num_steps = config.model.steps_to_predict
@@ -263,9 +259,9 @@ class Model(tf_keras.Model):
                 if tf.random.uniform(shape=[]) < self.ttr_param:
                     init = tf.stop_gradient(output)
                 else:
-                    init = tf_array_ops.squeeze(x_targ[:, i], axis=-1)
+                    init = tf.squeeze(x_targ[:, i], axis=-1)
 
-        return tf_array_ops.transpose(to_return.stack(), [1, 0, 2])
+        return tf.transpose(to_return.stack(), [1, 0, 2])
 
     def call(self, x, training=False, y=None):
 
@@ -290,7 +286,7 @@ class Model(tf_keras.Model):
         #     )
         # )
 
-        with tf_diff.GradientTape() as tape:
+        with tf.GradientTape() as tape:
             y_pred = self(x, training=True, y=y[:, :, :, :1])
             loss = self.compiled_loss(
                 y, y_pred, None, regularization_losses=self.losses
