@@ -138,7 +138,7 @@ class Model(tf_keras.Model):
         # pre_embedding = self.time_missing(x)
         # print(pre_embedding.shape)
         # embedding = self.embedding(x, training=training)
-        otpt = self.encoder(x, training=training, constants=[constants])
+        otpt = self.encoder(x, training=training, constants=constants)
         encoded = otpt[1:]
         decoded = self.decode(state=encoded, x_targ=y, training=training)
         return decoded
