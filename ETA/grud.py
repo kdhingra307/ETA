@@ -43,6 +43,7 @@ class GRUCell(tf.keras.layers.GRUCell):
         inputs = (x * mask) + (
             (1 - mask) * (x_prev_mask * x1 + (1 - x_prev_mask) * x2)
         )
+        tf.print("fl", tf.shape(inputs))
 
         h_prev_mask = self.h_prev(dt)
 
