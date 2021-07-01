@@ -28,6 +28,8 @@ class GRUCell(tf.keras.layers.GRUCell):
         mask = mask[:, :1]
         dt = dt[:, :1]
 
+        tf.print(tf.shape(x), tf.shape(x1), tf.shape(mask), tf.shape(dt))
+
         x_prev_mask = self.x_prev(dt)
 
         x_prev_mask = tf.exp(
