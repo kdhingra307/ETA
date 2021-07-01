@@ -127,10 +127,7 @@ class Model(tf_keras.Model):
                 output = self.post_process(output, training=training)
                 to_return = to_return.write(i, output)
 
-                if tf.random.uniform(shape=[]) > self.ttr_param:
-                    init = tf.stop_gradient(output)
-                else:
-                    init = tf_array_ops.squeeze(x_targ[:, i], axis=-1)
+                init = tf.stop_gradient(output)
 
         return tf_array_ops.transpose(to_return.stack(), [1, 0, 2])
 
