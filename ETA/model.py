@@ -145,7 +145,7 @@ class Model(tf_keras.Model):
 
     def train_step(self, data):
         x, y, x2 = data
-
+        print("x2", x2)
         with tf_diff.GradientTape() as tape:
             y_pred = self(x, training=True, y=y[:, :, :, :1], constants=x2)
             loss = self.compiled_loss(
@@ -168,7 +168,7 @@ class Model(tf_keras.Model):
 
     def predict_step(self, data):
         x, _, x2 = data
-        return self(x, training=False)
+        return self(x, training=False, constants=x2)
 
     def build(self, input_shape):
         super().build([input_shape[0], input_shape[1], 208])
