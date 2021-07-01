@@ -135,10 +135,10 @@ class Model(tf_keras.Model):
 
     def call(self, x, training=False, y=None):
 
-        pre_embedding = self.time_missing(x)
-        print(pre_embedding.shape)
-        embedding = self.embedding(x, training=training)
-        otpt = self.encoder(embedding, training=training)
+        # pre_embedding = self.time_missing(x)
+        # print(pre_embedding.shape)
+        # embedding = self.embedding(x, training=training)
+        otpt = self.encoder(x, training=training)
         encoded = otpt[1:]
         decoded = self.decode(state=encoded, x_targ=y, training=training)
         return decoded
@@ -152,6 +152,7 @@ class Model(tf_keras.Model):
                 y, y_pred, None, regularization_losses=self.losses
             )
 
+        self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
         self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}
 
