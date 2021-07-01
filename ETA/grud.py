@@ -5,7 +5,7 @@ from tensorflow.python.keras import backend as K
 class GRUCell(tf.keras.layers.GRUCell):
     def __init__(self, units):
         super(GRUCell, self).__init__(units)
-        self.x_prev = tf.keras.layers.Dense(num_variables, name="x_prev")
+        self.x_prev = tf.keras.layers.Dense(208, name="x_prev")
         self.h_prev = tf.keras.layers.Dense(units, name="h_prev")
         self.mask_z = tf.keras.layers.Dense(
             units, name="mask_z", use_bias=False
@@ -20,10 +20,10 @@ class GRUCell(tf.keras.layers.GRUCell):
     def call(self, inputs, states, training=False, constants=None):
         x2 = constants[0][:, 0]
 
-        x = inputs[:, :num_variables]
-        x1 = inputs[:, num_variables : 2 * num_variables]
-        mask = inputs[:, 2 * num_variables : 3 * num_variables]
-        dt = inputs[:, 3 * num_variables :]
+        x = inputs[:, :208]
+        x1 = inputs[:, 208 : 2 * 208]
+        mask = inputs[:, 2 * 208 : 3 * 208]
+        dt = inputs[:, 3 * 208 :]
 
         mask = mask[:, :1]
         dt = dt[:, :1]
