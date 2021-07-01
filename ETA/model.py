@@ -17,45 +17,45 @@ class Model(tf_keras.Model):
 
         self.time_missing = tf_keras.layers.GRU(128, return_sequences=True)
 
-        self.embedding = tf_keras.Sequential(
-            [
-                tf_keras.layers.Conv1D(
-                    filters=128,
-                    kernel_size=3,
-                    padding="SAME",
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-                tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
-                    filters=64,
-                    kernel_size=3,
-                    padding="SAME",
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-                tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
-                    filters=128,
-                    kernel_size=3,
-                    padding="SAME",
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-                tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
-                    filters=64,
-                    kernel_size=3,
-                    padding="SAME",
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-                tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
-                    filters=128,
-                    kernel_size=3,
-                    padding="SAME",
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-            ],
-            name="embedding",
-        )
+        # self.embedding = tf_keras.Sequential(
+        #     [
+        #         tf_keras.layers.Conv1D(
+        #             filters=128,
+        #             kernel_size=3,
+        #             padding="SAME",
+        #             activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+        #         ),
+        #         tf_keras.layers.BatchNormalization(),
+        #         tf_keras.layers.Conv1D(
+        #             filters=64,
+        #             kernel_size=3,
+        #             padding="SAME",
+        #             activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+        #         ),
+        #         tf_keras.layers.BatchNormalization(),
+        #         tf_keras.layers.Conv1D(
+        #             filters=128,
+        #             kernel_size=3,
+        #             padding="SAME",
+        #             activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+        #         ),
+        #         tf_keras.layers.BatchNormalization(),
+        #         tf_keras.layers.Conv1D(
+        #             filters=64,
+        #             kernel_size=3,
+        #             padding="SAME",
+        #             activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+        #         ),
+        #         tf_keras.layers.BatchNormalization(),
+        #         tf_keras.layers.Conv1D(
+        #             filters=128,
+        #             kernel_size=3,
+        #             padding="SAME",
+        #             activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+        #         ),
+        #     ],
+        #     name="embedding",
+        # )
 
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
