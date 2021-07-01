@@ -20,19 +20,10 @@ class GRUCell(tf.keras.layers.GRUCell):
     def call(self, inputs, states, training=False, constants=None):
         x2 = constants[0]
 
-        tf.print(tf.shape(inputs))
         x = inputs[:, :208]
         x1 = inputs[:, 208 : 2 * 208]
         mask = inputs[:, 2 * 208 : 3 * 208]
         dt = inputs[:, 3 * 208 :]
-
-        tf.print(
-            tf.shape(x),
-            tf.shape(x1),
-            tf.shape(mask),
-            tf.shape(dt),
-            tf.shape(x2),
-        )
 
         x_prev_mask = self.x_prev(dt)
 
