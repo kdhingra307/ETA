@@ -15,6 +15,8 @@ class Model(tf_keras.Model):
 
         super(Model, self).__init__()
 
+        self.time_missing = tf_keras.layers.GRU(128, return_sequences=True)
+
         self.embedding = tf_keras.Sequential(
             [
                 tf_keras.layers.Conv1D(
@@ -133,7 +135,9 @@ class Model(tf_keras.Model):
 
     def call(self, x, training=False, y=None):
 
-        # embedding = self.embedding(x, training=training)
+        pre_embedding = self.time_missing(x)
+        print(pre_embedding.shape)
+        embedding = self.embedding(pre_embedding, training=training)
         otpt = self.encoder(x, training=training)
         encoded = otpt[1:]
         decoded = self.decode(state=encoded, x_targ=y, training=training)
