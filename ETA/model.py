@@ -171,4 +171,4 @@ class Model(tf_keras.Model):
         return self(x, training=False)
 
     def build(self, input_shape):
-        self.build([input_shape[0], input_shape[1], 208])
+        super().build([input_shape[0], input_shape[1], 208])
