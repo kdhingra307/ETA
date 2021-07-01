@@ -34,7 +34,7 @@ def get_data(split_label):
         x1 = np.stack(x1[1:], axis=0)
         dt = np.stack(dt[1:], axis=0) / 12
 
-        x2 = np.sum(x_mask * x, axis=0) / np.sum(x_mask, axis=0)
+        x2 = np.sum(x_mask * x, axis=0) / (np.sum(x_mask, axis=0) + 1e-12)
 
         x = np.concatenate([x, x1, x_mask, dt], axis=-1)
 
