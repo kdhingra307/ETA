@@ -56,11 +56,12 @@ class Model(tf_keras.Model):
         #     ],
         #     name="embedding",
         # )
-
+        learnable_cell = GRUDCell(units=64)
+        learnable_cell.build((None, None, 208))
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
                 [
-                    GRUDCell(units=64),
+                    learnable_cell,
                     tf_keras.layers.GRUCell(
                         units=64, dropout=0.25, recurrent_dropout=0.25
                     ),
@@ -169,7 +170,3 @@ class Model(tf_keras.Model):
     def predict_step(self, data):
         x, _, x2 = data
         return self(x, training=False, constants=x2)
-
-    def build(self, input_shape):
-
-        super().build((input_shape[0], input_shape[1], 208))
