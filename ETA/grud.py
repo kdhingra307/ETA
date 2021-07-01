@@ -26,9 +26,6 @@ class GRUCell(tf.keras.layers.GRUCell):
         mask = inputs[:, 2 * 208 : 3 * 208]
         dt = inputs[:, 3 * 208 :]
 
-        mask = mask[:, :1]
-        dt = dt[:, :1]
-
         tf.print(
             tf.shape(x),
             tf.shape(x1),
