@@ -25,7 +25,7 @@ class GRUCell(tf.keras.layers.GRUCell):
         super().build(input_shape)
 
     def call(self, inputs, states, training=False, constants=None):
-        num_variables = inputs.shape[-1]
+        num_variables = inputs.shape[-1] // 4
 
         x2 = constants[0]
 
