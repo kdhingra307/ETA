@@ -35,6 +35,8 @@ class GRUCell(tf.keras.layers.GRUCell):
         mask = inputs[:, 2 * num_variables : 3 * num_variables]
         dt = inputs[:, 3 * num_variables :]
 
+        print(x1, dt, mask, x, x2)
+
         mask = mask[:, :1]
         dt = dt[:, :1]
 

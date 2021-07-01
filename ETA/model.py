@@ -60,7 +60,7 @@ class Model(tf_keras.Model):
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
                 [
-                    tf_keras.layers.GRUCell(units=64),
+                    GRUDCell(units=64),
                     tf_keras.layers.GRUCell(
                         units=64, dropout=0.25, recurrent_dropout=0.25
                     ),
@@ -133,21 +133,21 @@ class Model(tf_keras.Model):
 
         return tf_array_ops.transpose(to_return.stack(), [1, 0, 2])
 
-    def call(self, x, training=False, y=None):
+    def call(self, x, training=False, y=None, constants=None):
 
         # pre_embedding = self.time_missing(x)
         # print(pre_embedding.shape)
         # embedding = self.embedding(x, training=training)
-        otpt = self.encoder(x, training=training)
+        otpt = self.encoder(x, training=training, constants=[constants])
         encoded = otpt[1:]
         decoded = self.decode(state=encoded, x_targ=y, training=training)
         return decoded
 
     def train_step(self, data):
-        x, y = data
+        x, y, x2 = data
 
         with tf_diff.GradientTape() as tape:
-            y_pred = self(x, training=True, y=y[:, :, :, :1])
+            y_pred = self(x, training=True, y=y[:, :, :, :1], constants=x2)
             loss = self.compiled_loss(
                 y, y_pred, None, regularization_losses=self.losses
             )
@@ -157,8 +157,8 @@ class Model(tf_keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
-        x, y = data
-        y_pred = self(x, training=False)
+        x, y, x2 = data
+        y_pred = self(x, training=False, constants=x2)
         # Updates stateful loss metrics.
         loss = self.compiled_loss(
             y, y_pred, None, regularization_losses=self.losses
@@ -167,5 +167,5 @@ class Model(tf_keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
     def predict_step(self, data):
-        x, _ = data
+        x, _, x2 = data
         return self(x, training=False)
