@@ -272,6 +272,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         for i in range(self.steps_to_predict):
             init, state = self.cells(init, states=state, constants=[pos])
             to_return = to_return.write(i, init)
+            init = tf.stop_gradient(init)
 
         return tf.transpose(tf.squeeze(to_return.stack(), axis=-1), [1, 0, 2])
 
