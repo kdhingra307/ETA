@@ -169,3 +169,6 @@ class Model(tf_keras.Model):
     def predict_step(self, data):
         x, _, x2 = data
         return self(x, training=False)
+
+    def build(self, input_shape):
+        self.build([input_shape[0], input_shape[1], 208])
