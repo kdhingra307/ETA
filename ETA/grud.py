@@ -30,7 +30,9 @@ class GRUCell(tf.keras.layers.GRUCell):
 
         x_prev_mask = self.x_prev(dt)
 
-        x_prev_mask = tf.exp(-1 * tf.clip_by_value(x_prev_mask, 0, np.inf))
+        x_prev_mask = tf.exp(
+            -1 * tf.clip_by_value(x_prev_mask, 0, tf.float32.max)
+        )
 
         inputs = (x * mask) + (
             (1 - mask) * (x_prev_mask * x1 + (1 - x_prev_mask) * x2)
@@ -38,7 +40,9 @@ class GRUCell(tf.keras.layers.GRUCell):
 
         h_prev_mask = self.h_prev(dt)
 
-        h_prev_mask = tf.exp(-1 * tf.clip_by_value(h_prev_mask, 0, np.inf))
+        h_prev_mask = tf.exp(
+            -1 * tf.clip_by_value(h_prev_mask, 0, tf.float32.max)
+        )
 
         h_tm1 = h_prev_mask * states[0]
 
