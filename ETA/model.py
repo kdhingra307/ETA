@@ -171,7 +171,5 @@ class Model(tf_keras.Model):
         return self(x, training=False, constants=x2)
 
     def build(self, input_shape):
-        print(input_shape)
-        super().build(
-            np.array([input_shape[0], input_shape[1], 208], dtype=np.int32)
-        )
+
+        super().build((input_shape[0], input_shape[1], 208))
