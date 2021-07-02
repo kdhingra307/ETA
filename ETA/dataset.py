@@ -15,7 +15,7 @@ def get_data(split_label):
         data = np.load(file_name)
         x, y = data["x"], data["y"][:, :, 0]
 
-        x_mask = x[:, :, 0] > 0
+        x_mask = (x[:, :, 0] > 0).astype(np.float32)
         x_mask *= np.random.uniform(size=x_mask.shape)
         x_mask = x_mask > 0.2
 
