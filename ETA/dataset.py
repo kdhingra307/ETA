@@ -24,7 +24,6 @@ def get_data(split_label):
 
         x_mask = (x[:, :, 0] > 0).astype(np.float32)
         missing_data = np.load(last_path)["arr_0"]
-        print(missing_data.shape)
         x_mask *= missing_data
         x_mask = x_mask > 0.2
 
