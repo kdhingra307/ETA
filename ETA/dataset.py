@@ -16,6 +16,9 @@ def get_data(split_label):
         x, y = data["x"], data["y"][:, :, 0]
 
         x_mask = x[:, :, 0] > 0
+        x_mask *= np.random.uniform(size=x_mask.shape)
+        x_mask = x_mask > 0.2
+
         x = (x - mean_expanded) / std_expanded
 
         x_mask = np.concatenate(
