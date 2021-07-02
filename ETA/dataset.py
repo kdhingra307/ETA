@@ -25,8 +25,11 @@ def get_data(split_label):
             [x_mask, np.ones(x_mask.shape[:1])[:, None]], axis=-1
         )
 
-        x = np.concatenate([x[:, :, 0] * x_mask, x[:, :1, 1]], axis=1).astype(
-            np.float32
+        x = (
+            np.concatenate([x[:, :, 0], x[:, :1, 1]], axis=1).astype(
+                np.float32
+            )
+            * x_mask
         )
         x1 = [np.zeros(len(x[0]))]
         dt = [np.zeros(len(x[0]))]
