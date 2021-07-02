@@ -146,7 +146,7 @@ class Model(tf_keras.Model):
 
     def train_step(self, data):
         x, y, x2 = data
-        print("x2", x2)
+
         with tf_diff.GradientTape() as tape:
             # y_pred = self(x, training=True, y=y[:, :, :, :1], constants=x2)
             y_pred = self(x[:, :, :208], training=True, y=y[:, :, :, :1])

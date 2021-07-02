@@ -12,11 +12,20 @@ std_expanded = np.array(std).reshape([1, 1, -1])
 def get_data(split_label):
     def tf_map(file_name):
 
+        last_path = "/".join(
+            [
+                "./data/missing_data",
+            ]
+            + file_name.decode().split("/")[-2:]
+        )
+
         data = np.load(file_name)
         x, y = data["x"], data["y"][:, :, 0]
 
         x_mask = (x[:, :, 0] > 0).astype(np.float32)
-        x_mask *= np.random.uniform(size=x_mask.shape)
+        missing_data = np.load(last_path)["arr_0"]
+        print(missing_data.shape)
+        x_mask *= missing_data
         x_mask = x_mask > 0.2
 
         x = (x - mean_expanded) / std_expanded
