@@ -56,12 +56,12 @@ class Model(tf_keras.Model):
         #     ],
         #     name="embedding",
         # )
-        learnable_cell = GRUDCell(units=64)
-        learnable_cell.build((None, None, 208))
+        # learnable_cell = GRUDCell(units=64)
+        # learnable_cell.build((None, None, 208))
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
                 [
-                    learnable_cell,
+                    tf_keras.layers.GRUCell(units=64),
                     tf_keras.layers.GRUCell(
                         units=64, dropout=0.25, recurrent_dropout=0.25
                     ),
@@ -148,8 +148,8 @@ class Model(tf_keras.Model):
         x, y, x2 = data
 
         with tf_diff.GradientTape() as tape:
-            y_pred = self(x, training=True, y=y[:, :, :, :1], constants=x2)
-            # y_pred = self(x[:, :, :208], training=True, y=y[:, :, :, :1])
+            # y_pred = self(x, training=True, y=y[:, :, :, :1], constants=x2)
+            y_pred = self(x[:, :, :208], training=True, y=y[:, :, :, :1])
             loss = self.compiled_loss(
                 y, y_pred, None, regularization_losses=self.losses
             )
@@ -160,8 +160,8 @@ class Model(tf_keras.Model):
 
     def test_step(self, data):
         x, y, x2 = data
-        y_pred = self(x, training=False, constants=x2)
-        # y_pred = self(x[:, :, :208], training=False)
+        # y_pred = self(x, training=False, constants=x2)
+        y_pred = self(x[:, :, :208], training=False)
         # Updates stateful loss metrics.
         loss = self.compiled_loss(
             y, y_pred, None, regularization_losses=self.losses
