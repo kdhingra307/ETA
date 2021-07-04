@@ -112,8 +112,8 @@ class rwt_sampling:
         self.n_nodes = config.model.num_nodes
 
         self.sampler = {
-            "melr_train": self.sample,
-            "melr_val": lambda: np.arange(207),
+            "metr_missing/train": self.sample,
+            "metr_missing/val": lambda: np.arange(207),
         }
 
     def dummy(self):
