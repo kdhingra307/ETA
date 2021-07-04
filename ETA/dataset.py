@@ -14,7 +14,7 @@ adj_mx = np.load(
     "{}/{}/gaussian_adj_matrix.npz".format(
         config.model.working_dir, config.model.static_data_dir
     )
-)['arr_0'].astype(np.float32)
+)["arr_0"].astype(np.float32)
 
 non_zero_rows = np.load("./data/static/nonzero_custom.npy")
 
@@ -31,8 +31,12 @@ def calculate_random_walk_matrix(adj_mx):
 
 
 base_supports = [
-    tf.constant(adj_mx, dtype=tf.float32),
-    tf.constant(adj_mx.T, dtype=tf.float32),
+    tf.constant(
+        adj_mx[non_zero_rows[:, None], non_zero_rows], dtype=tf.float32
+    ),
+    tf.constant(
+        adj_mx[non_zero_rows[:, None], non_zero_rows].T, dtype=tf.float32
+    ),
 ]
 
 
@@ -143,7 +147,7 @@ class rwt_sampling:
                 )
             )["arr_0"].astype(np.float32)
             > 0
-        )
+        )[non_zero_rows[:, None], non_zero_rows]
 
         self.n_init = config.model.graph_batch_size
         self.n_nodes = config.model.num_nodes
