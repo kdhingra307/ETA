@@ -6,6 +6,7 @@ from ETA import DCGRUBlock, DCGRUCell, config
 import numpy as np
 from ETA.metrics import loss_function
 import tensorflow as tf
+from ETA.grud import GRUDCell
 
 
 class Model(tf_keras.Model):
@@ -24,8 +25,8 @@ class Model(tf_keras.Model):
         self.encoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
                 [
-                    DCGRUCell(64, adjacency_matrix, 2, num_nodes)
-                    for _ in range(2)
+                    GRUDCell(64, adjacency_matrix, 2, num_nodes),
+                    DCGRUCell(64, adjacency_matrix, 2, num_nodes),
                 ]
             ),
             num_nodes=num_nodes,
