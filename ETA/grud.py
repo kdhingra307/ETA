@@ -105,6 +105,7 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
             ),
             trainable=True,
         )
+        self.built = True
 
         self.batch_size = inp_shape[0]
 
