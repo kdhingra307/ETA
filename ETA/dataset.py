@@ -64,7 +64,7 @@ def get_data(split_label):
 
     tf_dataset = tf_dataset.map(
         lambda x, y, z: (
-            tf.ensure_shape(x, [None, config.model.num_nodes, 2]),
+            tf.ensure_shape(x, [None, config.model.num_nodes, 8]),
             tf.ensure_shape(y, [None, config.model.num_nodes, 2]),
             tf.ensure_shape(z, [config.model.num_nodes, 2]),
         )
