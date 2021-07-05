@@ -291,8 +291,8 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
         return tf.transpose(tf.squeeze(to_return.stack(), axis=-1), [1, 0, 2])
 
-    def call(self, x, state, pos):
+    def call(self, x, state, pos, z):
         if self.is_encoder:
-            return self.encode(x, pos=pos)
+            return self.encode(x, pos=pos, z=z)
         else:
-            return self.decode(state=state, x_targ=x, pos=pos)
+            return self.decode(state=state, x_targ=x, pos=pos, z=z)
