@@ -71,12 +71,8 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
             )
 
     def build(self, inp_shape):
-        print("build")
-        print(inp_shape)
-        tf.print(inp_shape)
 
         inpt_features = (inp_shape[-1] + 64) * 4
-        print(inpt_features)
 
         kernel_initializer = tf_keras.initializers.GlorotUniform()
         bias_initializer = tf_keras.initializers.Zeros()
@@ -125,14 +121,6 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
         x2 = constants[1]
 
         x, x1, mask, dt = tf.split(inputs, num_or_size_splits=4, axis=-1)
-
-        tf.print(
-            tf.shape(x),
-            tf.shape(x1),
-            tf.shape(mask),
-            tf.shape(dt),
-            tf.shape(x2),
-        )
 
         x_prev_mask = tf.exp(
             -1 * tf.clip_by_value(self.x_prev(dt), 0, tf.float32.max)
