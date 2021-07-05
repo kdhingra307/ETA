@@ -151,7 +151,6 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
             self._gconv(
                 inputs,
                 state,
-                dt,
                 output_size,
                 bias_start=1.0,
                 pos=position,
