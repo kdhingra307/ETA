@@ -45,7 +45,7 @@ class Model(tf_keras.Model):
             encode=False,
         )
 
-    def call(self, x, pos=None, training=False, y=None):
+    def call(self, x, pos=None, training=False, y=None, z=None):
 
         encoded = self.encoder(x, state=None, training=training, pos=pos, z=z)
         decoded = self.decoder(
