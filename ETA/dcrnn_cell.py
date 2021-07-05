@@ -85,6 +85,9 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         # return tf.sparse.reorder(L)
 
     def build(self, inp_shape):
+        print("build")
+        print(inp_shape)
+        tf.print(inp_shape)
 
         inpt_features = (inp_shape[-1] + 64) * 4
 
