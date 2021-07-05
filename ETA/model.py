@@ -47,8 +47,10 @@ class Model(tf_keras.Model):
 
     def call(self, x, pos=None, training=False, y=None):
 
-        encoded = self.encoder(x, state=None, training=training, pos=pos)
-        decoded = self.decoder(state=encoded, x=y, training=training, pos=pos)
+        encoded = self.encoder(x, state=None, training=training, pos=pos, z=z)
+        decoded = self.decoder(
+            state=encoded, x=y, training=training, pos=pos, z=z
+        )
         return decoded
 
     def train_step(self, data):
@@ -57,7 +59,7 @@ class Model(tf_keras.Model):
         sample_weight = None
 
         with tf_diff.GradientTape() as tape:
-            y_pred = self(x, training=True, y=y[:, :, :, :1], pos=pos)
+            y_pred = self(x, training=True, y=y[:, :, :, :1], pos=pos, z=z)
             loss = self.compiled_loss(
                 y, y_pred, None, regularization_losses=self.losses
             )
@@ -68,7 +70,7 @@ class Model(tf_keras.Model):
 
     def test_step(self, data):
         pos, x, y, z = data
-        y_pred = self(x, training=False, pos=pos)
+        y_pred = self(x, training=False, pos=pos, z=z)
         # Updates stateful loss metrics.
         loss = self.compiled_loss(
             y, y_pred, None, regularization_losses=self.losses
