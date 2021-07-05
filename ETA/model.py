@@ -22,10 +22,12 @@ class Model(tf_keras.Model):
 
         num_nodes = config.model.graph_batch_size
 
+        cell = GRUDCell(64, adjacency_matrix, 2, num_nodes)
+        cell.build([None, None, None, ])
         self.encoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
                 [
-                    GRUDCell(64, adjacency_matrix, 2, num_nodes),
+                    cell,        
                     DCGRUCell(64, adjacency_matrix, 2, num_nodes),
                 ]
             ),
