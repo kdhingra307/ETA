@@ -55,6 +55,12 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
 
         self.x_prev = tf.keras.layers.Dense(2, name="x_prev")
         self.h_prev = tf.keras.layers.Dense(num_units, name="h_prev")
+        self.h1_prev = tf.keras.layers.Dense(
+            2 * num_units, name="h_prev", use_bias=False
+        )
+        self.h2_prev = tf.keras.layers.Dense(
+            num_units, name="h_prev", use_bias=False
+        )
 
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
@@ -149,16 +155,20 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
                 pos=position,
                 training=training,
             )
+            + self.h1_prev(mask)
         )
         value = tf.reshape(value, (-1, num_nodes, output_size))
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
-        c = self._gconv(
-            inputs,
-            r * state,
-            self._num_units,
-            pos=position,
-            training=training,
+        c = (
+            self._gconv(
+                inputs,
+                r * state,
+                self._num_units,
+                pos=position,
+                training=training,
+            )
+            + self.h2_prev(mask)
         )
 
         if self._activation is not None:
