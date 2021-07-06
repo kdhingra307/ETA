@@ -155,7 +155,7 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
                 pos=position,
                 training=training,
             )
-            + self.h1_prev(mask)
+            + self.h1_prev(dt)
         )
         value = tf.reshape(value, (-1, num_nodes, output_size))
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
@@ -168,7 +168,7 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
                 pos=position,
                 training=training,
             )
-            + self.h2_prev(mask)
+            + self.h2_prev(dt)
         )
 
         if self._activation is not None:
