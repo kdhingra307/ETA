@@ -131,8 +131,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         """
         position = constants[0]
 
-        tf.print("state-", tf.shape(state))
-
         state = tf.reshape(state, [tf.shape(state[0])[0], -1, self._num_units])
         num_nodes = tf.shape(state)[1]
 
@@ -148,7 +146,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                 training=training,
             )
         )
-        tf.print("value-", tf.shape(value))
+        
         value = tf.reshape(value, (-1, num_nodes, output_size))
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
