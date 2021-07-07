@@ -8,7 +8,7 @@ mean, std = config.data.mean, config.data.std
 mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
-non_zero_rows = np.load("./data/static/nonzero_custom.npy")
+non_zero_rows = np.load("./data/static/non_zero_2801.npy")
 # non_zero_rows = np.arange(6639)
 
 
@@ -45,9 +45,10 @@ def get_data(split_label):
         )
     )
 
-    tf_dataset = tf_dataset.cache(
-        "{}/cache_{}".format(config.model.working_dir, split_label)
-    )
+    # tf_dataset = tf_dataset.cache(
+    #     "{}/cache_{}".format(config.model.working_dir, split_label)
+    # )
+
     tf_dataset = tf_dataset.batch(
         batch_size=config.model.batch_size,
     )
