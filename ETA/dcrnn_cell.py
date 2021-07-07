@@ -55,11 +55,9 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                     tf_keras.layers.Dense(
                         units=64, activation=tf_keras.layers.LeakyReLU(0.2)
                     ),
-                    tf_keras.layers.BatchNormalization(),
                     tf_keras.layers.Dense(
                         units=32, activation=tf_keras.layers.LeakyReLU(0.2)
                     ),
-                    tf_keras.layers.BatchNormalization(),
                     tf_keras.layers.Dense(
                         units=16, activation=tf_keras.layers.LeakyReLU(0.2)
                     ),
