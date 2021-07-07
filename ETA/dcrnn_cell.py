@@ -163,7 +163,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         output = new_state = u * state + (1 - u) * c
 
         if self._num_proj is not None:
-            output = self.projection_layer(output)
+            output = self.projection_layer(output, training=training)
         return output, new_state
 
     @staticmethod
@@ -234,7 +234,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
     def build(self, x_shape):
         self.batch_size = x_shape[0]
 
-    def encode(self, x, pos):
+    def encode(self, x, pos, training=False):
         state = self.block(
             x,
             constants=[pos],
@@ -242,6 +242,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
                 tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 128]),
                 tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 128]),
             ),
+            training=training,
         )
         return state[1:]
 
@@ -258,7 +259,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return teacher_coeff
 
     @tf.function
-    def decode(self, state, pos=None, x_targ=None):
+    def decode(self, state, pos=None, x_targ=None, training=training):
 
         init = tf.zeros(
             [tf.shape(state[0])[0], tf.shape(state[0])[1], 1], dtype=tf.float32
@@ -270,14 +271,18 @@ class DCGRUBlock(tf_keras.layers.Layer):
             size=self.steps_to_predict, dtype=tf.float32
         )
         for i in range(self.steps_to_predict):
-            init, state = self.cells(init, states=state, constants=[pos])
+            init, state = self.cells(
+                init, states=state, constants=[pos], training=training
+            )
             to_return = to_return.write(i, init)
             init = tf.stop_gradient(init)
 
         return tf.transpose(tf.squeeze(to_return.stack(), axis=-1), [1, 0, 2])
 
-    def call(self, x, state, pos):
+    def call(self, x, state, pos, training=False):
         if self.is_encoder:
-            return self.encode(x, pos=pos)
+            return self.encode(x, pos=pos, training=training)
         else:
-            return self.decode(state=state, x_targ=x, pos=pos)
+            return self.decode(
+                state=state, x_targ=x, pos=pos, training=training
+            )
