@@ -16,7 +16,7 @@ adj_mx = np.load(
     )
 )["arr_0"].astype(np.float32)
 
-non_zero_rows = np.load("./data/static/non_zero_2801.npy")
+non_zero_rows = np.load("./data/static/non_zero_784.npy")
 
 
 def calculate_random_walk_matrix(adj_mx):
