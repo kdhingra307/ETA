@@ -53,7 +53,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             self.projection_layer = tf_keras.Sequential(
                 [
                     tf_keras.layers.Dense(
-                        units=32, activation=tf_keras.layers.LeakyReLU(0.2)
+                        units=64, activation=tf_keras.layers.LeakyReLU(0.2)
                     ),
                     tf_keras.layers.BatchNormalization(),
                     tf_keras.layers.Dropout(0.5),
@@ -146,7 +146,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                 training=training,
             )
         )
-        
+
         value = tf.reshape(value, (-1, num_nodes, output_size))
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 

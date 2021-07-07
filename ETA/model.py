@@ -52,7 +52,7 @@ class Model(tf_keras.Model):
 
     def train_step(self, data):
         pos, x, y = data
-        print(pos, x, y)
+
         sample_weight = None
 
         with tf_diff.GradientTape() as tape:
