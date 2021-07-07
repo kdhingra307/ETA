@@ -8,7 +8,7 @@ mean, std = config.data.mean, config.data.std
 mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
-non_zero_rows = np.load("./data/static/non_zero_2801.npy")
+non_zero_rows = np.load("./data/static/non_zero_784.npy")
 # non_zero_rows = np.arange(6639)
 
 
