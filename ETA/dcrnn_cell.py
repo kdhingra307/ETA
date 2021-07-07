@@ -53,17 +53,17 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             self.projection_layer = tf_keras.Sequential(
                 [
                     tf_keras.layers.Dense(
-                        units=64, activation=tf_keras.layers.LeakyReLU(0.2)
+                        units=32, activation=tf_keras.layers.LeakyReLU(0.2)
                     ),
                     tf_keras.layers.BatchNormalization(),
                     tf_keras.layers.Dropout(0.5),
                     tf_keras.layers.Dense(
-                        units=128, activation=tf_keras.layers.LeakyReLU(0.2)
+                        units=32, activation=tf_keras.layers.LeakyReLU(0.2)
                     ),
                     tf_keras.layers.BatchNormalization(),
                     tf_keras.layers.Dropout(0.5),
                     tf_keras.layers.Dense(
-                        units=64, activation=tf_keras.layers.LeakyReLU(0.2)
+                        units=16, activation=tf_keras.layers.LeakyReLU(0.2)
                     ),
                     tf_keras.layers.Dense(units=num_proj),
                 ]
@@ -131,6 +131,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         """
         position = constants[0]
 
+        tf.print("state-", tf.shape(state))
+
         state = tf.reshape(state, [tf.shape(state[0])[0], -1, self._num_units])
         num_nodes = tf.shape(state)[1]
 
@@ -146,6 +148,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                 training=training,
             )
         )
+        tf.print("value-", tf.shape(value))
         value = tf.reshape(value, (-1, num_nodes, output_size))
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
