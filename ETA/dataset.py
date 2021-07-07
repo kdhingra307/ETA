@@ -30,13 +30,11 @@ def calculate_random_walk_matrix(adj_mx):
     return random_walk_mx
 
 
+adj_mx = adj_mx[non_zero_rows[:, None], non_zero_rows]
+
 base_supports = [
-    tf.constant(
-        adj_mx[non_zero_rows[:, None], non_zero_rows], dtype=tf.float32
-    ),
-    tf.constant(
-        adj_mx[non_zero_rows[:, None], non_zero_rows].T, dtype=tf.float32
-    ),
+    tf.constant(adj_mx, dtype=tf.float32),
+    tf.constant(np.dot(adj_mx, adj_mx), dtype=tf.float32),
 ]
 
 
