@@ -1,10 +1,10 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "small_eta/dcrnn/784/256/gaussian/1"
+  training_label: "small_eta/dcrnn/784/512/gaussian/1"
   num_nodes: 784
   steps_to_predict: 6
-  graph_batch_size: 256
+  graph_batch_size: 512
   static_data_dir: "static"
   ttr: 1
 
@@ -25,5 +25,5 @@ training:
   decay: 1e+3
   log_dir: "logs/{}"
   ckpt_dir: "ckpt/{}"
-  epochs: 50
+  epochs: 100
   reset: False
