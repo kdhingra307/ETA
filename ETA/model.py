@@ -10,45 +10,12 @@ class Model(tf_keras.Model):
 
         super(Model, self).__init__()
 
-        self.embedding = tf_keras.Sequential(
-            [
-                tf_keras.layers.Conv1D(
-                    filters=128,
-                    kernel_size=3,
-                    padding="SAME",
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-                tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
-                    filters=64,
-                    kernel_size=2,
-                    padding="SAME",
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-                tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
-                    filters=64,
-                    kernel_size=2,
-                    padding="SAME",
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-                tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
-                    filters=128,
-                    kernel_size=3,
-                    padding="SAME",
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-            ],
-            name="embedding",
-        )
-
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
                 [
-                    tf_keras.layers.GRUCell(units=64),
+                    tf_keras.layers.GRUCell(units=128),
                     tf_keras.layers.GRUCell(
-                        units=64, dropout=0.1, recurrent_dropout=0.1
+                        units=128, dropout=0.1, recurrent_dropout=0.1
                     ),
                 ]
             ),
@@ -58,9 +25,9 @@ class Model(tf_keras.Model):
 
         self.decoder = tf_keras.layers.StackedRNNCells(
             [
-                tf_keras.layers.GRUCell(units=64),
+                tf_keras.layers.GRUCell(units=128),
                 tf_keras.layers.GRUCell(
-                    units=64, dropout=0.1, recurrent_dropout=0.1
+                    units=128, dropout=0.1, recurrent_dropout=0.1
                 ),
             ],
             name="decoding",
@@ -121,8 +88,8 @@ class Model(tf_keras.Model):
 
     def call(self, x, training=False, y=None):
 
-        embedding = self.embedding(x, training=training)
-        otpt = self.encoder(embedding, training=training)
+        # embedding = self.embedding(x, training=training)
+        otpt = self.encoder(x, training=training)
         encoded = otpt[1:]
         decoded = self.decode(state=encoded, x_targ=y, training=training)
         return decoded
