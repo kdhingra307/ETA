@@ -259,7 +259,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return teacher_coeff
 
     @tf.function
-    def decode(self, state, pos=None, x_targ=None, training=training):
+    def decode(self, state, pos=None, x_targ=None, training=False):
 
         init = tf.zeros(
             [tf.shape(state[0])[0], tf.shape(state[0])[1], 1], dtype=tf.float32
