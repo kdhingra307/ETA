@@ -153,6 +153,7 @@ class rwt_sampling:
         self.sampler = {
             "custom_train": self.sample,
             "custom_val": self.sample,
+            "custom_test": self.sample,
         }
 
     def dummy(self):
