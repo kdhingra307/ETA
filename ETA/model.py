@@ -15,7 +15,7 @@ class Model(tf_keras.Model):
                 [
                     tf_keras.layers.GRUCell(units=128),
                     tf_keras.layers.GRUCell(
-                        units=128, dropout=0.1, recurrent_dropout=0.1
+                        units=128,
                     ),
                 ]
             ),
@@ -27,7 +27,7 @@ class Model(tf_keras.Model):
             [
                 tf_keras.layers.GRUCell(units=128),
                 tf_keras.layers.GRUCell(
-                    units=128, dropout=0.1, recurrent_dropout=0.1
+                    units=128,
                 ),
             ],
             name="decoding",
