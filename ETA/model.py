@@ -55,7 +55,7 @@ class Model(tf_keras.Model):
         #     ]
         # )
         learnable_cell = GRUDCell(units=256)
-        learnable_cell.build((None, None, 1166 * 4))
+        learnable_cell.build((None, None, 1166))
 
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
