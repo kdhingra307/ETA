@@ -17,12 +17,12 @@ class Model(tf_keras.Model):
 
         num_nodes = config.model.graph_batch_size
 
-        cell = GRUDCell(128, 2, num_nodes)
-        cell.build([None, None, None, 2])
+        # cell = GRUDCell(128, 2, num_nodes)
+        # cell.build([None, None, None, 2])
         self.encoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
                 [
-                    cell,
+                    DCGRUCell(128, adjacency_matrix, 2, num_nodes),
                     DCGRUCell(128, adjacency_matrix, 2, num_nodes),
                 ]
             ),
@@ -56,15 +56,11 @@ class Model(tf_keras.Model):
         sample_weight = None
 
         with tf_diff.GradientTape() as tape:
-            y_pred = self(x, training=True, y=y[:, :, :, :1], pos=pos, z=z)
-            Lreg = 0.0015 * sum(
-                tf.nn.l2_loss(tf_var) for tf_var in self.trainable_variables
+            y_pred = self(
+                x[:, :, :, :2], training=True, y=y[:, :, :, :1], pos=pos, z=z
             )
-            loss = (
-                self.compiled_loss(
-                    y, y_pred, None, regularization_losses=self.losses
-                )
-                + Lreg
+            loss = self.compiled_loss(
+                y, y_pred, None, regularization_losses=self.losses
             )
 
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
@@ -73,7 +69,7 @@ class Model(tf_keras.Model):
 
     def test_step(self, data):
         pos, x, y, z = data
-        y_pred = self(x, training=False, pos=pos, z=z)
+        y_pred = self(x[:, :, :, :2], training=False, pos=pos, z=z)
         # Updates stateful loss metrics.
         loss = self.compiled_loss(
             y, y_pred, None, regularization_losses=self.losses
