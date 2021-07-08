@@ -34,9 +34,9 @@ model = Model()
 
 
 model(
-    tf.zeros([2, 128, 128]),
     tf.zeros([16, 6, 128, 2]),
-    tf.zeros([16, 6, 128, 2]),
+    pos=tf.zeros([2, 128, 128]),
+    training=True,
 )
 for e in model.trainable_weights:
     print(e.name)
