@@ -1,7 +1,7 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "small_eta/lstm/784"
+  training_label: "small_eta/lstm/784/dropout"
   num_nodes: 784
   steps_to_predict: 6
   ttr: 1
