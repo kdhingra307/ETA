@@ -51,6 +51,8 @@ def get_data(split_label):
             np.transpose(data["x"], [1, 0, 2])[:, non_zero_rows],
             np.transpose(data["y"], [1, 0, 2])[:, non_zero_rows, 0],
         )
+        x[:,:,0] *= (x[:,:,0] <= 8)
+        y[:,:,0] *= (y[:,:,0] <= 8)
 
         x_mask = (x[:, :, 0] > 0).astype(np.float32)
         x = (x - mean_expanded) / std_expanded

@@ -14,11 +14,11 @@ data:
   path_pattern: "training_files"
   split_prefix: "custom_new_{}"
   mean:
-    - 2.13771687
-    - 0.5744334
+    - 1.92559222
+    - 0.56999187
   std:
-    - 2.04323081
-    - 0.17708756
+    - 1.29298016
+    - 0.17494257
 
 training:
   learning_rate: 0.001
