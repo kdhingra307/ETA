@@ -10,36 +10,10 @@ mean, std = config.data.mean, config.data.std
 mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
-adj_mx = np.load(
-    "{}/{}/spearson_custom.npz".format(
-        config.model.working_dir, config.model.static_data_dir
-    )
-)["arr_0"].astype(np.float32)
 
 non_zero_rows = np.load(
     "/home/pravesh/speech_work/ETA/models/ETA/data/static/custom_non_zero_1165.npy"
 )
-
-
-def calculate_random_walk_matrix(adj_mx):
-    d = tf.reduce_sum(adj_mx, axis=1)
-    d_inv = tf.math.pow(d, -0.5)
-    d_inv = tf.where(tf.math.is_inf(d_inv), tf.zeros_like(d_inv), d_inv)
-    d_mat_inv = tf.linalg.diag(d_inv)
-    return tf.matmul(
-        tf.transpose(tf.matmul(adj_mx, d_mat_inv), [1, 0]), d_mat_inv
-    )
-
-
-base_supports = [
-    tf.constant(adj_mx, dtype=tf.float32),
-]
-support = calculate_random_walk_matrix(base_supports[0])
-
-final_support = []
-final_support.append(support)
-final_support.append(tf.matmul(support, support))
-final_support = tf.stack(final_support, axis=0)
 
 
 def get_data(split_label):
@@ -128,9 +102,9 @@ def get_data(split_label):
         # final_support.append(support)
         # final_support.append(tf.matmul(support, support))
 
-        return final_support, x, y, z
+        return x, y, z
 
-    tf_dataset = tf_dataset.map(second_map)
+    # tf_dataset = tf_dataset.map(second_map)
 
     tf_dataset = tf_dataset.prefetch(config.data.prefetch)
 

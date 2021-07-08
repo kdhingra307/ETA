@@ -8,6 +8,23 @@ from tensorflow.python.ops.gen_math_ops import prod_eager_fallback
 from ETA import config
 
 
+adj_mx = np.load(
+    "{}/{}/spearson_custom.npz".format(
+        config.model.working_dir, config.model.static_data_dir
+    )
+)["arr_0"].astype(np.float32)
+
+
+def calculate_random_walk_matrix(adj_mx):
+    d = tf.reduce_sum(adj_mx, axis=1)
+    d_inv = tf.math.pow(d, -0.5)
+    d_inv = tf.where(tf.math.is_inf(d_inv), tf.zeros_like(d_inv), d_inv)
+    d_mat_inv = tf.linalg.diag(d_inv)
+    return tf.matmul(
+        tf.transpose(tf.matmul(adj_mx, d_mat_inv), [1, 0]), d_mat_inv
+    )
+
+
 class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     def get_initial_state(self, inputs, batch_size, dtype):
 
@@ -48,6 +65,17 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._max_diffusion_step = max_diffusion_step
         self._supports = []
         self._use_gc_for_ru = use_gc_for_ru
+
+        base_supports = [
+            tf.constant(adj_mx, dtype=tf.float32),
+        ]
+        support = calculate_random_walk_matrix(base_supports[0])
+
+        self.final_support = []
+        self.final_support.append(tf.sparse_from_dense(support))
+        self.final_support.append(
+            tf.sparse_from_dense(tf.matmul(support, support))
+        )
 
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
@@ -127,8 +155,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         [type]
             [description]
         """
-        print(inputs.shape, constants[0].shape)
-        position = constants[0]
+        # position = constants[0]
 
         state = tf.reshape(state, [tf.shape(state[0])[0], -1, self._num_units])
         num_nodes = tf.shape(state)[1]
@@ -141,7 +168,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                 state,
                 output_size,
                 bias_start=1.0,
-                _supports=position,
                 training=training,
             )
         )
@@ -153,7 +179,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             inputs,
             r * state,
             self._num_units,
-            _supports=position,
             training=training,
         )
 
@@ -177,7 +202,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         inputs,
         state,
         output_size,
-        _supports,
         bias_start=0.0,
         training=False,
     ):
@@ -192,13 +216,14 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         )
         output = []
 
+        _supports = self.final_support
         for i in range(2):
 
-            x1 = tf.matmul(_supports[i], x0)
+            x1 = tf.sparse.sparse_dense_matmul(_supports[i], x0)
             output.append(x1)
 
             for k in range(2, self._max_diffusion_step + 1):
-                x2 = 2 * tf.matmul(_supports[i], x1) - x0
+                x2 = 2 * tf.sparse.sparse_dense_matmul(_supports[i], x1) - x0
                 output.append(x2)
                 x1, x0 = x2, x1
 
@@ -237,7 +262,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
     def encode(self, x, pos, training=False, z=None):
         state = self.block(
             x,
-            constants=[pos, z],
+            # constants=[pos, z],
             initial_state=(
                 tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 128]),
                 tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 128]),
@@ -271,9 +296,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
             size=self.steps_to_predict, dtype=tf.float32
         )
         for i in range(self.steps_to_predict):
-            init, state = self.cells(
-                init, states=state, constants=[pos, z], training=training
-            )
+            init, state = self.cells(init, states=state, training=training)
             to_return = to_return.write(i, init)
             init = tf.stop_gradient(init)
 
