@@ -167,9 +167,9 @@ class Model(tf_keras.Model):
                 y, y_pred, None, regularization_losses=self.losses
             )
 
-        gradients = tape.gradient(loss, self.model.trainable_weights)
+        gradients = tape.gradient(loss, self.trainable_weights)
 
-        my_zip = zip(self.model.trainable_weights, gradients)
+        my_zip = zip(self.trainable_weights, gradients)
         for weights, grads in my_zip:
             tf.summary.histogram(
                 weights.name.replace(":", "_") + "_grads",
