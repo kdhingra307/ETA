@@ -13,7 +13,7 @@ class Model(tf_keras.Model):
         super(Model, self).__init__()
 
         adjacency_matrix = np.load(
-            "{}/{}/gaussian_adj_matrix.npz".format(
+            "{}/{}/sum_adj_matrix_v2.npz".format(
                 config.model.working_dir, config.model.static_data_dir
             )
         )["arr_0"].astype(np.float32)
