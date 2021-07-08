@@ -79,7 +79,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
     def build(self, inp_shape):
 
-        print(inp_shape)
         inpt_features = (inp_shape[-1] + 128) * 4
 
         kernel_initializer = tf_keras.initializers.GlorotUniform()
@@ -128,6 +127,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         [type]
             [description]
         """
+        print(inputs.shape, constants[0].shape)
         position = constants[0]
 
         state = tf.reshape(state, [tf.shape(state[0])[0], -1, self._num_units])
