@@ -1,11 +1,5 @@
 import tensorflow.keras as tf_keras
-import numpy as np
 import tensorflow as tf
-import scipy.sparse as sp
-from tensorflow.python.keras.layers.advanced_activations import LeakyReLU
-from tensorflow.python.ops.gen_array_ops import const
-from tensorflow.python.ops.gen_math_ops import prod_eager_fallback
-from ETA import config
 
 
 class GRUCell(tf.keras.layers.AbstractRNNCell):

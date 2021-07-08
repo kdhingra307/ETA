@@ -30,8 +30,6 @@ class Model(tf_keras.Model):
                     units=256,
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
-                # tf_keras.layers.BatchNormalization(),
-                # tf_keras.layers.Dropout(0.5),
                 tf_keras.layers.Dense(
                     units=512,
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
@@ -79,7 +77,6 @@ class Model(tf_keras.Model):
 
     def call(self, x, training=False, y=None):
 
-        # embedding = self.embedding(x, training=training)
         otpt = self.encoder(x, training=training)
         encoded = otpt[1:]
         decoded = self.decode(state=encoded, x_targ=y, training=training)

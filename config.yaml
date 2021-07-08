@@ -1,25 +1,25 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "small_eta/lstm/784/implementation"
-  num_nodes: 784
-  steps_to_predict: 6
+  training_label: "small_eta/lstm/custom_new"
+  num_nodes: 1165
+  steps_to_predict: 12
   ttr: 1
 
 data:
   shuffle: 1000
   prefetch: 10
   path_pattern: "training_files"
-  split_prefix: "custom_{}"
+  split_prefix: "custom_new_{}"
   mean:
-    - 1.45362457
-    - 0.53708629
+    - 2.13771687
+    - 0.5744334
   std:
-    - 1.65967594
-    - 0.26022761
+    - 2.04323081
+    - 0.17708756
 
 training:
-  learning_rate: 0.0001
+  learning_rate: 0.001
   decay: 1e+3
   log_dir: "logs/{}"
   ckpt_dir: "ckpt/{}"

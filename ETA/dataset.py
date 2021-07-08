@@ -8,8 +8,7 @@ mean, std = config.data.mean, config.data.std
 mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
-non_zero_rows = np.load("./data/static/non_zero_784.npy")
-# non_zero_rows = np.arange(6639)
+non_zero_rows = np.load("./data/static/custom_non_zero_1165.npy")
 
 
 def get_data(split_label):
@@ -44,10 +43,6 @@ def get_data(split_label):
             tf_map, [x], [tf.float32, tf.float32], name="load_each_file"
         )
     )
-
-    # tf_dataset = tf_dataset.cache(
-    #     "{}/cache_{}".format(config.model.working_dir, split_label)
-    # )
 
     tf_dataset = tf_dataset.batch(
         batch_size=config.model.batch_size,
