@@ -11,12 +11,14 @@ mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
 adj_mx = np.load(
-    "{}/{}/metr_adj_matrix.npz".format(
+    "{}/{}/gaussian_adj_matrix.npz".format(
         config.model.working_dir, config.model.static_data_dir
     )
 )["arr_0"].astype(np.float32)
 
-non_zero_rows = np.arange(207)
+non_zero_rows = np.load(
+    "/home/pravesh/speech_work/ETA/models/ETA/data/static/custom_non_zero_1165.npy"
+)
 
 
 def calculate_random_walk_matrix(adj_mx):
@@ -45,8 +47,8 @@ def get_data(split_label):
 
         data = np.load(file_name)
         x, y = (
-            data["x"][:, non_zero_rows],
-            data["y"][:, non_zero_rows, 0],
+            np.transpose(data["x"], [1, 0, 2])[:, non_zero_rows],
+            np.transpose(data["y"], [1, 0, 2])[:, non_zero_rows, 0],
         )
         # x[:, :, 0] *= x[:, :, 0] <= 8
         # y *= y <= 8
@@ -167,7 +169,7 @@ class rwt_sampling:
 
         self.adj = (
             np.load(
-                "{}/{}/metr_adj_matrix.npz".format(
+                "{}/{}/gaussian_adj_matrix.npz".format(
                     config.model.working_dir, config.model.static_data_dir
                 )
             )["arr_0"].astype(np.float32)
@@ -178,9 +180,9 @@ class rwt_sampling:
         self.n_nodes = config.model.num_nodes
 
         self.sampler = {
-            "metr_missing/train": self.sample,
-            "metr_missing/val": self.sample,
-            "metr_missing/test": self.sample,
+            "custom_new_train": self.sample,
+            "custom_new_val": self.sample,
+            "custom_new_test": self.sample,
         }
 
     def dummy(self):
