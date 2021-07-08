@@ -17,37 +17,37 @@ class Model(tf_keras.Model):
 
         self.embedding = tf_keras.Sequential(
             [
-                tf_keras.layers.Conv2D(
+                tf_keras.layers.Conv1D(
                     filters=1024,
-                    kernel_size=[3, 3],
+                    kernel_size=3,
                     padding="SAME",
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv2D(
+                tf_keras.layers.Conv1D(
                     filters=512,
-                    kernel_size=[3, 3],
+                    kernel_size=3,
                     padding="SAME",
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv2D(
+                tf_keras.layers.Conv1D(
                     filters=256,
-                    kernel_size=[3, 3],
+                    kernel_size=3,
                     padding="SAME",
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv2D(
+                tf_keras.layers.Conv1D(
                     filters=256,
-                    kernel_size=[3, 3],
+                    kernel_size=3,
                     padding="SAME",
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv2D(
+                tf_keras.layers.Conv1D(
                     filters=512,
-                    kernel_size=[3, 3],
+                    kernel_size=3,
                     padding="SAME",
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
