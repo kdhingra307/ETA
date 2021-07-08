@@ -27,7 +27,7 @@ def get_data(split_label):
 
         y = np.stack([y, mask], axis=-1).astype(np.float32)
 
-        return x, y
+        return x.astype(np.float32), y
 
     files = glob(
         "{}/{}/{}/*npz".format(
