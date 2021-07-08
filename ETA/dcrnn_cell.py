@@ -47,7 +47,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     def __init__(
         self,
         num_units,
-        adj_mx,
+        adj_mx111,
         max_diffusion_step,
         num_nodes,
         num_proj=None,
