@@ -1,7 +1,7 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "small_eta/lstm/regularized/5"
+  training_label: "small_eta/lstm/regularized/6"
   num_nodes: 1165
   steps_to_predict: 12
   ttr: 1
