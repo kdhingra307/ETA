@@ -26,7 +26,7 @@ class GRUCell(tf.keras.layers.AbstractRNNCell):
         super(GRUCell, self).__init__()
         self._activation = activation
         self._num_units = units
-        self.kernel = tf.keras.Dense(units=units)
+        self.kernel = tf.keras.layers.Dense(units=units)
 
     def build(self, inp_shape):
 
