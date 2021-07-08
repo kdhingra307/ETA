@@ -26,10 +26,11 @@ class GRUCell(tf.keras.layers.AbstractRNNCell):
         super(GRUCell, self).__init__()
         self._activation = activation
         self._num_units = units
+        self.kernel = tf.keras.Dense(units=units)
 
     def build(self, inp_shape):
 
-        inpt_features = inp_shape[-1] + self._num_units
+        inpt_features = 2 * self._num_units
 
         kernel_initializer = tf_keras.initializers.GlorotUniform()
         bias_initializer = tf_keras.initializers.Zeros()
@@ -78,20 +79,14 @@ class GRUCell(tf.keras.layers.AbstractRNNCell):
             [description]
         """
 
+        inputs = self.kernel(inputs)
+
         state = tf.reshape(state, [-1, self._num_units])
 
         inputs_and_state = tf.concat([inputs, state], axis=1)
         value = tf.sigmoid(tf.matmul(inputs_and_state, self.w1) + self.b1)
 
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
-        print(
-            inputs.shape,
-            state.shape,
-            inputs_and_state.shape,
-            value.shape,
-            r.shape,
-        )
-        tf.print(tf.shape(state), tf.shape(inputs_and_state), tf.shape(value))
 
         inputs_and_state = tf.concat([inputs * r, state], axis=1)
 
