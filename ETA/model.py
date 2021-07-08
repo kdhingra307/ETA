@@ -19,7 +19,7 @@ class Model(tf_keras.Model):
             tf_keras.layers.StackedRNNCells(
                 [
                     tf_keras.layers.GRUCell(
-                        units=128, dropout=0.5, recurrent_dropout=0.5
+                        units=32, dropout=0.5, recurrent_dropout=0.5
                     ),
                     # tf_keras.layers.GRUCell(units=128),
                 ]
@@ -31,7 +31,7 @@ class Model(tf_keras.Model):
         self.decoder = tf_keras.layers.StackedRNNCells(
             [
                 tf_keras.layers.GRUCell(
-                    units=128, dropout=0.5, recurrent_dropout=0.5
+                    units=32, dropout=0.5, recurrent_dropout=0.5
                 ),
                 # tf_keras.layers.GRUCell(units=128),
             ],
