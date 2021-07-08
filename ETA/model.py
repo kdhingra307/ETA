@@ -86,7 +86,7 @@ class Model(tf_keras.Model):
         x, y = data
 
         with tf.GradientTape() as tape:
-            y_pred = self(x, training=True, y=y[:, :, :, :1])
+            y_pred = self(x, training=True, y=y[:, :, :1])
             loss = self.compiled_loss(
                 y, y_pred, None, regularization_losses=self.losses
             )
