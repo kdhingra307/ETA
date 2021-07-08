@@ -160,7 +160,7 @@ class Model(tf_keras.Model):
         x, y, x2 = data
         print(x, y, x2)
 
-        with tf_diff.GradientTape() as tape:
+        with tf.GradientTape() as tape:
             y_pred = self(x, training=True, y=y[:, :, :, :1], constants=x2)
             # y_pred = self(x[:, :, :208], training=True, y=y[:, :, :, :1])
             loss = self.compiled_loss(
