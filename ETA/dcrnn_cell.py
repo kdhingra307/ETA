@@ -233,10 +233,10 @@ class DCGRUBlock(tf_keras.layers.Layer):
     def build(self, x_shape):
         self.batch_size = x_shape[0]
 
-    def encode(self, x, pos, training=False):
+    def encode(self, x, pos, training=False, z=None):
         state = self.block(
             x,
-            constants=[pos],
+            constants=[pos, z],
             initial_state=(
                 tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 128]),
                 tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 128]),
@@ -258,7 +258,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return teacher_coeff
 
     @tf.function
-    def decode(self, state, pos=None, x_targ=None, training=False):
+    def decode(self, state, pos=None, x_targ=None, training=False, z=None):
 
         init = tf.zeros(
             [tf.shape(state[0])[0], tf.shape(state[0])[1], 1], dtype=tf.float32
@@ -271,17 +271,17 @@ class DCGRUBlock(tf_keras.layers.Layer):
         )
         for i in range(self.steps_to_predict):
             init, state = self.cells(
-                init, states=state, constants=[pos], training=training
+                init, states=state, constants=[pos, z], training=training
             )
             to_return = to_return.write(i, init)
             init = tf.stop_gradient(init)
 
         return tf.transpose(tf.squeeze(to_return.stack(), axis=-1), [1, 0, 2])
 
-    def call(self, x, state, pos, training=False):
+    def call(self, x, state, pos, training=False, z=None):
         if self.is_encoder:
-            return self.encode(x, pos=pos, training=training)
+            return self.encode(x, pos=pos, training=training, z=z)
         else:
             return self.decode(
-                state=state, x_targ=x, pos=pos, training=training
+                state=state, x_targ=x, pos=pos, training=training, z=z
             )
