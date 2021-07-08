@@ -64,10 +64,10 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
             )
 
         self.attention_1 = tf.keras.layers.MultiHeadAttention(
-            16, 32, attention_axes=(0, 2)
+            4, 32, attention_axes=(0, 2)
         )
         self.attention_2 = tf.keras.layers.MultiHeadAttention(
-            16, 32, attention_axes=(0, 2)
+            4, 32, attention_axes=(0, 2)
         )
         self.w1 = tf.keras.layers.Dense(
             2 * self._num_units, activation=tf.keras.activations.sigmoid
