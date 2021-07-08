@@ -108,7 +108,7 @@ def get_data(split_label):
 
     tf_dataset = tf_dataset.batch(batch_size=config.model.batch_size)
 
-    def second_map(x, y):
+    def second_map(x, y, z):
         positions = batch_sampler.sampler[split_label]()
 
         x = tf.gather(x, indices=positions, axis=2)
