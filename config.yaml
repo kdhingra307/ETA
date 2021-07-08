@@ -1,7 +1,7 @@
 model:
   working_dir: "/home/pravesh/speech_work/ETA/models/ETA/data"
   batch_size: 8
-  training_label: "small_eta/dcrnn/custom_new/missing/dot_gaussian/trans1"
+  training_label: "small_eta/dcrnn/custom_new/missing/dot_gaussian/transpo1"
   num_nodes: 1165
   steps_to_predict: 12
   graph_batch_size: 256
@@ -14,11 +14,11 @@ data:
   path_pattern: "training_files"
   split_prefix: "custom_new_{}"
   mean:
-    - 1.92559222
-    - 0.56999187
+    - 2.13771687
+    - 0.5744334
   std:
-    - 1.29298016
-    - 0.17494257
+    - 2.04323081
+    - 0.17708756
 
 training:
   learning_rate: 0.001
