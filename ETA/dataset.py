@@ -16,7 +16,9 @@ adj_mx = np.load(
     )
 )["arr_0"].astype(np.float32)
 
-non_zero_rows = np.load("./data/static/non_zero_2801.npy")
+non_zero_rows = np.load(
+    "/home/pravesh/speech_work/ETA/models/ETA/data/static/custom_non_zero_1165.npy"
+)
 
 
 def calculate_random_walk_matrix(adj_mx):
@@ -45,7 +47,10 @@ def get_data(split_label):
     def tf_map(file_name):
 
         data = np.load(file_name)
-        x, y = data["x"][:, non_zero_rows], data["y"][:, non_zero_rows, 0]
+        x, y = (
+            np.transpose(data["x"], [1, 0, 2])[:, non_zero_rows],
+            np.transpose(data["y"], [1, 0, 2])[:, non_zero_rows, 0],
+        )
 
         mask = (y > 0) * 1
 
@@ -151,9 +156,9 @@ class rwt_sampling:
         self.n_nodes = config.model.num_nodes
 
         self.sampler = {
-            "custom_train": self.sample,
-            "custom_val": self.sample,
-            "custom_test": self.sample,
+            "custom_new_train": self.sample,
+            "custom_new_val": self.sample,
+            "custom_new_test": self.sample,
         }
 
     def dummy(self):
