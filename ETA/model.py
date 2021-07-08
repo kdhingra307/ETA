@@ -12,11 +12,7 @@ class Model(tf_keras.Model):
 
         super(Model, self).__init__()
 
-        adjacency_matrix = np.load(
-            "{}/{}/corr_pearson.npz".format(
-                config.model.working_dir, config.model.static_data_dir
-            )
-        )["arr_0"].astype(np.float32)
+        adjacency_matrix = None
 
         num_nodes = config.model.graph_batch_size
 
