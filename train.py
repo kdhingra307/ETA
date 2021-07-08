@@ -30,6 +30,11 @@ optimizer = tf_keras.optimizers.Adam(
     learning_rate=config.training.learning_rate
 )
 model = Model()
+
+for e in model.trainable_weights:
+    print(e.name)
+
+
 model.compile(optimizer=optimizer, loss=loss_function, metrics=metrics)
 
 train_split = config.data.split_prefix.format("train")
