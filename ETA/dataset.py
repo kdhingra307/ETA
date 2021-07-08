@@ -86,4 +86,4 @@ def get_data(split_label):
         )
     )
 
-    tf_dataset = tf_dataset.prefetch(config.data.prefetch)
+    return tf_dataset.prefetch(config.data.prefetch)
