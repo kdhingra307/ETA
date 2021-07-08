@@ -51,8 +51,8 @@ def get_data(split_label):
             np.transpose(data["x"], [1, 0, 2])[:, non_zero_rows],
             np.transpose(data["y"], [1, 0, 2])[:, non_zero_rows, 0],
         )
-        x[:, :, 0] *= x[:, :, 0] <= 8
-        y *= y <= 8
+        # x[:, :, 0] *= x[:, :, 0] <= 8
+        # y *= y <= 8
 
         x_mask = (x[:, :, 0] > 0).astype(np.float32)
         x = (x - mean_expanded) / std_expanded
@@ -125,7 +125,6 @@ def get_data(split_label):
             support = calculate_random_walk_matrix(cur_support)
 
             final_support.append(tf.transpose(support, [1, 0]))
-
 
         return tf.stack(final_support, axis=0), x, y, z
 
