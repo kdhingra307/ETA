@@ -95,6 +95,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
         output_size = 2 * self._num_units
 
+        print(inputs, state)
         inputs_and_state = tf.concat([inputs, state], axis=2)
         attended = self.attention_1(inputs_and_state, inputs_and_state)
         print(attended)
