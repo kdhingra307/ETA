@@ -15,7 +15,10 @@ def get_data(split_label):
     def tf_map(file_name):
 
         data = np.load(file_name)
-        x, y = data["x"][:, non_zero_rows], data["y"][:, non_zero_rows, 0]
+        x, y = (
+            np.transpose(data["x"], [1, 0, 2])[:, non_zero_rows],
+            np.transpose(data["y"], [1, 0, 2])[:, non_zero_rows, 0],
+        )
 
         mask = (y > 0) * 1
 
