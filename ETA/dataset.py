@@ -52,14 +52,31 @@ def get_data(split_label):
             np.transpose(data["y"], [1, 0, 2])[:, non_zero_rows, 0],
         )
 
+        x_mask = (x[:, :, 0] > 0).astype(np.float32)
+        x = (x - mean_expanded) / std_expanded
+
+        x_mask = np.stack([x_mask, np.ones(x_mask.shape)], axis=-1)
+
+        x1 = [np.zeros(x[0].shape)]
+        dt = [np.zeros(x[0].shape)]
+        for e in range(len(x)):
+            x1.append((x1[-1] * (1 - x_mask[e])) + x_mask[e] * x[e])
+            dt.append(((1 + dt[-1]) * (1 - x_mask[e])) + x_mask[e])
+
+        x1 = np.stack(x1[1:], axis=0)
+        dt = np.stack(dt[1:], axis=0) / 12
+
+        x2 = np.sum(x_mask * x, axis=0) / (np.sum(x_mask, axis=0) + 1e-12)
+
+        x = np.concatenate([x, x1, x_mask, dt], axis=-1)
+
         mask = (y > 0) * 1
 
         y = (y - mean[0]) / std[0]
-        x = (x - mean_expanded) / std_expanded
 
         y = np.stack([y, mask], axis=-1).astype(np.float32)
 
-        return x.astype(np.float32), y
+        return x.astype(np.float32), y, x2.astype(np.float32)
 
     files = glob(
         "{}/{}/{}/*.npz".format(
@@ -75,25 +92,25 @@ def get_data(split_label):
     )
 
     tf_dataset = tf_dataset.map(
-        lambda x, y: (
+        lambda x, y, z: (
             tf.ensure_shape(
-                x, [config.model.steps_to_predict, config.model.num_nodes, 2]
+                x, [config.model.steps_to_predict, config.model.num_nodes, 8]
             ),
             tf.ensure_shape(
                 y, [config.model.steps_to_predict, config.model.num_nodes, 2]
             ),
+            tf.ensure_shape(z, [config.model.num_nodes, 2]),
         )
     )
 
-    tf_dataset = tf_dataset.batch(
-        batch_size=config.model.batch_size, drop_remainder=True
-    )
+    tf_dataset = tf_dataset.batch(batch_size=config.model.batch_size)
 
     def second_map(x, y):
         positions = batch_sampler.sampler[split_label]()
 
         x = tf.gather(x, indices=positions, axis=2)
         y = tf.gather(y, indices=positions, axis=2)
+        z = tf.gather(z, indices=positions, axis=1)
 
         final_support = []
         for support in base_supports:
@@ -101,7 +118,8 @@ def get_data(split_label):
                 tf.gather(support, positions, axis=1), positions, axis=0
             )
             final_support.append(calculate_random_walk_matrix(cur_support))
-        return tf.stack(final_support, axis=0), x, y
+
+        return tf.stack(final_support, axis=0), x, y, z
 
     tf_dataset = tf_dataset.map(second_map)
 
