@@ -19,7 +19,7 @@ class GRUCell(tf.keras.layers.AbstractRNNCell):
 
     @property
     def state_size(self):
-        return None
+        return self._num_units
 
     def __init__(self, units, activation=tf.nn.tanh):
 
