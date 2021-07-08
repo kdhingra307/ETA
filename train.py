@@ -13,8 +13,8 @@ from os.path import join as join_directory
 import tensorflow as tf
 
 
-optimizer = tf_keras.optimizers.Adagrad(
-    learning_rate=config.training.learning_rate, epsilon=1e-3
+optimizer = tf_keras.optimizers.Adam(
+    learning_rate=config.training.learning_rate
 )
 model = Model()
 model.compile(optimizer=optimizer, loss=loss_function, metrics=metrics)
