@@ -62,11 +62,8 @@ class Model(tf_keras.Model):
             # Lreg = 0.0015 * sum(
             #     tf.nn.l2_loss(tf_var) for tf_var in self.trainable_variables
             # )
-            loss = (
-                self.compiled_loss(
-                    y, y_pred, None, regularization_losses=self.losses
-                )
-                + Lreg
+            loss = self.compiled_loss(
+                y, y_pred, None, regularization_losses=self.losses
             )
 
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
