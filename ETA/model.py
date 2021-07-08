@@ -1,7 +1,11 @@
 import tensorflow.keras as tf_keras
 import numpy as np
+from tensorflow.python.keras.backend import batch_normalization, dropout
+from tensorflow.python.keras.layers.core import Dropout
+from tensorflow.python.keras.layers.normalization_v2 import BatchNormalization
 from ETA import config
-from ETA.gru import GRUCell
+
+# from ETA.gru import GRUCell
 from tensorflow import function as tf_function
 import tensorflow as tf
 
@@ -13,29 +17,43 @@ class Model(tf_keras.Model):
 
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
-                [GRUCell(units=128), GRUCell(units=128)]
+                [
+                    tf_keras.layers.GRUCell(
+                        units=128, dropout=0.5, recurrent_dropout=0.5
+                    ),
+                    tf_keras.layers.GRUCell(units=128),
+                ]
             ),
             return_state=True,
             name="encoding",
         )
 
         self.decoder = tf_keras.layers.StackedRNNCells(
-            [GRUCell(units=128), GRUCell(units=128)],
+            [
+                tf_keras.layers.GRUCell(
+                    units=128, dropout=0.5, recurrent_dropout=0.5
+                ),
+                tf_keras.layers.GRUCell(units=128),
+            ],
             name="decoding",
         )
 
         self.post_process = tf_keras.Sequential(
             [
+                tf_keras.layers.BatchNormalization(),
+                tf_keras.layers.Dropout(0.5),
                 tf_keras.layers.Dense(
                     units=128,
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
+                tf_keras.layers.BatchNormalization(),
+                tf_keras.layers.Dropout(0.5),
                 tf_keras.layers.Dense(
                     units=256,
                     activation=tf_keras.layers.LeakyReLU(alpha=0.2),
                 ),
                 tf_keras.layers.Dense(
-                    units=config.model.num_nodes,
+                    units=config.model.num_nodes, use_bias=False
                 ),
             ],
             name="post_process",
