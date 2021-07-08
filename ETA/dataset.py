@@ -34,6 +34,12 @@ def calculate_random_walk_matrix(adj_mx):
 base_supports = [
     tf.constant(adj_mx, dtype=tf.float32),
 ]
+support = calculate_random_walk_matrix(base_supports[0])
+
+final_support = []
+final_support.append(support)
+final_support.append(tf.matmul(support, support))
+final_support = tf.stack(final_support, axis=0)
 
 
 def get_data(split_label):
@@ -47,8 +53,6 @@ def get_data(split_label):
             np.transpose(data["x"], [1, 0, 2])[:, non_zero_rows],
             np.transpose(data["y"], [1, 0, 2])[:, non_zero_rows, 0],
         )
-        # x[:, :, 0] *= x[:, :, 0] <= 8
-        # y *= y <= 8
 
         x_mask = (x[:, :, 0] > 0).astype(np.float32)
         x = (x - mean_expanded) / std_expanded
@@ -107,23 +111,24 @@ def get_data(split_label):
     tf_dataset = tf_dataset.batch(batch_size=config.model.batch_size)
 
     def second_map(x, y, z):
-        positions = batch_sampler.sampler[split_label]()
+        # positions = batch_sampler.sampler[split_label]()
 
-        x = tf.gather(x, indices=positions, axis=2)
-        y = tf.gather(y, indices=positions, axis=2)
-        z = tf.gather(z, indices=positions, axis=1)
+        # x = tf.gather(x, indices=positions, axis=2)
+        # y = tf.gather(y, indices=positions, axis=2)
+        # z = tf.gather(z, indices=positions, axis=1)
 
-        final_support = []
+        # final_support = []
 
-        cur_support = tf.gather(
-            tf.gather(base_supports[0], positions, axis=1), positions, axis=0
-        )
-        support = calculate_random_walk_matrix(cur_support)
+        # cur_support = tf.gather(
+        #     tf.gather(base_supports[0], positions, axis=1), positions, axis=0
+        # )
 
-        final_support.append(support)
-        final_support.append(tf.matmul(support, support))
+        # support = calculate_random_walk_matrix(cur_support)
 
-        return tf.stack(final_support, axis=0), x, y, z
+        # final_support.append(support)
+        # final_support.append(tf.matmul(support, support))
+
+        return final_support, x, y, z
 
     tf_dataset = tf_dataset.map(second_map)
 
