@@ -72,9 +72,9 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         support = calculate_random_walk_matrix(base_supports[0])
 
         self.final_support = []
-        self.final_support.append(tf.sparse_from_dense(support))
+        self.final_support.append(tf.sparse.from_dense(support))
         self.final_support.append(
-            tf.sparse_from_dense(tf.matmul(support, support))
+            tf.sparse.from_dense(tf.matmul(support, support))
         )
 
         if num_proj != None:
