@@ -15,6 +15,45 @@ class Model(tf_keras.Model):
 
         super(Model, self).__init__()
 
+        self.embedding = tf_keras.Sequential(
+            [
+                tf_keras.layers.Conv2D(
+                    filters=1024,
+                    kernel_size=[3, 3],
+                    padding="SAME",
+                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+                ),
+                tf_keras.layers.BatchNormalization(),
+                tf_keras.layers.Conv2D(
+                    filters=512,
+                    kernel_size=[3, 3],
+                    padding="SAME",
+                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+                ),
+                tf_keras.layers.BatchNormalization(),
+                tf_keras.layers.Conv2D(
+                    filters=256,
+                    kernel_size=[3, 3],
+                    padding="SAME",
+                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+                ),
+                tf_keras.layers.BatchNormalization(),
+                tf_keras.layers.Conv2D(
+                    filters=256,
+                    kernel_size=[3, 3],
+                    padding="SAME",
+                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+                ),
+                tf_keras.layers.BatchNormalization(),
+                tf_keras.layers.Conv2D(
+                    filters=512,
+                    kernel_size=[3, 3],
+                    padding="SAME",
+                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+                ),
+            ]
+        )
+
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
                 [
