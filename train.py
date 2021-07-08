@@ -27,9 +27,8 @@ if gpus:
         print(e)
 
 
-optimizer = tf_keras.optimizers.Adam(
-    learning_rate=config.training.learning_rate,
-    epsilon=1e-3
+optimizer = tf_keras.optimizers.Adagrad(
+    learning_rate=config.training.learning_rate, epsilon=1e-3
 )
 model = Model()
 

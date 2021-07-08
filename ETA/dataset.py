@@ -36,12 +36,6 @@ base_supports = [
         adj_mx[non_zero_rows[:, None], non_zero_rows], dtype=tf.float32
     ),
 ]
-support = calculate_random_walk_matrix(base_supports[0])
-
-final_support = []
-final_support.append(support)
-final_support.append(tf.matmul(support, support))
-final_support = tf.stack(final_support, axis=0)
 
 
 def get_data(split_label):
@@ -113,22 +107,22 @@ def get_data(split_label):
     tf_dataset = tf_dataset.batch(batch_size=config.model.batch_size)
 
     def second_map(x, y, z):
-        # positions = batch_sampler.sampler[split_label]()
+        positions = batch_sampler.sampler[split_label]()
 
-        # x = tf.gather(x, indices=positions, axis=2)
-        # y = tf.gather(y, indices=positions, axis=2)
-        # z = tf.gather(z, indices=positions, axis=1)
+        x = tf.gather(x, indices=positions, axis=2)
+        y = tf.gather(y, indices=positions, axis=2)
+        z = tf.gather(z, indices=positions, axis=1)
 
-        # final_support = []
+        final_support = []
 
-        # cur_support = tf.gather(
-        #     tf.gather(base_supports[0], positions, axis=1), positions, axis=0
-        # )
+        cur_support = tf.gather(
+            tf.gather(base_supports[0], positions, axis=1), positions, axis=0
+        )
 
-        # support = calculate_random_walk_matrix(cur_support)
+        support = calculate_random_walk_matrix(cur_support)
 
-        # final_support.append(support)
-        # final_support.append(tf.matmul(support, support))
+        final_support.append(support)
+        final_support.append(tf.matmul(support, support))
 
         return final_support, x, y, z
 

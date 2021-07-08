@@ -1,7 +1,7 @@
 model:
   working_dir: "/home/pravesh/speech_work/ETA/models/ETA/data"
   batch_size: 8
-  training_label: "small_eta/eta/full/single_adj"
+  training_label: "small_eta/eta/adagrad"
   num_nodes: 1165
   steps_to_predict: 12
   graph_batch_size: 256
