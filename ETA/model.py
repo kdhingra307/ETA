@@ -58,7 +58,7 @@ class Model(tf_keras.Model):
         with tf_diff.GradientTape() as tape:
             y_pred = self(x, training=True, y=y[:, :, :, :1], pos=pos, z=z)
             Lreg = 0.0015 * sum(
-                tf.nn.l2_loss(tf_var) for tf_var in self.trainable_variables()
+                tf.nn.l2_loss(tf_var) for tf_var in self.trainable_variables
             )
             loss = (
                 self.compiled_loss(
