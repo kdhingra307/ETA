@@ -87,7 +87,10 @@ def get_data(split_label):
     tf_dataset = tf_dataset.shuffle(config.data.shuffle, seed=1234)
     tf_dataset = tf_dataset.map(
         lambda x: tf.numpy_function(
-            tf_map, [x], [tf.float32, tf.float32], name="load_each_file"
+            tf_map,
+            [x],
+            [tf.float32, tf.float32, tf.float32],
+            name="load_each_file",
         )
     )
 
