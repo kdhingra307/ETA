@@ -1,7 +1,7 @@
 model:
   working_dir: "/home/pravesh/speech_work/ETA/models/ETA/data"
   batch_size: 16
-  training_label: "small_eta/eta/closest_adj"
+  training_label: "small_eta/eta/spearson/0.01/dot"
   num_nodes: 1165
   steps_to_predict: 12
   graph_batch_size: 256
@@ -21,7 +21,7 @@ data:
     - 0.17708756
 
 training:
-  learning_rate: 0.001
+  learning_rate: 0.01
   decay: 1e+3
   log_dir: "logs/{}"
   ckpt_dir: "ckpt/{}"

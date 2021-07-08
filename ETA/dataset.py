@@ -11,7 +11,7 @@ mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
 adj_mx = np.load(
-    "{}/{}/adj_matrix.npz".format(
+    "{}/{}/spearson_custom.npz".format(
         config.model.working_dir, config.model.static_data_dir
     )
 )["arr_0"].astype(np.float32)
@@ -31,11 +31,8 @@ def calculate_random_walk_matrix(adj_mx):
     )
 
 
-adj_mx = adj_mx[non_zero_rows[:, None], non_zero_rows]
-
 base_supports = [
     tf.constant(adj_mx, dtype=tf.float32),
-    tf.constant(np.dot(adj_mx, adj_mx), dtype=tf.float32),
 ]
 
 
@@ -117,13 +114,14 @@ def get_data(split_label):
         z = tf.gather(z, indices=positions, axis=1)
 
         final_support = []
-        for support in base_supports:
-            cur_support = tf.gather(
-                tf.gather(support, positions, axis=1), positions, axis=0
-            )
-            support = calculate_random_walk_matrix(cur_support)
 
-            final_support.append(tf.transpose(support, [1, 0]))
+        cur_support = tf.gather(
+            tf.gather(base_supports[0], positions, axis=1), positions, axis=0
+        )
+        support = calculate_random_walk_matrix(cur_support)
+
+        final_support.append(support)
+        final_support.append(tf.matmul(support, support))
 
         return tf.stack(final_support, axis=0), x, y, z
 
@@ -169,12 +167,12 @@ class rwt_sampling:
 
         self.adj = (
             np.load(
-                "{}/{}/adj_matrix.npz".format(
+                "{}/{}/spearson_custom.npz".format(
                     config.model.working_dir, config.model.static_data_dir
                 )
             )["arr_0"].astype(np.float32)
             > 0
-        )[non_zero_rows[:, None], non_zero_rows]
+        )
 
         self.n_init = config.model.graph_batch_size
         self.n_nodes = config.model.num_nodes
