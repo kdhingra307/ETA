@@ -102,14 +102,14 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                 shape=(2 * self._num_units,), dtype=tf.float32
             ),
             trainable=True,
-            name="w3",
+            name="b1",
         )
         self.b2 = tf.Variable(
             initial_value=bias_initializer(
                 shape=(self._num_units,), dtype=tf.float32
             ),
             trainable=True,
-            name="w4",
+            name="b2",
         )
 
         self.batch_size = inp_shape[0]
