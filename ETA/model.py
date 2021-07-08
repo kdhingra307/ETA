@@ -16,44 +16,44 @@ class Model(tf_keras.Model):
 
         super(Model, self).__init__()
 
-        self.embedding = tf_keras.Sequential(
-            [
-                tf_keras.layers.Conv1D(
-                    filters=1024,
-                    kernel_size=3,
-                    padding="SAME",
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-                tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
-                    filters=512,
-                    kernel_size=3,
-                    padding="SAME",
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-                tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
-                    filters=256,
-                    kernel_size=3,
-                    padding="SAME",
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-                tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
-                    filters=256,
-                    kernel_size=3,
-                    padding="SAME",
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-                tf_keras.layers.BatchNormalization(),
-                tf_keras.layers.Conv1D(
-                    filters=512,
-                    kernel_size=3,
-                    padding="SAME",
-                    activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                ),
-            ]
-        )
+        # self.embedding = tf_keras.Sequential(
+        #     [
+        #         tf_keras.layers.Conv1D(
+        #             filters=1024,
+        #             kernel_size=3,
+        #             padding="SAME",
+        #             activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+        #         ),
+        #         tf_keras.layers.BatchNormalization(),
+        #         tf_keras.layers.Conv1D(
+        #             filters=512,
+        #             kernel_size=3,
+        #             padding="SAME",
+        #             activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+        #         ),
+        #         tf_keras.layers.BatchNormalization(),
+        #         tf_keras.layers.Conv1D(
+        #             filters=256,
+        #             kernel_size=3,
+        #             padding="SAME",
+        #             activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+        #         ),
+        #         tf_keras.layers.BatchNormalization(),
+        #         tf_keras.layers.Conv1D(
+        #             filters=256,
+        #             kernel_size=3,
+        #             padding="SAME",
+        #             activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+        #         ),
+        #         tf_keras.layers.BatchNormalization(),
+        #         tf_keras.layers.Conv1D(
+        #             filters=512,
+        #             kernel_size=3,
+        #             padding="SAME",
+        #             activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+        #         ),
+        #     ]
+        # )
         learnable_cell = GRUDCell(units=256)
         learnable_cell.build((None, None, 1166 * 4))
 
@@ -149,9 +149,9 @@ class Model(tf_keras.Model):
 
         return tf.transpose(to_return.stack(), [1, 0, 2])
 
-    def call(self, x, training=False, y=None):
-        embed = self.embedding(x)
-        otpt = self.encoder(embed, training=training)
+    def call(self, x, training=False, y=None, constants=None):
+        # embed = self.embedding(x)
+        otpt = self.encoder(x, training=training, constants=constants)
         encoded = otpt[1:]
         decoded = self.decode(state=encoded, x_targ=y, training=training)
         return decoded
