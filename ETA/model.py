@@ -14,7 +14,7 @@ class Model(tf_keras.Model):
 
         super(Model, self).__init__()
 
-        adjacency_matrix = np.load(
+        attention = np.load(
             "{}/{}/metr_adj_matrix.npz".format(
                 config.model.working_dir, config.model.static_data_dir
             )
@@ -22,13 +22,13 @@ class Model(tf_keras.Model):
 
         num_nodes = config.model.graph_batch_size
 
-        cell = GRUDCell(64, adjacency_matrix, 2, num_nodes)
-        cell.build([None, None, None, 2])
+        # cell = GRUDCell(64, adjacency_matrix, 2, num_nodes)
+        # cell.build([None, None, None, 2])
         self.encoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
                 [
-                    cell,
-                    DCGRUCell(64, adjacency_matrix, 2, num_nodes),
+                    DCGRUCell(64, attention, 2, num_nodes),
+                    DCGRUCell(64, attention, 2, num_nodes),
                 ]
             ),
             num_nodes=num_nodes,
@@ -38,8 +38,8 @@ class Model(tf_keras.Model):
         self.decoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
                 [
-                    DCGRUCell(64, adjacency_matrix, 2, num_nodes),
-                    DCGRUCell(64, adjacency_matrix, 2, num_nodes, num_proj=1),
+                    DCGRUCell(64, attention, 2, num_nodes),
+                    DCGRUCell(64, attention, 2, num_nodes, num_proj=1),
                 ]
             ),
             num_nodes=num_nodes,
@@ -61,7 +61,9 @@ class Model(tf_keras.Model):
         sample_weight = None
 
         with tf_diff.GradientTape() as tape:
-            y_pred = self(x, training=True, y=y[:, :, :, :1], pos=pos, z=z)
+            y_pred = self(
+                x[:, :, :, :2], training=True, y=y[:, :, :, :1], pos=pos, z=z
+            )
             loss = self.compiled_loss(
                 y, y_pred, None, regularization_losses=self.losses
             )
@@ -72,7 +74,7 @@ class Model(tf_keras.Model):
 
     def test_step(self, data):
         pos, x, y, z = data
-        y_pred = self(x, training=False, pos=pos, z=z)
+        y_pred = self(x[:, :, :, :2], training=False, pos=pos, z=z)
         # Updates stateful loss metrics.
         loss = self.compiled_loss(
             y, y_pred, None, regularization_losses=self.losses

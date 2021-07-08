@@ -30,7 +30,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
     def __init__(
         self,
         num_units,
-        adj_mx,
+        attention,
         max_diffusion_step,
         num_nodes,
         num_proj=None,
@@ -46,15 +46,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._num_proj = num_proj
         self._num_units = num_units
         self._max_diffusion_step = max_diffusion_step
-        self._supports = []
+
         self._use_gc_for_ru = use_gc_for_ru
-
-        norm = np.load("./data/static/norm.npy")
-
-        self._supports = [
-            tf.constant(adj_mx, dtype=tf.float32),
-            tf.constant(adj_mx.T, dtype=tf.float32),
-        ]
 
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
@@ -70,53 +63,18 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                 ]
             )
 
-    @staticmethod
-    def _build_sparse_matrix(L, fac=None):
-        if fac is not None:
-            return tf.constant(L.todense() / fac)
-        else:
-            return tf.constant(L.todense())
-        # return tf.constant(
-        #     [np.arange(207) for _ in range(207)], dtype=tf.float32
-        # )
-        # L = L.tocoo()
-        # indices = np.column_stack((L.row, L.col))
-        # L = tf.SparseTensor(indices, L.data, L.shape)
-        # return tf.sparse.reorder(L)
-
-    def build(self, inp_shape):
-
-        inpt_features = (inp_shape[-1] + 64) * 4
-
-        kernel_initializer = tf_keras.initializers.GlorotUniform()
-        bias_initializer = tf_keras.initializers.Zeros()
-        self.w1 = tf.Variable(
-            initial_value=kernel_initializer(
-                shape=(inpt_features, 2 * self._num_units), dtype=tf.float32
-            ),
-            trainable=True,
+        self.attention_1 = tf.keras.layers.MultiHeadAttention(
+            16, 32, attention_axes=(0, 1)
         )
-        self.w2 = tf.Variable(
-            initial_value=kernel_initializer(
-                shape=(inpt_features, self._num_units), dtype=tf.float32
-            ),
-            trainable=True,
+        self.attention_2 = tf.keras.layers.MultiHeadAttention(
+            16, 32, attention_axes=(0, 1)
         )
-
-        self.b1 = tf.Variable(
-            initial_value=bias_initializer(
-                shape=(2 * self._num_units,), dtype=tf.float32
-            ),
-            trainable=True,
+        self.w1 = tf.keras.layers.Dense(
+            2 * self._num_units, activation=tf.keras.activations.sigmoid
         )
-        self.b2 = tf.Variable(
-            initial_value=bias_initializer(
-                shape=(self._num_units,), dtype=tf.float32
-            ),
-            trainable=True,
+        self.w2 = tf.keras.layers.Dense(
+            self._num_units, activation=tf.keras.activations.sigmoid
         )
-
-        self.batch_size = inp_shape[0]
 
     @tf.function
     def call(self, inputs, state, constants=None, scope=None, training=False):
@@ -136,26 +94,21 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         num_nodes = tf.shape(state)[1]
 
         output_size = 2 * self._num_units
-        value = tf.sigmoid(
-            self._gconv(
-                inputs,
-                state,
-                output_size,
-                bias_start=1.0,
-                pos=position,
-                training=training,
-            )
-        )
+
+        inputs_and_state = tf.concat([inputs, state], axis=2)
+        attended = self.attention_1(inputs_and_state, inputs_and_state)
+        print(attended)
+        value = self.w1(attended)
+        print(value)
+
         value = tf.reshape(value, (-1, num_nodes, output_size))
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
-        c = self._gconv(
-            inputs,
-            r * state,
-            self._num_units,
-            pos=position,
-            training=training,
-        )
+        inputs_and_state = tf.concat([inputs * r, state], axis=2)
+        attended = self.attention_2(inputs_and_state, inputs_and_state)
+        print(attended)
+        c = self.w2(attended)
+        print(c)
 
         if self._activation is not None:
             c = self._activation(c)
@@ -178,19 +131,13 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         state,
         output_size,
         pos,
-        bias_start=0.0,
-        training=False,
     ):
 
         inputs_and_state = tf.concat([inputs, state], axis=2)
         num_nodes = tf.shape(inputs)[1]
         num_inpt_features = inputs_and_state.shape[-1]
 
-        x0 = tf.reshape(
-            tf.transpose(inputs_and_state, [1, 0, 2]),
-            [num_nodes, -1],
-        )
-        output = []
+        self._attention()
 
         for support in self._supports:
 
