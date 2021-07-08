@@ -79,7 +79,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
     def build(self, inp_shape):
 
-        inpt_features = (inp_shape[-1] + 256) * 4
+        inpt_features = (inp_shape[-1] + 128) * 4
 
         kernel_initializer = tf_keras.initializers.GlorotUniform()
         bias_initializer = tf_keras.initializers.Zeros()
@@ -238,8 +238,8 @@ class DCGRUBlock(tf_keras.layers.Layer):
             x,
             constants=[pos, z],
             initial_state=(
-                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 256]),
-                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 256]),
+                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 128]),
+                tf.zeros([tf.shape(x)[0], tf.shape(x)[2], 128]),
             ),
             training=training,
         )
