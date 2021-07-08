@@ -13,7 +13,7 @@ from os.path import join as join_directory
 import tensorflow as tf
 
 
-optimizer = tf_keras.optimizers.Adagrad(
+optimizer = tf_keras.optimizers.Adam(
     learning_rate=config.training.learning_rate
 )
 model = Model()
