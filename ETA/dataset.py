@@ -26,7 +26,7 @@ def calculate_random_walk_matrix(adj_mx):
     d_inv = tf.math.pow(d, -0.5)
     d_inv = tf.where(tf.math.is_inf(d_inv), tf.zeros_like(d_inv), d_inv)
     d_mat_inv = tf.linalg.diag(d_inv)
-    return tf.matmult(
+    return tf.matmul(
         tf.transpose(tf.matmul(adj_mx, d_mat_inv), [1, 0]), d_mat_inv
     )
 
