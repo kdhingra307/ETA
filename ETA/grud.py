@@ -70,7 +70,7 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
 
     def build(self, inp_shape):
 
-        inpt_features = (inp_shape[-1] + 256) * 4
+        inpt_features = (inp_shape[-1] + 128) * 4
 
         kernel_initializer = tf_keras.initializers.GlorotUniform()
         bias_initializer = tf_keras.initializers.Zeros()
