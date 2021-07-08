@@ -4,6 +4,7 @@ from tensorflow.python.keras.backend import batch_normalization, dropout
 from tensorflow.python.keras.layers.core import Dropout
 from tensorflow.python.keras.layers.normalization_v2 import BatchNormalization
 from ETA import config
+from ETA.gru import GRUDCell
 
 # from ETA.gru import GRUCell
 from tensorflow import function as tf_function
@@ -53,16 +54,13 @@ class Model(tf_keras.Model):
                 ),
             ]
         )
+        learnable_cell = GRUDCell(units=256)
+        learnable_cell.build((None, None, 1166 * 4))
 
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
                 [
-                    tf_keras.layers.GRUCell(
-                        units=256,
-                        # dropout=0.5,
-                        # recurrent_dropout=0.5,
-                        use_bias=False,
-                    ),
+                    learnable_cell,
                     tf_keras.layers.GRUCell(
                         units=256,
                         # dropout=0.5,
@@ -159,38 +157,30 @@ class Model(tf_keras.Model):
         return decoded
 
     def train_step(self, data):
-        x, y = data
+        x, y, x2 = data
 
-        with tf.GradientTape() as tape:
-            y_pred = self(x, training=True, y=y[:, :, :, :1])
+        with tf_diff.GradientTape() as tape:
+            y_pred = self(x, training=True, y=y[:, :, :, :1], constants=x2)
+            # y_pred = self(x[:, :, :208], training=True, y=y[:, :, :, :1])
             loss = self.compiled_loss(
                 y, y_pred, None, regularization_losses=self.losses
             )
 
-        gradients = tape.gradient(loss, self.trainable_weights)
-
-        my_zip = zip(self.trainable_weights, gradients)
-        for weights, grads in my_zip:
-            tf.summary.histogram(
-                weights.name.replace(":", "_") + "_grads",
-                data=grads,
-                # step=step,
-            )
-
-        my_zip = zip(gradients, self.trainable_weights)
-        self.optimizer.apply_gradients(my_zip)
-        # self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
+        self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
         self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
-        x, y = data
-        y_pred = self(x, training=False)
-
-        self.compiled_loss(y, y_pred, None, regularization_losses=self.losses)
+        x, y, x2 = data
+        y_pred = self(x, training=False, constants=x2)
+        # y_pred = self(x[:, :, :208], training=False)
+        # Updates stateful loss metrics.
+        loss = self.compiled_loss(
+            y, y_pred, None, regularization_losses=self.losses
+        )
         self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}
 
     def predict_step(self, data):
-        x, _ = data
-        return self(x, training=False)
+        x, _, x2 = data
+        return self(x, training=False, constants=x2)
