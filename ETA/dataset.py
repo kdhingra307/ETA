@@ -25,9 +25,7 @@ def get_data(split_label):
         y = (y - mean[0]) / std[0]
         x = (x - mean_expanded) / std_expanded
 
-        x = np.concatenate([x[:, :, 0], x[:, :1, 1]], axis=1).astype(
-            np.float32
-        )
+        x = np.concatenate([x[:, :, 0]], axis=1).astype(np.float32)
         y = np.stack([y, mask], axis=-1).astype(np.float32)
 
         return x, y
@@ -53,7 +51,7 @@ def get_data(split_label):
 
     tf_dataset = tf_dataset.map(
         lambda x, y: (
-            tf.ensure_shape(x, [None, None, config.model.num_nodes + 1]),
+            tf.ensure_shape(x, [None, None, config.model.num_nodes]),
             tf.ensure_shape(y, [None, None, config.model.num_nodes, 2]),
         )
     )
