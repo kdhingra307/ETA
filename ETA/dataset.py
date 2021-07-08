@@ -22,19 +22,20 @@ non_zero_rows = np.load(
 
 
 def calculate_random_walk_matrix(adj_mx):
-    d = np.array(np.sum(adj_mx, axis=1))
-    d_inv = np.power(d, -0.5).flatten()
-    d_inv[np.isinf(d_inv)] = 0.0
-    d_mat_inv = np.diag(d_inv)
-
-    return adj_mx.dot(d_mat_inv).T.dot(d_mat_inv)
+    d = tf.reduce_sum(adj_mx, axis=1)
+    d_inv = tf.math.pow(d, -0.5)
+    d_inv = tf.where(tf.math.is_inf(d_inv), tf.zeros_like(d_inv), d_inv)
+    d_mat_inv = tf.linalg.diag(d_inv)
+    return tf.matmult(
+        tf.transpose(tf.matmul(adj_mx, d_mat_inv), [1, 0]), d_mat_inv
+    )
 
 
 adj_mx = adj_mx[non_zero_rows[:, None], non_zero_rows]
 
 base_supports = [
     tf.constant(adj_mx, dtype=tf.float32),
-    tf.constant(adj_mx.T, dtype=tf.float32),
+    tf.constant(np.dot(adj_mx, adj_mx), dtype=tf.float32),
 ]
 
 
