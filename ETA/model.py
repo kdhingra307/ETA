@@ -4,6 +4,7 @@ from tensorflow import squeeze as tf_squeeze
 from tensorflow.python.keras.engine import data_adapter
 from ETA import DCGRUBlock, DCGRUCell, config
 import numpy as np
+import tensorflow as tf
 from ETA.grud import GRUDCell
 
 
@@ -56,8 +57,14 @@ class Model(tf_keras.Model):
 
         with tf_diff.GradientTape() as tape:
             y_pred = self(x, training=True, y=y[:, :, :, :1], pos=pos, z=z)
-            loss = self.compiled_loss(
-                y, y_pred, None, regularization_losses=self.losses
+            Lreg = 0.0015 * sum(
+                tf.nn.l2_loss(tf_var) for tf_var in self.trainable_variables()
+            )
+            loss = (
+                self.compiled_loss(
+                    y, y_pred, None, regularization_losses=self.losses
+                )
+                + Lreg
             )
 
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
