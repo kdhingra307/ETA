@@ -177,7 +177,7 @@ class Model(tf_keras.Model):
                 # step=step,
             )
 
-        my_zip = zip(self.trainable_weights, gradients)
+        my_zip = zip(gradients, self.trainable_weights)
         self.optimizer.apply_gradients(my_zip)
         # self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
         self.compiled_metrics.update_state(y, y_pred, None)
