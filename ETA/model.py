@@ -4,8 +4,6 @@ from tensorflow import squeeze as tf_squeeze
 from tensorflow.python.keras.engine import data_adapter
 from ETA import DCGRUBlock, DCGRUCell, config
 import numpy as np
-from ETA.metrics import loss_function
-import tensorflow as tf
 from ETA.grud import GRUDCell
 
 

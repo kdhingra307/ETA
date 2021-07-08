@@ -11,7 +11,7 @@ mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
 adj_mx = np.load(
-    "{}/{}/sum_adj_matrix_v2.npz".format(
+    "{}/{}/gaussian_adj_matrix.npz".format(
         config.model.working_dir, config.model.static_data_dir
     )
 )["arr_0"].astype(np.float32)
@@ -166,7 +166,7 @@ class rwt_sampling:
 
         self.adj = (
             np.load(
-                "{}/{}/sum_adj_matrix_v2.npz".format(
+                "{}/{}/gaussian_adj_matrix.npz".format(
                     config.model.working_dir, config.model.static_data_dir
                 )
             )["arr_0"].astype(np.float32)
