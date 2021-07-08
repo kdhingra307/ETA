@@ -54,12 +54,12 @@ class Model(tf_keras.Model):
         return decoded
 
     def train_step(self, data):
-        pos, x, y = data
+        pos, x, y, z = data
 
         sample_weight = None
 
         with tf_diff.GradientTape() as tape:
-            y_pred = self(x, training=True, y=y[:, :, :, :1], pos=pos)
+            y_pred = self(x, training=True, y=y[:, :, :, :1], pos=pos, z=z)
             loss = self.compiled_loss(
                 y, y_pred, None, regularization_losses=self.losses
             )
@@ -69,8 +69,8 @@ class Model(tf_keras.Model):
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
-        pos, x, y = data
-        y_pred = self(x, training=False, pos=pos)
+        pos, x, y, z = data
+        y_pred = self(x, training=False, pos=pos, z=z)
         # Updates stateful loss metrics.
         loss = self.compiled_loss(
             y, y_pred, None, regularization_losses=self.losses
