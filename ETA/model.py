@@ -4,7 +4,7 @@ from tensorflow.python.keras.backend import batch_normalization, dropout
 from tensorflow.python.keras.layers.core import Dropout
 from tensorflow.python.keras.layers.normalization_v2 import BatchNormalization
 from ETA import config
-from ETA.gru import GRUDCell
+from ETA.grud import GRUCell as GRUDCell
 
 # from ETA.gru import GRUCell
 from tensorflow import function as tf_function
