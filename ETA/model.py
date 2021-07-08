@@ -152,8 +152,8 @@ class Model(tf_keras.Model):
         return tf.transpose(to_return.stack(), [1, 0, 2])
 
     def call(self, x, training=False, y=None):
-
-        otpt = self.encoder(x, training=training)
+        embed = self.embedding(x)
+        otpt = self.encoder(embed, training=training)
         encoded = otpt[1:]
         decoded = self.decode(state=encoded, x_targ=y, training=training)
         return decoded
