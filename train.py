@@ -33,15 +33,6 @@ optimizer = tf_keras.optimizers.Adam(
 model = Model()
 
 
-model(
-    tf.zeros([16, 6, 128, 2]),
-    pos=tf.zeros([2, 128, 128]),
-    training=True,
-)
-for e in model.trainable_weights:
-    print(e.name)
-
-
 model.compile(optimizer=optimizer, loss=loss_function, metrics=metrics)
 
 train_split = config.data.split_prefix.format("train")
