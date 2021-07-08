@@ -45,8 +45,8 @@ def get_data(split_label):
 
         data = np.load(file_name)
         x, y = (
-            np.transpose(data["x"], [1, 0, 2])[:, non_zero_rows],
-            np.transpose(data["y"], [1, 0, 2])[:, non_zero_rows, 0],
+            data["x"][:, non_zero_rows],
+            data["y"][:, non_zero_rows, 0],
         )
         # x[:, :, 0] *= x[:, :, 0] <= 8
         # y *= y <= 8
