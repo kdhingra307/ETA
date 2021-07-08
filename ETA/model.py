@@ -1,6 +1,7 @@
 import tensorflow.keras as tf_keras
 import numpy as np
 from ETA import config
+from ETA.gru import GRUCell
 from tensorflow import function as tf_function
 import tensorflow as tf
 
@@ -12,24 +13,14 @@ class Model(tf_keras.Model):
 
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
-                [
-                    tf_keras.layers.GRUCell(units=256),
-                    tf_keras.layers.GRUCell(
-                        units=128,
-                    ),
-                ]
+                [GRUCell(units=256), GRUCell(units=128)]
             ),
             return_state=True,
             name="encoding",
         )
 
         self.decoder = tf_keras.layers.StackedRNNCells(
-            [
-                tf_keras.layers.GRUCell(units=256),
-                tf_keras.layers.GRUCell(
-                    units=128,
-                ),
-            ],
+            [GRUCell(units=256), GRUCell(units=128)],
             name="decoding",
         )
 
