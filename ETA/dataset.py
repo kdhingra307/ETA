@@ -22,7 +22,7 @@ non_zero_rows = np.load(
 
 
 def calculate_random_walk_matrix(adj_mx):
-    d = np.array(adj_mx.sum(1))
+    d = np.array(np.sum(adj_mx, axis=1))
     d_inv = np.power(d, -0.5).flatten()
     d_inv[np.isinf(d_inv)] = 0.0
     d_mat_inv = np.diag(d_inv)
