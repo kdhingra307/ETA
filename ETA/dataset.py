@@ -178,9 +178,9 @@ class rwt_sampling:
         self.n_nodes = config.model.num_nodes
 
         self.sampler = {
-            "custom_new_train": self.sample,
-            "custom_new_val": self.sample,
-            "custom_new_test": self.sample,
+            "metr_missing/train": self.sample,
+            "metr_missing/val": self.sample,
+            "metr_missing/test": self.sample,
         }
 
     def dummy(self):
