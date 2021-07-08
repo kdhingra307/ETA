@@ -12,6 +12,7 @@ from tensorflow.keras.callbacks import TensorBoard, LearningRateScheduler
 from os.path import join as join_directory
 from tensorflow import summary as tf_summary
 from tensorflow.config import experimental as tf_gpu
+import tensorflow as tf
 
 
 gpus = tf_gpu.list_physical_devices("GPU")
@@ -31,6 +32,12 @@ optimizer = tf_keras.optimizers.Adam(
 )
 model = Model()
 
+
+model(
+    tf.zeros([2, 128, 128]),
+    tf.zeros([16, 6, 128, 2]),
+    tf.zeros([16, 6, 128, 2]),
+)
 for e in model.trainable_weights:
     print(e.name)
 
