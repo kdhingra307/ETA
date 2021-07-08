@@ -11,7 +11,7 @@ mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
 adj_mx = np.load(
-    "{}/{}/adj_matrix.npz".format(
+    "{}/{}/spearson_custom.npz".format(
         config.model.working_dir, config.model.static_data_dir
     )
 )["arr_0"].astype(np.float32)
@@ -32,9 +32,7 @@ def calculate_random_walk_matrix(adj_mx):
 
 
 base_supports = [
-    tf.constant(
-        adj_mx[non_zero_rows[:, None], non_zero_rows], dtype=tf.float32
-    ),
+    tf.constant(adj_mx, dtype=tf.float32),
 ]
 
 
@@ -168,12 +166,12 @@ class rwt_sampling:
 
         self.adj = (
             np.load(
-                "{}/{}/adj_matrix.npz".format(
+                "{}/{}/spearson_custom.npz".format(
                     config.model.working_dir, config.model.static_data_dir
                 )
             )["arr_0"].astype(np.float32)
             > 0
-        )[non_zero_rows[:, None], non_zero_rows]
+        )
 
         self.n_init = config.model.graph_batch_size
         self.n_nodes = config.model.num_nodes
