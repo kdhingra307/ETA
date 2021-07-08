@@ -1,7 +1,7 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "results/metr/gru_graph/3"
+  training_label: "results/metr/gat/1"
   num_nodes: 207
   steps_to_predict: 12
   graph_batch_size: 128
