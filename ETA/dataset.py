@@ -149,7 +149,6 @@ class rwt_sampling:
 
         self.n_init = config.model.graph_batch_size
         self.n_nodes = config.model.num_nodes
-        self.roots = np.nonzero(np.sum(self.adj, axis=0) == 1)[0]
 
         self.sampler = {
             "custom_train": self.sample,
