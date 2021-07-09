@@ -30,7 +30,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         num_nodes,
         num_proj=None,
         activation=tf.nn.tanh,
-        etype=1
+        etype=1,
         reuse=None,
         use_gc_for_ru=True,
     ):
@@ -210,7 +210,9 @@ class GSConv(tf_keras.layers.Layer):
 
             x = tf.tensordot(support, x0, axes=[1, 1])
             x = tf.transpose(x, [2, 1, 3, 0])
-            x = tf.reshape(x, [tf.shape(x0)[0], tf.shape(x0)[1], x0.shape[-1], 2])
+            x = tf.reshape(
+                x, [tf.shape(x0)[0], tf.shape(x0)[1], x0.shape[-1], 2]
+            )
 
             return self.layer(x[:, :, :, 0], training=training) + self.layer1(
                 x[:, :, :, 1], training=training
