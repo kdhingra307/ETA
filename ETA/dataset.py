@@ -120,9 +120,11 @@ def get_data(split_label):
         support = calculate_random_walk_matrix(cur_support)
 
         final_support.append(support)
-        final_support.append(tf.matmul(support, support))
+        final_support.append(tf.matmul(final_support[-1], support))
+        final_support.append(tf.matmul(final_support[-1], support))
+        final_support.append(tf.matmul(final_support[-1], support))
 
-        return final_support, x, y, z
+        return tf.stack(final_support, axis=0), x, y, z
 
     tf_dataset = tf_dataset.map(second_map)
 
