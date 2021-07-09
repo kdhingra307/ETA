@@ -42,8 +42,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._max_diffusion_step = max_diffusion_step
         self._use_gc_for_ru = use_gc_for_ru
 
-        self.first_layer = [GSConv(units=num_units * 2)]
-        self.second_layer = [GSConv(num_units)]
+        self.first_layer = GSConv(units=num_units * 2)
+        self.second_layer = GSConv(num_units)
 
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
@@ -92,12 +92,14 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
 
         inputs_and_state = tf.concat([inputs, state], axis=2)
 
-        value = tf.sigmoid(self.first_layer[0](inputs_and_state, support))
+        value = tf.sigmoid(
+            self.first_layer(inputs_and_state, support, training=training)
+        )
 
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
         inputs_and_state = tf.concat([inputs, r * state], axis=2)
-        c = self.second_layer[0](inputs_and_state, support)
+        c = self.second_layer(inputs_and_state, support, training=training)
 
         if self._activation is not None:
             c = self._activation(c)
