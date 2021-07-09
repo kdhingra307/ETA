@@ -1,9 +1,11 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "small_eta/lstm_spatial/3"
+  training_label: "small_eta/lstm_spatial/sampled"
   num_nodes: 1165
+  graph_batch_size: 256
   steps_to_predict: 12
+  static_data_dir: "static"
   ttr: 1
 
 data:
