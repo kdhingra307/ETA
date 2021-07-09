@@ -34,13 +34,13 @@ class GConv(tf_keras.layers.Layer):
         return layer(x, training=training)
 
     def call(self, x, support, training=False):
-        x = self.operation(x, support[0], self.layer[0], training=training)
-        for i in range(1, 4):
-            x += self.operation(
-                x, support[i], self.layer[i], training=training
+        output = []
+        for i in range(0, 4):
+            output.append(
+                self.operation(x, support[i], self.layer[i], training=training)
             )
 
-        return x
+        return output
 
 
 class Model(tf_keras.Model):
@@ -70,11 +70,11 @@ class Model(tf_keras.Model):
             encode=False,
         )
 
-        # self.gconv = GConv(128)
+        self.gconv = GConv(128)
 
     def call(self, x, training=False, y=None, adj=None, z=None):
 
-        # x = self.gconv(x, adj, training=training)
+        x = self.gconv(x, adj, training=training)
 
         encoded = self.encoder(x=x, adj=adj, state=None, training=training)
         decoded = self.decoder(adj=adj, state=encoded, x=y, training=training)
