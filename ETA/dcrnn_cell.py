@@ -190,8 +190,9 @@ class GSConv(tf_keras.layers.Layer):
         self.layer = tf.keras.layers.Dense(units=units)
 
     def call(self, x0, support, training=False):
-        x = tf.tensordot(support[0], x0, axes=[1, 1])
-        # print(x)
+        print(x0, support)
+        x = tf.tensordot(support], x0, axes=[1, 1])
+        print(x)
         x = tf.transpose(x, [1, 0, 2])
 
         return self.layer(x, training=training)
