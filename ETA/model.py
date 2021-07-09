@@ -78,7 +78,7 @@ class Model(tf_keras.Model):
 
                 init = tf.stop_gradient(output)
 
-        return tf.squeeze(tf.transpose(to_return.stack(), [1, 0, 2]), axis=-1)
+        return tf.transpose(tf.squeeze(to_return.stack(), axis=-1), [1, 0, 2])
 
     def call(self, x, training=False, y=None):
 
