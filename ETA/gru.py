@@ -28,6 +28,8 @@ class GRUCell(tf.keras.layers.AbstractRNNCell):
 
     def build(self, inp_shape):
 
+        print(inp_shape)
+
         inpt_features = 2 * self._num_units
 
         kernel_initializer = tf_keras.initializers.GlorotUniform()
