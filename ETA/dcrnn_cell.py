@@ -141,7 +141,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
 
     def encode(self, x, adj, training=False):
-        state = self.block(x, training=training)
+        state = self.block(x, training=training, constants=[adj])
         return state[1:]
 
     @tf.function
@@ -170,7 +170,9 @@ class DCGRUBlock(tf_keras.layers.Layer):
             size=self.steps_to_predict, dtype=tf.float32
         )
         for i in tf.range(self.steps_to_predict):
-            init, state = self.cells(init, states=state, training=training)
+            init, state = self.cells(
+                init, states=state, training=training, constants=[adj]
+            )
             to_return = to_return.write(i, init)
         return tf.transpose(to_return.stack(), [1, 0, 2, 3])
 
