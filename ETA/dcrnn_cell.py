@@ -89,8 +89,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         support = constants[0]
         state = state[0]
 
-        print("inpt", inputs, state)
-
         inputs_and_state = tf.concat([inputs, state], axis=2)
 
         value = tf.sigmoid(self.first_layer[0](inputs_and_state, support))
@@ -193,7 +191,6 @@ class GSConv(tf_keras.layers.Layer):
 
     def call(self, x0, support, training=False):
         x = tf.tensordot(support, x0, axes=[1, 1])
-        print(x)
         x = tf.transpose(x, [1, 0, 2])
 
         return self.layer(x, training=training)
