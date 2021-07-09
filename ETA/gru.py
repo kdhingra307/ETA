@@ -76,15 +76,15 @@ class GRUCell(tf.keras.layers.AbstractRNNCell):
         """
 
         inputs = self.kernel(inputs)
-        print(state)
+
         state = tf.reshape(state, [-1, 256, self._num_units])
 
-        inputs_and_state = tf.concat([inputs, state], axis=1)
+        inputs_and_state = tf.concat([inputs, state], axis=2)
         value = tf.sigmoid(tf.matmul(inputs_and_state, self.w1) + self.b1)
 
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
-        inputs_and_state = tf.concat([inputs * r, state], axis=1)
+        inputs_and_state = tf.concat([inputs * r, state], axis=2)
 
         c = tf.matmul(inputs_and_state, self.w2) + self.b2
 
