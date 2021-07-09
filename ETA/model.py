@@ -19,8 +19,12 @@ class GConv(tf_keras.layers.Layer):
                     #     units=2 * units, activation=tf.keras.layers.LeakyReLU()
                     # ),
                     # tf.keras.layers.BatchNormalization(),
-                    tf.keras.layers.Dense(
-                        units=units, activation=tf.keras.layers.LeakyReLU(0.2)
+                    tf.keras.layers.Conv2D(
+                        units=units,
+                        activation=tf.keras.layers.LeakyReLU(0.2),
+                        kernel_size=[3, 1],
+                        padding="Same",
+                        strides=[1, 1],
                     ),
                 ]
             )
