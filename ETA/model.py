@@ -20,7 +20,7 @@ class GConv(tf_keras.layers.Layer):
                     # ),
                     # tf.keras.layers.BatchNormalization(),
                     tf.keras.layers.Conv2D(
-                        units=units,
+                        filters == units,
                         activation=tf.keras.layers.LeakyReLU(0.2),
                         kernel_size=[3, 1],
                         padding="Same",
@@ -76,7 +76,7 @@ class Model(tf_keras.Model):
             encode=False,
         )
 
-        self.gconv = GConv(128)
+        self.gconv = GConv(32)
 
     def call(self, x, training=False, y=None, adj=None, z=None):
 
