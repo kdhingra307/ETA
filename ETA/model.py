@@ -15,12 +15,12 @@ class GConv(tf_keras.layers.Layer):
         self.layer = [
             tf.keras.Sequential(
                 [
+                    # tf.keras.layers.Dense(
+                    #     units=2 * units, activation=tf.keras.layers.LeakyReLU()
+                    # ),
+                    # tf.keras.layers.BatchNormalization(),
                     tf.keras.layers.Dense(
-                        units=2 * units, activation=tf.keras.layers.LeakyReLU()
-                    ),
-                    tf.keras.layers.BatchNormalization(),
-                    tf.keras.layers.Dense(
-                        units=units, activation=tf.keras.layers.LeakyReLU()
+                        units=units, activation=tf.keras.layers.LeakyReLU(0.2)
                     ),
                 ]
             )
@@ -28,7 +28,8 @@ class GConv(tf_keras.layers.Layer):
         ]
 
     def operation(self, x0, support, layer, training=False):
-        x = tf.tensordot(support, x0, axes=[1, 1])
+        x = tf.tensordot(support, x0, axes=[1, 2])
+        print(x)
         x = tf.transpose(x, [1, 0, 2])
 
         return layer(x, training=training)
@@ -71,16 +72,12 @@ class Model(tf_keras.Model):
         )
 
         self.gconv = GConv(128)
-        self.gconv1 = GConv(128)
 
     def call(self, x, training=False, y=None, adj=None, z=None):
 
-        encoded = self.encoder(x=x, adj=adj, state=None, training=training)
+        x = self.gconv(x, adj, training=training)
 
-        encoded = [
-            self.gconv(encoded[0], adj, training=training),
-            self.gconv1(encoded[1], adj, training=training),
-        ]
+        encoded = self.encoder(x=x, adj=adj, state=None, training=training)
         decoded = self.decoder(adj=adj, state=encoded, x=y, training=training)
         return tf_squeeze(decoded, axis=-1)
 
