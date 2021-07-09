@@ -77,10 +77,10 @@ class Model(tf_keras.Model):
 
         encoded = self.encoder(x=x, adj=adj[0], state=None, training=training)
 
-        encoded = [
-            self.gconv(encoded[0], adj, training=training),
-            self.gconv1(encoded[1], adj, training=training),
-        ]
+        # encoded = [
+        #     self.gconv(encoded[0], adj, training=training),
+        #     self.gconv1(encoded[1], adj, training=training),
+        # ]
         decoded = self.decoder(
             adj=adj[0], state=encoded, x=y, training=training
         )
