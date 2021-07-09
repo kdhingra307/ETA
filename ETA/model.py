@@ -34,8 +34,8 @@ class GConv(tf_keras.layers.Layer):
         return layer(x, training=training)
 
     def call(self, x, support, training=False):
-
-        for i in range(4):
+        x = self.operation(x, support[0], self.layer[0], training=training)
+        for i in range(1, 4):
             x += self.operation(
                 x, support[i], self.layer[i], training=training
             )
