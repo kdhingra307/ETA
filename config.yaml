@@ -1,29 +1,29 @@
 model:
-  working_dir: "./data"
-  batch_size: 16
-  training_label: "final_corrected/resnet/7"
-  static_data_dir: "static"
-  num_nodes: 207
-  counter_position: 0
-  teacher_decay_rate: 20000
-  graph_batch_size: 207
+  working_dir: "/home/pravesh/speech_work/ETA/models/ETA/data"
+  batch_size: 8
+  training_label: "small_eta/resnet/1"
+  num_nodes: 1165
   steps_to_predict: 12
+  graph_batch_size: 256
+  static_data_dir: "static"
+  ttr: 1
 
 data:
   shuffle: 1000
   prefetch: 10
   path_pattern: "training_files"
-  split_prefix: "melr_{}"
+  split_prefix: "custom_new_{}"
   mean:
-    - 54.405
-    - 0.497
+    - 2.13771687
+    - 0.5744334
   std:
-    - 19.493
-    - 0.288
+    - 2.04323081
+    - 0.17708756
+
 training:
   learning_rate: 0.001
   decay: 1e+3
   log_dir: "logs/{}"
   ckpt_dir: "ckpt/{}"
-  epochs: 50
+  epochs: 100
   reset: False

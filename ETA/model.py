@@ -43,15 +43,6 @@ class GConv(tf_keras.layers.Layer):
         return x
 
 
-def calculate_random_walk_matrix(adj_mx):
-    d = np.array(adj_mx.sum(1))
-    d_inv = np.power(d, -0.5).flatten()
-    d_inv[np.isinf(d_inv)] = 0.0
-    d_mat_inv = np.diag(d_inv)
-
-    return adj_mx.dot(d_mat_inv).T.dot(d_mat_inv)
-
-
 class Model(tf_keras.Model):
     def __init__(self):
 
@@ -78,47 +69,23 @@ class Model(tf_keras.Model):
             steps_to_predict=steps_to_predict,
             encode=False,
         )
-        mat = np.load(
-            "{}/{}/metr_adj_matrix.npz".format(
-                config.model.working_dir, config.model.static_data_dir
-            )
-        )["arr_0"].astype(np.float32)
-
-        nmat = calculate_random_walk_matrix(mat).T
-
-        adjacency_matrix = [np.eye(len(mat))]
-
-        for _ in range(3):
-            adjacency_matrix.append(adjacency_matrix[-1].dot(nmat))
-
-        self.adjacency_matrix = [
-            tf.convert_to_tensor(x, dtype=tf.float32) for x in adjacency_matrix
-        ]
 
         self.gconv = GConv(64)
         self.gconv1 = GConv(64)
 
     def call(self, x, training=False, y=None, adj=None):
 
-        with tf.name_scope("f_call"):
+        encoded = self.encoder(x=x, adj=adj, state=None, training=training)
 
-            encoded = self.encoder(x=x, adj=adj, state=None, training=training)
-
-            encoded = [
-                self.gconv(
-                    encoded[0], self.adjacency_matrix, training=training
-                ),
-                self.gconv1(
-                    encoded[1], self.adjacency_matrix, training=training
-                ),
-            ]
-            decoded = self.decoder(
-                adj=adj, state=encoded, x=y, training=training
-            )
-            return tf_squeeze(decoded, axis=-1)
+        encoded = [
+            self.gconv(encoded[0], adj, training=training),
+            self.gconv1(encoded[1], adj, training=training),
+        ]
+        decoded = self.decoder(adj=adj, state=encoded, x=y, training=training)
+        return tf_squeeze(decoded, axis=-1)
 
     def train_step(self, data):
-        x, y = data
+        pos, x, y = data
 
         with tf_diff.GradientTape() as tape:
             y_pred = self(x, training=True)

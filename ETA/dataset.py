@@ -3,7 +3,6 @@ from glob import glob
 import tensorflow as tf
 import numpy as np
 from ETA import config
-from scipy.sparse.linalg.eigen.arpack import eigsh
 
 #%%
 
@@ -11,79 +10,121 @@ mean, std = config.data.mean, config.data.std
 mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
+adj_mx = np.load(
+    "{}/{}/spearson_custom.npz".format(
+        config.model.working_dir, config.model.static_data_dir
+    )
+)["arr_0"].astype(np.float32)
+
+non_zero_rows = np.load(
+    "/home/pravesh/speech_work/ETA/models/ETA/data/static/custom_non_zero_1165.npy"
+)
+
 
 def calculate_random_walk_matrix(adj_mx):
-    d = np.array(adj_mx.sum(1))
-    d_inv = np.power(d, -0.5).flatten()
-    d_inv[np.isinf(d_inv)] = 0.0
-    d_mat_inv = np.diag(d_inv)
+    d = tf.reduce_sum(adj_mx, axis=1)
+    d_inv = tf.math.pow(d, -0.5)
+    d_inv = tf.where(tf.math.is_inf(d_inv), tf.zeros_like(d_inv), d_inv)
+    d_mat_inv = tf.linalg.diag(d_inv)
+    return tf.matmul(
+        tf.transpose(tf.matmul(adj_mx, d_mat_inv), [1, 0]), d_mat_inv
+    )
 
-    return adj_mx.dot(d_mat_inv).T.dot(d_mat_inv)
+
+base_supports = [
+    tf.constant(adj_mx, dtype=tf.float32),
+]
 
 
 def get_data(split_label):
 
-    # batch_sampler = sampling()
+    batch_sampler = rwt_sampling()
 
     def tf_map(file_name):
 
         data = np.load(file_name)
-        x, y = data["x"], data["y"][:, :, 0]
+        x, y = (
+            np.transpose(data["x"], [1, 0, 2])[:, non_zero_rows],
+            np.transpose(data["y"], [1, 0, 2])[:, non_zero_rows, 0],
+        )
+
+        x_mask = (x[:, :, 0] > 0).astype(np.float32)
+        x = (x - mean_expanded) / std_expanded
+
+        x_mask = np.stack([x_mask, np.ones(x_mask.shape)], axis=-1)
+
+        x1 = [np.zeros(x[0].shape)]
+        dt = [np.zeros(x[0].shape)]
+        for e in range(len(x)):
+            x1.append((x1[-1] * (1 - x_mask[e])) + x_mask[e] * x[e])
+            dt.append(((1 + dt[-1]) * (1 - x_mask[e])) + x_mask[e])
+
+        x1 = np.stack(x1[1:], axis=0)
+        dt = np.stack(dt[1:], axis=0) / 12
+
+        x2 = np.sum(x_mask * x, axis=0) / (np.sum(x_mask, axis=0) + 1e-12)
+
+        x = np.concatenate([x, x1, x_mask, dt], axis=-1)
 
         mask = (y > 0) * 1
 
         y = (y - mean[0]) / std[0]
-        x = (x - mean_expanded) / std_expanded
 
         y = np.stack([y, mask], axis=-1).astype(np.float32)
 
-        return x.astype(np.float32), y
+        return x.astype(np.float32), y, x2.astype(np.float32)
 
-    files = sorted(
-        glob(
-            "{}/{}/{}/*.npz".format(
-                config.model.working_dir, config.data.path_pattern, split_label
-            )
+    files = glob(
+        "{}/{}/{}/*.npz".format(
+            config.model.working_dir, config.data.path_pattern, split_label
         )
     )
     tf_dataset = tf.data.Dataset.from_tensor_slices(files)
     tf_dataset = tf_dataset.shuffle(config.data.shuffle, seed=1234)
     tf_dataset = tf_dataset.map(
         lambda x: tf.numpy_function(
-            tf_map, [x], [tf.float32, tf.float32], name="load_each_file"
+            tf_map,
+            [x],
+            [tf.float32, tf.float32, tf.float32],
+            name="load_each_file",
         )
     )
 
     tf_dataset = tf_dataset.map(
-        lambda x, y: (
-            tf.ensure_shape(x, [None, config.model.num_nodes, 2]),
-            tf.ensure_shape(y, [None, config.model.num_nodes, 2]),
+        lambda x, y, z: (
+            tf.ensure_shape(
+                x, [config.model.steps_to_predict, config.model.num_nodes, 8]
+            ),
+            tf.ensure_shape(
+                y, [config.model.steps_to_predict, config.model.num_nodes, 2]
+            ),
+            tf.ensure_shape(z, [config.model.num_nodes, 2]),
         )
     )
 
-    tf_dataset = tf_dataset.batch(
-        batch_size=config.model.batch_size,
-    )
+    tf_dataset = tf_dataset.batch(batch_size=config.model.batch_size)
 
-    def second_map(x, y):
-        # positions = batch_sampler.sample()
+    def second_map(x, y, z):
+        positions = batch_sampler.sampler[split_label]()
 
-        adj_mx = batch_sampler.adjacency_matrix
-        # norm = batch_sampler.probab_individ[positions][:, positions]
+        x = tf.gather(x, indices=positions, axis=2)
+        y = tf.gather(y, indices=positions, axis=2)
+        z = tf.gather(z, indices=positions, axis=1)
 
-        # adj_mx /= norm
-        # adj_mx *= batch_sampler.probab[positions].reshape([1, -1])
+        final_support = []
 
-        adj_mx = tf.convert_to_tensor(adj_mx, dtype=tf.float32)
-        # x = tf.gather(x, indices=positions, axis=2)
-        # y = tf.gather(y, indices=positions, axis=2)
+        cur_support = tf.gather(
+            tf.gather(base_supports[0], positions, axis=1), positions, axis=0
+        )
 
-        return adj_mx, x, y
+        support = calculate_random_walk_matrix(cur_support)
 
-    # tf_dataset = tf_dataset.map(second_map)
-    tf_dataset = tf_dataset.cache(
-        "{}/cache_{}".format(config.model.working_dir, split_label)
-    )
+        final_support.append(support)
+        final_support.append(tf.matmul(support, support))
+
+        return final_support, x, y, z
+
+    tf_dataset = tf_dataset.map(second_map)
 
     tf_dataset = tf_dataset.prefetch(config.data.prefetch)
 
@@ -91,63 +132,85 @@ def get_data(split_label):
 
 
 #%%
-class sampling:
+class node_sampling:
     def __init__(self, sampler="random"):
 
-        # adjacency_matrix = [np.eye(len(mat))]
-        # for e in range(3):
-        #     adjacency_matrix.append(adjacency_matrix[-1].dot(nmat))
-
-        # adjacency_matrix1 = calculate_random_walk_matrix(mat.T).T
-        # support = []
-        # support.append(adjacency_matrix)
-        # support.append(adjacency_matrix1)
-
-        # support.append(
-        #     2 * adjacency_matrix.dot(adjacency_matrix)
-        #     - np.eye(len(adjacency_matrix))
-        # )
-        # support.append(
-        #     2 * adjacency_matrix1.dot(adjacency_matrix1)
-        #     - np.eye(len(adjacency_matrix))
-        # )
-
-        # self.adjacency_matrix = np.stack(adjacency_matrix, axis=-1)
-        # self.adjacency_matrix = chebyshev_polynomials(adjacency_matrix, 3)
-        # print(self.adjacency_matrix.shape)
+        adj = np.load(
+            "{}/{}/metr_adj_matrix.npz".format(
+                config.model.working_dir, config.model.static_data_dir
+            )
+        )["arr_0"].astype(np.float32)
 
         self.n_init = config.model.graph_batch_size
-        self.probab_individ = self.adjacency_matrix ** 2
+        self.probab_individ = adj ** 2
         self.probab = np.sum(self.probab_individ, axis=-1)
         self.probab = self.probab / np.sum(self.probab)
 
+        self.sampler = {
+            "melr_train": self.sample,
+            "melr_val": lambda: tf.range(256),
+        }
+
     def sample(self):
-        return np.arange(self.n_init)
-        samples = np.random.multinomial(1, self.probab, self.n_init)
-        positions = np.argmax(samples, axis=-1)
 
-        return positions
+        samples = tf.random.categorical(
+            tf.math.log(self.probab[None, :]), self.n_init
+        )[0]
+        samples = tf.unique(samples)[0]
+        return samples
+        # return tf.random.shuffle(np.arange(207))
 
 
-# %%
-def chebyshev_polynomials(adj, k):
-    """Calculate Chebyshev polynomials up to order k. Return a list of sparse matrices (tuple representation)."""
-    print("Calculating Chebyshev polynomials up to order {}...".format(k))
+class rwt_sampling:
+    def __init__(self, sampler="random"):
 
-    # laplacian = np.eye(adj.shape[0]) - adj
-    # largest_eigval, _ = eigsh(laplacian, 1, which="LM")
-    # scaled_laplacian = (2.0 / largest_eigval[0]) * laplacian - np.eye(
-    #     adj.shape[0]
-    # )
+        self.adj = (
+            np.load(
+                "{}/{}/spearson_custom.npz".format(
+                    config.model.working_dir, config.model.static_data_dir
+                )
+            )["arr_0"].astype(np.float32)
+            > 0
+        )
 
-    t_k = list()
-    t_k.append(np.eye(adj.shape[0]))
-    t_k.append(adj)
+        self.n_init = config.model.graph_batch_size
+        self.n_nodes = config.model.num_nodes
 
-    def chebyshev_recurrence(t_k_minus_one, t_k_minus_two):
-        return 2 * adj.dot(t_k_minus_one) - t_k_minus_two
+        self.sampler = {
+            "custom_new_train": self.sample,
+            "custom_new_val": self.sample,
+            "custom_new_test": self.sample,
+        }
 
-    for i in range(2, k + 1):
-        t_k.append(chebyshev_recurrence(t_k[-1], t_k[-2]))
+    def dummy(self):
+        nodes = np.array([np.random.randint(self.n_nodes)])
 
-    return np.stack(t_k, axis=-1)
+        while len(nodes) < self.n_init:
+            cur_nodes = len(nodes)
+            neighbours = np.array([], dtype=np.int32)
+            for e in nodes:
+                neighbours = np.union1d(neighbours, np.nonzero(self.adj[e])[0])
+
+            chosen_neighbours = (
+                neighbours
+                if len(neighbours) < 12
+                else np.random.choice(neighbours, 12, replace=False)
+            )
+            nodes = np.union1d(
+                nodes,
+                chosen_neighbours,
+            )
+
+            if cur_nodes == len(nodes):
+                remaining_nodes = np.delete(np.arange(self.n_nodes), nodes)
+                nodes = np.concatenate(
+                    [nodes, np.random.choice(remaining_nodes, 1)]
+                )
+
+        return np.array(nodes)[: self.n_init].astype(np.int32)
+
+    def sample(self):
+
+        output = tf.numpy_function(self.dummy, [], tf.int32)
+
+        return tf.ensure_shape(output, [self.n_init])

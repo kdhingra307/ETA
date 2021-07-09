@@ -12,6 +12,7 @@ from tensorflow.keras.callbacks import TensorBoard, LearningRateScheduler
 from os.path import join as join_directory
 from tensorflow import summary as tf_summary
 from tensorflow.config import experimental as tf_gpu
+import tensorflow as tf
 
 
 gpus = tf_gpu.list_physical_devices("GPU")
@@ -26,15 +27,13 @@ if gpus:
         print(e)
 
 
-optimizer = tf_keras.optimizers.Adam(
-    learning_rate=config.training.learning_rate
+optimizer = tf_keras.optimizers.Adagrad(
+    learning_rate=config.training.learning_rate, epsilon=1e-3
 )
 model = Model()
-model.compile(
-    optimizer=optimizer,
-    loss=loss_function,
-    metrics=metrics,
-)
+
+
+model.compile(optimizer=optimizer, loss=loss_function, metrics=metrics)
 
 train_split = config.data.split_prefix.format("train")
 validation_split = config.data.split_prefix.format("val")
@@ -52,8 +51,8 @@ ckpt_dir = join_directory(
 
 
 def scheduler(epoch, lr):
-    if epoch >= 20 and epoch <= 50 and epoch % 10 == 0:
-        lr *= 0.9
+    if epoch >= 15 and epoch <= 50 and epoch % 10 == 8:
+        lr *= 0.8
 
     print(tf_summary.scalar("LearningRate", data=lr))
     return lr
@@ -61,14 +60,15 @@ def scheduler(epoch, lr):
 
 ckpt_manager = CheckpointManager(optimizer, model, ckpt_dir)
 log_manager = TensorBoard(
-    log_dir=log_dir, update_freq="batch", embeddings_freq=1, histogram_freq=1
+    log_dir=log_dir, update_freq="batch", histogram_freq=1, embeddings_freq=5
 )
 lr_manager = LearningRateScheduler(scheduler)
 ckpt_manager.ckpt_manager.restore_or_initialize()
 
 model.fit(
-    x=Dataset(train_split),
+    Dataset(train_split),
     epochs=config.training.epochs,
+    initial_epoch=0,
     callbacks=[ckpt_manager, log_manager, lr_manager],
     validation_data=Dataset(validation_split),
 )
