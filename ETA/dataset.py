@@ -90,12 +90,12 @@ def get_data(split_label):
             tf.ensure_shape(y, [None, None, 256, 2]),
         )
     )
-    tf_dataset = tf_dataset.map(
-        lambda x, y: (
-            tf.reshape(tf.transpose(x, [0, 2, 1, 3]), [-1, 12, 2]),
-            tf.reshape(tf.transpose(y, [0, 2, 1, 3]), [-1, 12, 2]),
-        )
-    )
+    # tf_dataset = tf_dataset.map(
+    #     lambda x, y: (
+    #         tf.reshape(tf.transpose(x, [0, 2, 1, 3]), [-1, 12, 2]),
+    #         tf.reshape(tf.transpose(y, [0, 2, 1, 3]), [-1, 12, 2]),
+    #     )
+    # )
 
     tf_dataset = tf_dataset.prefetch(config.data.prefetch)
 

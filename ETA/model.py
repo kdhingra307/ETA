@@ -3,6 +3,7 @@ import numpy as np
 from ETA import config
 from tensorflow import function as tf_function
 import tensorflow as tf
+from ETA.gru import GRUCell
 
 
 class Model(tf_keras.Model):
@@ -13,8 +14,8 @@ class Model(tf_keras.Model):
         self.encoder = tf_keras.layers.RNN(
             tf_keras.layers.StackedRNNCells(
                 [
-                    tf_keras.layers.GRUCell(units=128),
-                    tf_keras.layers.GRUCell(units=128),
+                    GRUCell(units=128),
+                    GRUCell(units=128),
                 ]
             ),
             return_state=True,
@@ -23,8 +24,8 @@ class Model(tf_keras.Model):
 
         self.decoder = tf_keras.layers.StackedRNNCells(
             [
-                tf_keras.layers.GRUCell(units=128),
-                tf_keras.layers.GRUCell(units=128),
+                GRUCell(units=128),
+                GRUCell(units=128),
             ],
             name="decoding",
         )
@@ -51,7 +52,6 @@ class Model(tf_keras.Model):
 
         state = tuple(state)
         if init is None:
-            num_nodes = config.model.num_nodes
             import tensorflow as tf
 
             init = tf.zeros(
