@@ -193,7 +193,7 @@ class GSConv(tf_keras.layers.Layer):
 
     def call(self, x0, support, training=False):
 
-        size = 2
+        size = 4
         x = tf.tensordot(support[:size], x0, axes=[1, 1])
         x = tf.transpose(x, [2, 1, 3, 0])
         x = tf.reshape(
