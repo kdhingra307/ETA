@@ -6,6 +6,7 @@ from ETA import (
     config,
     CheckpointManager,
 )
+
 from datetime import datetime
 import tensorflow.keras as tf_keras
 from tensorflow.keras.callbacks import TensorBoard, LearningRateScheduler
