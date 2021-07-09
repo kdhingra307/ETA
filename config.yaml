@@ -1,6 +1,6 @@
 model:
   working_dir: "/home/pravesh/speech_work/ETA/models/ETA/data"
-  batch_size: 16
+  batch_size: 8
   training_label: "small_eta/resnet/check/12"
   num_nodes: 1165
   steps_to_predict: 12
