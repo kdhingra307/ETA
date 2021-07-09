@@ -67,20 +67,19 @@ def get_data(split_label):
         lambda x: tf.numpy_function(
             tf_map,
             [x],
-            [tf.float32, tf.float32, tf.float32],
+            [tf.float32, tf.float32],
             name="load_each_file",
         )
     )
 
     tf_dataset = tf_dataset.map(
-        lambda x, y, z: (
+        lambda x, y: (
             tf.ensure_shape(
                 x, [config.model.steps_to_predict, config.model.num_nodes, 8]
             ),
             tf.ensure_shape(
                 y, [config.model.steps_to_predict, config.model.num_nodes, 2]
             ),
-            tf.ensure_shape(z, [config.model.num_nodes, 2]),
         )
     )
 
