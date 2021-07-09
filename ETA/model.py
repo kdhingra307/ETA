@@ -40,7 +40,7 @@ class GConv(tf_keras.layers.Layer):
                 self.operation(x, support[i], self.layer[i], training=training)
             )
 
-        return output
+        return tf.concat(output, axis=-1)
 
 
 class Model(tf_keras.Model):
