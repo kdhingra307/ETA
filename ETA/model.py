@@ -75,14 +75,14 @@ class Model(tf_keras.Model):
 
     def call(self, x, training=False, y=None, adj=None, z=None):
 
-        encoded = self.encoder(x=x, adj=adj[0], state=None, training=training)
+        encoded = self.encoder(x=x, adj=adj[:2], state=None, training=training)
 
         # encoded = [
         #     self.gconv(encoded[0], adj, training=training),
         #     self.gconv1(encoded[1], adj, training=training),
         # ]
         decoded = self.decoder(
-            adj=adj[0], state=encoded, x=y, training=training
+            adj=adj[:2], state=encoded, x=y, training=training
         )
         return tf_squeeze(decoded, axis=-1)
 

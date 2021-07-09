@@ -193,6 +193,5 @@ class GSConv(tf_keras.layers.Layer):
         x = tf.tensordot(support, x0, axes=[1, 1])
         print(x)
         x = tf.transpose(x, [1, 0, 2])
-        print(x)
 
         return self.layer(x, training=training)
