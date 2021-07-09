@@ -72,17 +72,6 @@ def get_data(split_label):
         )
     )
 
-    tf_dataset = tf_dataset.map(
-        lambda x, y: (
-            tf.ensure_shape(
-                x, [config.model.steps_to_predict, config.model.num_nodes, 2]
-            ),
-            tf.ensure_shape(
-                y, [config.model.steps_to_predict, config.model.num_nodes, 2]
-            ),
-        )
-    )
-
     tf_dataset = tf_dataset.batch(batch_size=config.model.batch_size)
 
     def second_map(x, y):
@@ -97,8 +86,8 @@ def get_data(split_label):
 
     tf_dataset = tf_dataset.map(
         lambda x, y: (
-            tf.ensure_shape(x, [None, None, config.model.num_nodes, 2]),
-            tf.ensure_shape(y, [None, None, config.model.num_nodes, 2]),
+            tf.ensure_shape(x, [None, None, 256, 2]),
+            tf.ensure_shape(y, [None, None, 256, 2]),
         )
     )
     tf_dataset = tf_dataset.map(
