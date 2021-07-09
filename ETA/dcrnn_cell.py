@@ -96,8 +96,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
         inputs_and_state = tf.concat([inputs, r * state], axis=2)
-        x = self.second_layer[0](inputs_and_state, support)
-        c = x
+        c = self.second_layer[0](inputs_and_state, support)
 
         if self._activation is not None:
             c = self._activation(c)
@@ -191,6 +190,8 @@ class GSConv(tf_keras.layers.Layer):
 
     def call(self, x0, support, training=False):
         x = tf.tensordot(support, x0, axes=[1, 1])
+        print(x)
         x = tf.transpose(x, [1, 0, 2])
+        print(x)
 
-        return self.layer(x0, training=training)
+        return self.layer(x, training=training)
