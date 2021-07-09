@@ -117,14 +117,12 @@ def get_data(split_label):
             tf.gather(base_supports[0], positions, axis=1), positions, axis=0
         )
 
-        support = tf.transpose(
-            calculate_random_walk_matrix(cur_support), [1, 0]
-        )
+        support = calculate_random_walk_matrix(cur_support)
 
         final_support.append(support)
-        final_support.append(tf.matmul(final_support[-1], support))
-        final_support.append(tf.matmul(final_support[-1], support))
-        final_support.append(tf.matmul(final_support[-1], support))
+        final_support.append(tf.matmul(support, support))
+        # final_support.append(tf.matmul(final_support[-1], support))
+        # final_support.append(tf.matmul(final_support[-1], support))
 
         return tf.stack(final_support, axis=0), x, y, z
 
