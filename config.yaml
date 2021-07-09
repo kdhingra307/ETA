@@ -1,13 +1,13 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "small_eta/grud/7"
+  training_label: "small_eta/grud/8"
   num_nodes: 1165
   steps_to_predict: 12
   ttr: 1
 
 data:
-  shuffle: 1000
+  shuffle: 10000
   prefetch: 10
   path_pattern: "training_files"
   split_prefix: "custom_new_{}"
