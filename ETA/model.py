@@ -61,8 +61,8 @@ class Model(tf_keras.Model):
         self.decoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
                 [
-                    DCGRUCell(64, 2, num_nodes),
-                    DCGRUCell(64, 2, num_nodes, num_proj=1),
+                    DCGRUCell(128, 2, num_nodes),
+                    DCGRUCell(128, 2, num_nodes, num_proj=1),
                 ]
             ),
             num_nodes=num_nodes,
@@ -70,10 +70,10 @@ class Model(tf_keras.Model):
             encode=False,
         )
 
-        self.gconv = GConv(64)
-        self.gconv1 = GConv(64)
+        self.gconv = GConv(128)
+        self.gconv1 = GConv(128)
 
-    def call(self, x, training=False, y=None, adj=None):
+    def call(self, x, training=False, y=None, adj=None, z=None):
 
         encoded = self.encoder(x=x, adj=adj, state=None, training=training)
 
@@ -85,34 +85,29 @@ class Model(tf_keras.Model):
         return tf_squeeze(decoded, axis=-1)
 
     def train_step(self, data):
-        pos, x, y = data
+        pos, x, y, z = data
+
+        sample_weight = None
 
         with tf_diff.GradientTape() as tape:
-            y_pred = self(x, training=True)
+            y_pred = self(
+                x[:, :, :, :2], training=True, y=y[:, :, :, :1], adj=pos, z=z
+            )
             loss = self.compiled_loss(
                 y, y_pred, None, regularization_losses=self.losses
             )
 
-        gradients = tape.gradient(loss, self.trainable_variables)
-
-        # for i, e in zip(gradients, self.trainable_variables):
-        #     tf.summary.histogram("grads/" + e.name, i)
-        #     tf.summary.scalar("grads/" + e.name + "/max", tf.reduce_max(i))
-        #     tf.summary.scalar("grads/" + e.name + "/min", tf.reduce_min(i))
-        #     tf.summary.scalar("grads/" + e.name + "/mean", tf.reduce_mean(i))
-
-        self.optimizer.apply_gradients(
-            zip(gradients, self.trainable_variables)
-        )
-
-        self.compiled_metrics.update_state(y, y_pred, None)
+        self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
+        self.compiled_metrics.update_state(y, y_pred, sample_weight)
         return {m.name: m.result() for m in self.metrics}
 
     def test_step(self, data):
-        x, y = data
-        y_pred = self(x, training=False)
+        pos, x, y, z = data
+        y_pred = self(x[:, :, :, :2], training=False, adj=pos, z=z)
         # Updates stateful loss metrics.
-        self.compiled_loss(y, y_pred, None, regularization_losses=self.losses)
+        loss = self.compiled_loss(
+            y, y_pred, None, regularization_losses=self.losses
+        )
         self.compiled_metrics.update_state(y, y_pred, None)
         return {m.name: m.result() for m in self.metrics}
 
