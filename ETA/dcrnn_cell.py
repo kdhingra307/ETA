@@ -89,6 +89,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         support = constants[0]
         state = state[0]
 
+        print("inpt", inputs, state)
+
         inputs_and_state = tf.concat([inputs, state], axis=2)
 
         value = tf.sigmoid(self.first_layer[0](inputs_and_state, support))
