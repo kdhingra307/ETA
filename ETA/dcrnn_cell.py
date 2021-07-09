@@ -191,7 +191,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
 
 class GSConv(tf_keras.layers.Layer):
-    def __init__(self, units, should):
+    def __init__(self, units, should=False):
         super(GSConv, self).__init__()
 
         self.layer = tf.keras.layers.Dense(units=units)
