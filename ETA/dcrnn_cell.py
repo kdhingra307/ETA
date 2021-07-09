@@ -202,7 +202,7 @@ class GSConv(tf_keras.layers.Layer):
 
         # size = 1
         if self.should:
-            x = tf.tensordot(support[0], x0, axes=[1, 1])
+            x = tf.tensordot(support[1], x0, axes=[1, 1])
             x = tf.transpose(x, [1, 0, 2])
 
             return self.layer(x, training=training)
