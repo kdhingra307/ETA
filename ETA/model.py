@@ -29,8 +29,7 @@ class GConv(tf_keras.layers.Layer):
 
     def operation(self, x0, support, layer, training=False):
         x = tf.tensordot(support, x0, axes=[1, 2])
-        print(x)
-        x = tf.transpose(x, [1, 0, 2])
+        x = tf.transpose(x, [1, 2, 0, 3])
 
         return layer(x, training=training)
 
