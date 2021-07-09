@@ -14,7 +14,7 @@ import tensorflow as tf
 
 
 optimizer = tf_keras.optimizers.Adagrad(
-    learning_rate=config.training.learning_rate, epsilon=5e-1
+    learning_rate=config.training.learning_rate, epsilon=5e-2
 )
 model = Model()
 model.compile(optimizer=optimizer, loss=loss_function, metrics=metrics)
