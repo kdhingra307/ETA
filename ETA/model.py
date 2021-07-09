@@ -89,7 +89,7 @@ class Model(tf_keras.Model):
 
     def train_step(self, data):
         x, y = data
-
+        print(x, y)
         with tf.GradientTape() as tape:
             y_pred = self(x, training=True, y=y[:, :, :1])
             loss = self.compiled_loss(
