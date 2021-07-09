@@ -55,7 +55,7 @@ class Model(tf_keras.Model):
             import tensorflow as tf
 
             init = tf.zeros(
-                [tf.shape(state[0])[0], 1],
+                [tf.shape(state[0])[0], 256, 1],
                 dtype=tf.float32,
             )
 
