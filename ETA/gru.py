@@ -17,7 +17,10 @@ class GRUCell(tf.keras.layers.AbstractRNNCell):
 
     @property
     def state_size(self):
-        return None
+        if self._num_proj:
+            return self._num_nodes * self._num_proj
+        else:
+            return self._num_nodes * self._num_units
 
     def __init__(self, units, activation=tf.nn.tanh):
 
@@ -27,8 +30,6 @@ class GRUCell(tf.keras.layers.AbstractRNNCell):
         self.kernel = tf.keras.layers.Dense(units=units)
 
     def build(self, inp_shape):
-
-        print(inp_shape)
 
         inpt_features = 2 * self._num_units
 
