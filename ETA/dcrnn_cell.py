@@ -190,14 +190,15 @@ class GSConv(tf_keras.layers.Layer):
         super(GSConv, self).__init__()
 
         self.layer = tf.keras.layers.Dense(units=units)
+        self.layer1 = tf.keras.layers.Dense(units=units)
 
     def call(self, x0, support, training=False):
 
-        size = 1
-        x = tf.tensordot(support[1:2], x0, axes=[1, 1])
+        # size = 1
+        x = tf.tensordot(support, x0, axes=[1, 1])
         x = tf.transpose(x, [2, 1, 3, 0])
-        x = tf.reshape(
-            x, [tf.shape(x0)[0], tf.shape(x0)[1], x0.shape[-1] * size]
-        )
+        x = tf.reshape(x, [tf.shape(x0)[0], tf.shape(x0)[1], x0.shape[-1], 2])
 
-        return self.layer(x, training=training)
+        return self.layer(x[:, :, :, 0], training=training) + self.layer1(
+            x[:, :, :, 1], training=training
+        )
