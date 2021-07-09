@@ -4,9 +4,7 @@ import tensorflow as tf
 
 class GRUCell(tf.keras.layers.AbstractRNNCell):
     def get_initial_state(self, inputs, batch_size, dtype):
-        return tf.zeros(
-            [batch_size, tf.shape(inputs)[1], self._num_units], dtype=dtype
-        )
+        return tf.zeros([batch_size, 256, self._num_units], dtype=dtype)
 
     @property
     def output_size(self):
