@@ -30,6 +30,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         num_nodes,
         num_proj=None,
         activation=tf.nn.tanh,
+        etype=1
         reuse=None,
         use_gc_for_ru=True,
     ):
@@ -42,8 +43,12 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._max_diffusion_step = max_diffusion_step
         self._use_gc_for_ru = use_gc_for_ru
 
-        self.first_layer = GSConv(units=num_units * 2)
-        self.second_layer = GSConv(num_units)
+        if etype == 1:
+            self.first_layer = GSConv(units=num_units * 2, should=True)
+            self.second_layer = GSConv(num_units, should=True)
+        else:
+            self.first_layer = GSConv(units=num_units * 2)
+            self.second_layer = GSConv(num_units)
 
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
@@ -186,19 +191,27 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
 
 class GSConv(tf_keras.layers.Layer):
-    def __init__(self, units):
+    def __init__(self, units, should):
         super(GSConv, self).__init__()
 
         self.layer = tf.keras.layers.Dense(units=units)
         self.layer1 = tf.keras.layers.Dense(units=units)
+        self.should = should
 
     def call(self, x0, support, training=False):
 
         # size = 1
-        x = tf.tensordot(support, x0, axes=[1, 1])
-        x = tf.transpose(x, [2, 1, 3, 0])
-        x = tf.reshape(x, [tf.shape(x0)[0], tf.shape(x0)[1], x0.shape[-1], 2])
+        if self.should:
+            x = tf.tensordot(support[0], x0, axes=[1, 1])
+            x = tf.transpose(x, [1, 0, 2])
 
-        return self.layer(x[:, :, :, 0], training=training) + self.layer1(
-            x[:, :, :, 1], training=training
-        )
+            return self.layer(x, training=training)
+        else:
+
+            x = tf.tensordot(support, x0, axes=[1, 1])
+            x = tf.transpose(x, [2, 1, 3, 0])
+            x = tf.reshape(x, [tf.shape(x0)[0], tf.shape(x0)[1], x0.shape[-1], 2])
+
+            return self.layer(x[:, :, :, 0], training=training) + self.layer1(
+                x[:, :, :, 1], training=training
+            )

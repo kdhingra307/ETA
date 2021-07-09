@@ -52,7 +52,10 @@ class Model(tf_keras.Model):
 
         self.encoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
-                [DCGRUCell(128, 2, num_nodes), DCGRUCell(128, 2, num_nodes)]
+                [
+                    DCGRUCell(128, 2, num_nodes, etype=1),
+                    DCGRUCell(128, 2, num_nodes, etype=1),
+                ]
             ),
             num_nodes=num_nodes,
             steps_to_predict=steps_to_predict,
@@ -61,8 +64,8 @@ class Model(tf_keras.Model):
         self.decoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
                 [
-                    DCGRUCell(128, 2, num_nodes),
-                    DCGRUCell(128, 2, num_nodes, num_proj=1),
+                    DCGRUCell(128, 2, num_nodes, etype=0),
+                    DCGRUCell(128, 2, num_nodes, num_proj=1, etype=0),
                 ]
             ),
             num_nodes=num_nodes,
