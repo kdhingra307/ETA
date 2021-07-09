@@ -168,7 +168,7 @@ class Model(tf_keras.Model):
             )
 
         gradients = tape.gradient(loss, self.trainable_weights)
-        gradients, norm = tf.clip_by_global_norm(gradients, 0.1)
+        gradients, norm = tf.clip_by_global_norm(gradients, 0.05)
         tf.print(norm)
 
         my_zip = zip(self.trainable_weights, gradients)
