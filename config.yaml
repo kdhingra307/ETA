@@ -1,7 +1,7 @@
 model:
   working_dir: "./data"
   batch_size: 16
-  training_label: "small_eta/grud/lr_1"
+  training_label: "small_eta/grud/lr_6"
   num_nodes: 1165
   steps_to_predict: 12
   ttr: 1
@@ -19,7 +19,7 @@ data:
     - 0.17708756
 
 training:
-  learning_rate: 0.001
+  learning_rate: 0.1
   decay: 1e+3
   log_dir: "logs/{}"
   ckpt_dir: "ckpt/{}"
