@@ -166,6 +166,18 @@ class Model(tf_keras.Model):
             loss = self.compiled_loss(
                 y, y_pred, None, regularization_losses=self.losses
             )
+        
+        gradients = tape.gradient(loss, self.trainable_weights)
+
+        my_zip = zip(self.trainable_weights, gradients)
+        for weights, grads in my_zip:
+            tf.summary.histogram(
+                weights.name.replace(":", "_") + "_grads",
+                data=grads,
+            )
+
+        my_zip = zip(gradients, self.trainable_weights)
+        self.optimizer.apply_gradients(my_zip)
 
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
         self.compiled_metrics.update_state(y, y_pred, None)

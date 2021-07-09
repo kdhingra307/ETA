@@ -48,7 +48,7 @@ log_manager = TensorBoard(
 )
 lr_manager = LearningRateScheduler(scheduler)
 ckpt_manager.ckpt_manager.restore_or_initialize()
-print(optimizer.epsilon)
+print("epsilon", optimizer.epsilon)
 
 model.fit(
     Dataset(train_split),
