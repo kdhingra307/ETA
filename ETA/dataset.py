@@ -61,7 +61,7 @@ def get_data(split_label):
 
     tf_dataset = tf.data.Dataset.from_tensor_slices(files)
 
-    tf_dataset = tf_dataset.shuffle(config.data.shuffle, seed=12)
+    tf_dataset = tf_dataset.shuffle(config.data.shuffle, seed=1020)
     tf_dataset = tf_dataset.map(
         lambda x: tf.numpy_function(
             tf_map,
