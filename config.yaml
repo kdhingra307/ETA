@@ -1,7 +1,7 @@
 model:
   working_dir: "/home/pravesh/speech_work/ETA/models/ETA/data"
   batch_size: 8
-  training_label: "small_eta/resnet/check/5"
+  training_label: "small_eta/resnet/check/6"
   num_nodes: 1165
   steps_to_predict: 12
   graph_batch_size: 256
@@ -9,7 +9,7 @@ model:
   ttr: 1
 
 data:
-  shuffle: 1000
+  shuffle: 4000
   prefetch: 10
   path_pattern: "training_files"
   split_prefix: "custom_new_{}"

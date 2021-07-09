@@ -119,8 +119,18 @@ def get_data(split_label):
 
         support = calculate_random_walk_matrix(cur_support)
 
+        support_prod = tf.matmul(support, support)
         final_support.append(support)
-        final_support.append(tf.matmul(support, support))
+        final_support.append(
+            2 * support_prod - tf.eye(support.shape[0])
+        )
+
+        final_support.append(
+            tf.matmul(support_prod, final_support[-1])
+        )
+        final_support.append(
+            2 * tf.matmul(support_prod, final_support[-1]) - final_support[-2]
+        )
         # final_support.append(tf.matmul(final_support[-1], support))
         # final_support.append(tf.matmul(final_support[-1], support))
 
