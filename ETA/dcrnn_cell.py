@@ -120,27 +120,18 @@ class DCGRUBlock(tf_keras.layers.Layer):
         self.num_nodes = num_nodes
         self.steps_to_predict = steps_to_predict
         # config.model.counter_position
-        self.counter = tf.Variable(1, dtype=tf.float32, trainable=False)
         if encode:
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
+        else:
+            self.ttr_counter = tf.Variable(
+                0, dtype=tf.float32, trainable=False
+            )
+            self.ttr_val = tf.Variable(0, dtype=tf.float32, trainable=False)
 
     def encode(self, x, adj, training=False, z=None):
         print(x, adj, z)
         state = self.block(x, training=training, constants=[adj, z])
         return state[1:]
-
-    @tf.function
-    def decay_teacher_coefficient(self):
-        decay_rate = config.model.teacher_decay_rate
-
-        teacher_coeff = decay_rate / (
-            decay_rate + tf.exp(self.counter / decay_rate)
-        )
-        tf.summary.scalar(name="teacher_decay_coefficient", data=teacher_coeff)
-
-        self.counter.assign_add(1)
-
-        return teacher_coeff
 
     @tf.function
     def decode(self, state, adj=None, x_targ=None, training=False, z=None):
@@ -154,12 +145,31 @@ class DCGRUBlock(tf_keras.layers.Layer):
         to_return = tf.TensorArray(
             size=self.steps_to_predict, dtype=tf.float32
         )
-        for i in tf.range(self.steps_to_predict):
-            init, state = self.cells(
-                init, states=state, training=training, constants=[adj, z]
-            )
-            to_return = to_return.write(i, init)
-        return tf.transpose(to_return.stack(), [1, 0, 2, 3])
+
+        if x_targ is None:
+            for i in tf.range(self.steps_to_predict):
+                init, state = self.cells(
+                    init, states=state, training=training, constants=[adj, z]
+                )
+                to_return = to_return.write(i, init)
+        else:
+            for i in tf.range(self.steps_to_predict):
+                output, state = self.cells(
+                    init, states=state, training=training, constants=[adj, z]
+                )
+
+                to_return = to_return.write(i, output)
+
+                if tf.random.uniform(shape=[]) < self.ttr_val:
+                    init = tf.stop_gradient(output)
+                else:
+                    init = tf.squeeze(x_targ[:, i], axis=-1)
+
+    def ttr(self):
+        self.ttr_counter.assign_add(1)
+        if self.ttr_counter > 483 * 3:
+            self.ttr_val.assign(tf.sin((50 * 483) / self.ttr_counter))
+        tf.summary.scalar("ttr_val", self.ttr_val)
 
     def call(self, x, state, adj=None, training=False, z=None):
         if self.is_encoder:
