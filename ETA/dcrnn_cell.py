@@ -123,8 +123,8 @@ class DCGRUBlock(tf_keras.layers.Layer):
         if encode:
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
 
-    def encode(self, x, adj, training=False):
-        state = self.block(x, training=training, constants=[adj])
+    def encode(self, x, adj, training=False, z=None):
+        state = self.block(x, training=training, constants=[adj, z])
         return state[1:]
 
     @tf.function
@@ -159,11 +159,11 @@ class DCGRUBlock(tf_keras.layers.Layer):
             to_return = to_return.write(i, init)
         return tf.transpose(to_return.stack(), [1, 0, 2, 3])
 
-    def call(self, x, state, adj=None, training=False):
+    def call(self, x, state, adj=None, training=False, z=None):
         if self.is_encoder:
-            return self.encode(x, adj, training=training)
+            return self.encode(x, adj, training=training, z=z)
         else:
-            return self.decode(state, adj, x, training=training)
+            return self.decode(state, adj, x, training=training, z=z)
 
 
 class GSConv(tf_keras.layers.Layer):
