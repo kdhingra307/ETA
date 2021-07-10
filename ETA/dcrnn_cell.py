@@ -195,11 +195,11 @@ class GSConv(tf_keras.layers.Layer):
         super(GSConv, self).__init__()
 
         self.layer = tf.keras.layers.Dense(
-            units=units,
+            units=units // 2,
             activation=tf.keras.layers.LeakyReLU(0.2),
         )
         self.layer1 = tf.keras.layers.Dense(
-            units=units,
+            units=units // 2,
             activation=tf.keras.layers.LeakyReLU(0.2),
         )
         self.layer2 = tf.keras.layers.Dense(units=units)
