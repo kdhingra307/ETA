@@ -54,11 +54,10 @@ class GConv(tf_keras.layers.Layer):
         )
 
         output = []
-        for i in range(0, 4):
+        for i in range(0, 2):
             cur_otpt = self.operation(
                 x, support[i], self.layer[i], training=training
             )
-            print(cur_otpt)
             output.append(h_prev_mask * cur_otpt)
 
         return tf.concat(output, axis=-1)
