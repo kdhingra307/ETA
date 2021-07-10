@@ -160,6 +160,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return tf.transpose(to_return.stack(), [1, 0, 2, 3])
 
     def call(self, x, state, adj=None, training=False, z=None):
+        print("z", z)
         if self.is_encoder:
             return self.encode(x, adj, training=training, z=z)
         else:
