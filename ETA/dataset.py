@@ -38,11 +38,13 @@ final_support = []
 
 final_support.append(base_supports[0])
 final_support.append(
-    2 * tf.matmul(base_supports[0], base_supports[0]) - tf.eye(base_supports[0].shape[0])
+    2 * tf.matmul(base_supports[0], base_supports[0])
+    - tf.eye(base_supports[0].shape[0])
 )
 final_support.append(tf.matmul(base_supports[1], final_support[-1]))
 final_support.append(
-    2 * tf.matmul(base_supports[1], final_support[-1]) - tf.eye(base_supports[0].shape[0])
+    2 * tf.matmul(base_supports[1], final_support[-1])
+    - tf.eye(base_supports[0].shape[0])
 )
 
 
@@ -81,7 +83,10 @@ def get_data(split_label):
         lambda x: tf.numpy_function(
             tf_map,
             [x],
-            [tf.float32, tf.float32, tf.float32],
+            [
+                tf.float32,
+                tf.float32,
+            ],
             name="load_each_file",
         )
     )
