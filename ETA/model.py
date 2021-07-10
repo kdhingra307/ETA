@@ -28,7 +28,7 @@ class GConv(tf_keras.layers.Layer):
                     ),
                 ]
             )
-            for _ in range(4)
+            for _ in range(2)
         ]
 
     def operation(self, x0, support, layer, training=False):
