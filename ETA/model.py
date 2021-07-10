@@ -13,7 +13,7 @@ class GConv(tf_keras.layers.Layer):
         super(GConv, self).__init__()
 
         self.x_prev = tf.keras.layers.Dense(2, name="x_prev")
-        self.h_layer = tf.keras.layers.Dense(units, name="h_prev")
+        self.h_prev = tf.keras.layers.Dense(units, name="h_prev")
 
         self.layer = [
             tf.keras.Sequential(
