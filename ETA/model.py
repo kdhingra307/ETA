@@ -12,6 +12,9 @@ class GConv(tf_keras.layers.Layer):
     def __init__(self, units):
         super(GConv, self).__init__()
 
+        self.x_prev = tf.keras.layers.Dense(2, name="x_prev")
+        self.h_layer = tf.keras.layers.Dense(units, name="h_prev")
+
         self.layer = [
             tf.keras.Sequential(
                 [
@@ -33,12 +36,29 @@ class GConv(tf_keras.layers.Layer):
 
         return layer(x, training=training)
 
-    def call(self, x, support, training=False):
-        output = []
+    def call(self, x, support, x2, training=False):
 
-        for i in range(0, 2):
+        x, x1, mask, dt = tf.split(x, num_or_size_splits=4, axis=-1)
+
+        x_prev_mask = tf.exp(
+            -1 * tf.clip_by_value(self.x_prev(dt), 0, tf.float32.max)
+        )
+
+        x = (x * mask) + (
+            (1 - mask) * (x_prev_mask * x1 + (1 - x_prev_mask) * x2)
+        )
+
+        h_prev_mask = tf.exp(
+            -1 * tf.clip_by_value(self.h_prev(dt), 0, tf.float32.max)
+        )
+
+        output = []
+        for i in range(0, 4):
             output.append(
-                self.operation(x, support[i], self.layer[i], training=training)
+                h_prev_mask
+                * self.operation(
+                    x, support[i], self.layer[i], training=training
+                )
             )
 
         return tf.concat(output, axis=-1)
@@ -78,7 +98,7 @@ class Model(tf_keras.Model):
 
     def call(self, x, training=False, y=None, adj=None, z=None):
 
-        x = self.gconv(x, adj, training=training)
+        x = self.gconv(x, adj, x2=z, training=training)
 
         encoded = self.encoder(x=x, adj=adj, state=None, training=training)
         decoded = self.decoder(adj=adj, state=encoded, x=y, training=training)
@@ -90,9 +110,7 @@ class Model(tf_keras.Model):
         sample_weight = None
 
         with tf_diff.GradientTape() as tape:
-            y_pred = self(
-                x[:, :, :, :2], training=True, y=y[:, :, :, :1], adj=pos, z=z
-            )
+            y_pred = self(x, training=True, y=y[:, :, :, :1], adj=pos, z=z)
             loss = self.compiled_loss(
                 y, y_pred, None, regularization_losses=self.losses
             )
@@ -103,7 +121,7 @@ class Model(tf_keras.Model):
 
     def test_step(self, data):
         pos, x, y, z = data
-        y_pred = self(x[:, :, :, :2], training=False, adj=pos, z=z)
+        y_pred = self(x, training=False, adj=pos, z=z)
         # Updates stateful loss metrics.
         loss = self.compiled_loss(
             y, y_pred, None, regularization_losses=self.losses
