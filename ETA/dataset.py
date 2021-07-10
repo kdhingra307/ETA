@@ -14,7 +14,7 @@ adj_mx = np.load(
     "{}/{}/gaussian_adj_matrix.npz".format(
         config.model.working_dir, config.model.static_data_dir
     )
-)["arr_0"].astype(np.float32)[[non_zero_rows, :], non_zero_rows]
+)["arr_0"].astype(np.float32)[non_zero_rows[:, None], non_zero_rows]
 
 non_zero_rows = np.load(
     "/home/pravesh/speech_work/ETA/models/ETA/data/static/custom_non_zero_1165.npy"
@@ -181,7 +181,7 @@ class rwt_sampling:
                 )
             )["arr_0"].astype(np.float32)
             > 0
-        )[[non_zero_rows, :], non_zero_rows]
+        )[non_zero_rows[:, None], non_zero_rows]
 
         self.n_init = config.model.graph_batch_size
         self.n_nodes = config.model.num_nodes
