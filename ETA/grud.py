@@ -59,7 +59,7 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
         self.norms = [tf.keras.layers.BatchNormalization() for _ in range(3)]
         self.h_prev = tf.keras.layers.Dense(num_units, name="h_prev")
 
-        self.h1_prev = tf.keras.layers.Dense(num_units, name="h_prev")
+        self.h1_prev = tf.keras.layers.Dense(2 * num_units, name="h_prev")
         self.h2_prev = tf.keras.layers.Dense(num_units, name="h_prev")
 
         if num_proj != None:
