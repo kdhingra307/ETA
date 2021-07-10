@@ -192,6 +192,9 @@ class GSConv(tf_keras.layers.Layer):
             units=units // 2,
             activation=tf.keras.layers.LeakyReLU(0.2),
         )
+        self.batch_norm = tf.keras.layers.BatchNormalization()
+        self.batch_norm1 = tf.keras.layers.BatchNormalization()
+
         self.layer2 = tf.keras.layers.Dense(units=units)
         self.should = should
 
@@ -201,12 +204,14 @@ class GSConv(tf_keras.layers.Layer):
         x = tf.tensordot(support[0], x0, axes=[1, 1])
         x = tf.transpose(x, [1, 0, 2])
         x = self.layer(x)
+        x = self.batch_norm(x)
         output.append(x)
 
         x = tf.tensordot(support[1], tf.concat([x, x0], axis=-1), axes=[1, 1])
         x = tf.transpose(x, [1, 0, 2])
 
         x = self.layer1(x)
+        x = self.batch_norm1(x)
         output.append(x)
 
         return self.layer2(tf.concat(output, axis=-1))

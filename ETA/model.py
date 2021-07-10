@@ -32,21 +32,6 @@ class GConv(tf_keras.layers.Layer):
 
         self.h_prev = tf.keras.layers.Dense(units, name="h_prev")
 
-        # self.layer = [
-        #     tf.keras.Sequential(
-        #         [
-        #             tf.keras.layers.Conv2D(
-        #                 filters=units,
-        #                 activation=tf.keras.layers.LeakyReLU(0.2),
-        #                 kernel_size=[3, 1],
-        #                 padding="Same",
-        #                 strides=[1, 1],
-        #             ),
-        #         ]
-        #     )
-        #     for _ in range(2)
-        # ]
-
     def operation(self, x0, support, layer, training=False):
         x = tf.tensordot(support, x0, axes=[1, 2])
         x = tf.transpose(x, [1, 2, 0, 3])
