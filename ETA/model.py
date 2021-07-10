@@ -16,7 +16,7 @@ class Model(tf_keras.Model):
         num_nodes = config.model.graph_batch_size
         steps_to_predict = config.model.steps_to_predict
 
-        cell = GRUDCell(128, 2, num_nodes)
+        cell = GRUDCell(128, num_nodes)
         cell.build([None, None, None, 2])
         self.encoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(

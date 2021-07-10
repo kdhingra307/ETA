@@ -130,11 +130,6 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
 
         output = new_state = u * state + (1 - u) * c
 
-        if self._num_proj is not None:
-            output = self.projection_layer(output)
-
-        print("tot", output)
-
         return output, new_state
 
 
