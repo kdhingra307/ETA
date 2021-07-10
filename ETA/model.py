@@ -48,7 +48,7 @@ class Model(tf_keras.Model):
         decoded = self.decoder(
             adj=adj,
             state=encoded,
-            x=y[:, :, :, :1],
+            x=y,
             training=training,
             z=z,
         )
