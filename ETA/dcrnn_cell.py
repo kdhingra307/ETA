@@ -212,7 +212,7 @@ class GSConv(tf_keras.layers.Layer):
         x = tf.transpose(x, [2, 1, 3, 0])
         x = tf.reshape(x, [tf.shape(x0)[0], tf.shape(x0)[1], x0.shape[-1], 2])
 
-        return tf.concatenate(
+        return tf.concat(
             [
                 self.layer(x[:, :, :, 0], training=training)
                 + self.layer1(x[:, :, :, 1], training=training)
