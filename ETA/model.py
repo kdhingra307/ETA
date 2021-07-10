@@ -15,20 +15,20 @@ class GConv(tf_keras.layers.Layer):
         self.x_prev = tf.keras.layers.Dense(2, name="x_prev")
         self.h_prev = tf.keras.layers.Dense(units, name="h_prev")
 
-        self.layer = [
-            tf.keras.Sequential(
-                [
-                    tf.keras.layers.Conv2D(
-                        filters=units,
-                        activation=tf.keras.layers.LeakyReLU(0.2),
-                        kernel_size=[3, 1],
-                        padding="Same",
-                        strides=[1, 1],
-                    ),
-                ]
-            )
-            for _ in range(2)
-        ]
+        # self.layer = [
+        #     tf.keras.Sequential(
+        #         [
+        #             tf.keras.layers.Conv2D(
+        #                 filters=units,
+        #                 activation=tf.keras.layers.LeakyReLU(0.2),
+        #                 kernel_size=[3, 1],
+        #                 padding="Same",
+        #                 strides=[1, 1],
+        #             ),
+        #         ]
+        #     )
+        #     for _ in range(2)
+        # ]
 
     def operation(self, x0, support, layer, training=False):
         x = tf.tensordot(support, x0, axes=[1, 2])
@@ -49,18 +49,20 @@ class GConv(tf_keras.layers.Layer):
             (1 - mask) * (x_prev_mask * x1 + (1 - x_prev_mask) * x2)
         )
 
-        h_prev_mask = tf.exp(
-            -1 * tf.clip_by_value(self.h_prev(dt), 0, tf.float32.max)
-        )
+        return x
 
-        output = []
-        for i in range(0, 2):
-            cur_otpt = self.operation(
-                x, support[i], self.layer[i], training=training
-            )
-            output.append(cur_otpt)
+        # h_prev_mask = tf.exp(
+        #     -1 * tf.clip_by_value(self.h_prev(dt), 0, tf.float32.max)
+        # )
 
-        return tf.concat(output, axis=-1)
+        # output = []
+        # for i in range(0, 2):
+        #     cur_otpt = self.operation(
+        #         x, support[i], self.layer[i], training=training
+        #     )
+        #     output.append(cur_otpt)
+
+        # return tf.concat(output, axis=-1)
 
 
 class Model(tf_keras.Model):
