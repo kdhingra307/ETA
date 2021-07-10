@@ -124,6 +124,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
 
     def encode(self, x, adj, training=False, z=None):
+        print("z", z)
         state = self.block(x, training=training, constants=[adj, z])
         return state[1:]
 
@@ -142,7 +143,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
     @tf.function
     def decode(self, state, adj=None, x_targ=None, training=False, z=None):
-
+        print("z", z)
         batch_size = tf.shape(state[0])[0]
 
         init = tf.zeros([batch_size, self.num_nodes, 1], dtype=tf.float32)
@@ -160,7 +161,6 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return tf.transpose(to_return.stack(), [1, 0, 2, 3])
 
     def call(self, x, state, adj=None, training=False, z=None):
-        print("z", z)
         if self.is_encoder:
             return self.encode(x, adj, training=training, z=z)
         else:
