@@ -192,7 +192,7 @@ class GSConv(tf_keras.layers.Layer):
         if self.should:
             return self.layer2(x0)
         else:
-            self.operation(x0, support[0], self.layer2)
+            return self.operation(x0, support[0], self.layer2)
 
     def operation(self, x0, support, layer, training=False):
         x = tf.tensordot(support, x0, axes=[1, 1])
