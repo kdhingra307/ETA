@@ -172,8 +172,8 @@ class GSConv(tf_keras.layers.Layer):
     def call(self, x0, support, training=False):
 
         output = []
-        for e in support:
-            output.append(tf.tensordot(e, x0, axes=[1, 1]))
+        for e in range(4)
+            output.append(tf.tensordot(support[e], x0, axes=[1, 1]))
 
         x = tf.concat(output, axis=0)
         return self.layer(x)
