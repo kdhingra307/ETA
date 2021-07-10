@@ -44,6 +44,7 @@ class GConv(tf_keras.layers.Layer):
             -1 * tf.clip_by_value(self.x_prev(dt), 0, tf.float32.max)
         )
         x2 = tf.expand_dims(x2, axis=1)
+        print(x, mask, x_prev_mask, x1, x2)
         x = (x * mask) + (
             (1 - mask) * (x_prev_mask * x1 + (1 - x_prev_mask) * x2)
         )
