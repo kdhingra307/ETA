@@ -12,7 +12,24 @@ class GConv(tf_keras.layers.Layer):
     def __init__(self, units):
         super(GConv, self).__init__()
 
-        self.x_prev = tf.keras.layers.Dense(2, name="x_prev")
+        self.x_prev1 = [
+            tf.keras.layers.Conv2D(
+                filters=8,
+                activation=tf.keras.layers.LeakyReLU(0.2),
+                kernel_size=[4, 1],
+                padding="Same",
+                strides=[1, 1],
+            )
+            for _ in range(2)
+        ]
+
+        self.x_prev = tf.keras.layers.Conv2D(
+            filters=2,
+            kernel_size=[4, 1],
+            padding="Same",
+            strides=[1, 1],
+        )
+
         self.h_prev = tf.keras.layers.Dense(units, name="h_prev")
 
         # self.layer = [
@@ -41,7 +58,10 @@ class GConv(tf_keras.layers.Layer):
         x, x1, mask, dt = tf.split(x, num_or_size_splits=4, axis=-1)
 
         x_prev_mask = tf.exp(
-            -1 * tf.clip_by_value(self.x_prev(dt), 0, tf.float32.max)
+            -1
+            * tf.clip_by_value(
+                self.x_prev(self.x_prev1(dt)), 0, tf.float32.max
+            )
         )
         x2 = tf.expand_dims(x2, axis=1)
 
