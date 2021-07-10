@@ -39,12 +39,11 @@ class GConv(tf_keras.layers.Layer):
 
     def call(self, x, support, training=False):
         output = []
-        x = self.operation(x, support[0], self.layer[0], training=training)
-        for i in range(1, 2):
-            x += self.operation(
+        # x = self.operation(x, support[0], self.layer[0], training=training)
+        for i in range(0, 2):
+            output.append(self.operation(
                 x, support[i], self.layer[i], training=training
-            )
-            output.append(x)
+            ))
 
         return tf.concat(output, axis=-1)
 
