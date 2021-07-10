@@ -164,6 +164,8 @@ class DCGRUBlock(tf_keras.layers.Layer):
                 else:
                     init = x_targ[:, i]
 
+        return tf.transpose(to_return.stack(), [1, 0, 2, 3])
+
     def ttr(self):
         self.ttr_counter.assign_add(1)
         if self.ttr_counter > 483 * 3:
