@@ -52,16 +52,14 @@ class GConv(tf_keras.layers.Layer):
         h_prev_mask = tf.exp(
             -1 * tf.clip_by_value(self.h_prev(dt), 0, tf.float32.max)
         )
-        print(h_prev_mask)
 
         output = []
         for i in range(0, 4):
-            output.append(
-                h_prev_mask
-                * self.operation(
-                    x, support[i], self.layer[i], training=training
-                )
+            cur_otpt = self.operation(
+                x, support[i], self.layer[i], training=training
             )
+            print(cur_otpt)
+            output.append(h_prev_mask * cur_otpt)
 
         return tf.concat(output, axis=-1)
 
