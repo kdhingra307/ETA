@@ -60,7 +60,7 @@ class GConv(tf_keras.layers.Layer):
         embedding = self.x_prev1[0](dt)
         embedding += self.x_prev1[1](embedding)
         embedding += self.x_prev1[2](embedding)
-        embedding = tf.concate([embedding, dt], axis=-1)
+        embedding = tf.concat([embedding, dt], axis=-1)
 
         x_prev_mask = tf.exp(
             -1 * tf.clip_by_value(self.x_prev(embedding), 0, tf.float32.max)
