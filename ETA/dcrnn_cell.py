@@ -194,6 +194,8 @@ class GSConv(tf_keras.layers.Layer):
     def __init__(self, units, should=False):
         super(GSConv, self).__init__()
 
+        self._hidden = units // 2
+
         self.layer = tf.keras.layers.Dense(
             units=units // 2,
             activation=tf.keras.layers.LeakyReLU(0.2),
@@ -227,7 +229,7 @@ class GSConv(tf_keras.layers.Layer):
         )
         x = tf.transpose(x, [2, 1, 3, 0])
         x = tf.reshape(
-            x, [tf.shape(x0)[0], tf.shape(x0)[1], x.shape[-1] + x0.shape[-1]]
+            x, [tf.shape(x0)[0], tf.shape(x0)[1], self._hidden + x0.shape[-1]]
         )
 
         x = self.layer1(x)
