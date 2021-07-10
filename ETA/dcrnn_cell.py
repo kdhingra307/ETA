@@ -141,7 +141,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return teacher_coeff
 
     @tf.function
-    def decode(self, state, adj=None, x_targ=None, training=False):
+    def decode(self, state, adj=None, x_targ=None, training=False, z=None):
 
         batch_size = tf.shape(state[0])[0]
 
@@ -154,7 +154,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         )
         for i in tf.range(self.steps_to_predict):
             init, state = self.cells(
-                init, states=state, training=training, constants=[adj]
+                init, states=state, training=training, constants=[adj, z]
             )
             to_return = to_return.write(i, init)
         return tf.transpose(to_return.stack(), [1, 0, 2, 3])
