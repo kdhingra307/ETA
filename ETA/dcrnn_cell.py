@@ -168,8 +168,11 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
     def ttr(self):
         self.ttr_counter.assign_add(1)
-        if self.ttr_counter > 483 * 3:
-            self.ttr_val.assign(tf.sin((50 * 483) / self.ttr_counter))
+        tf.cond(
+            self.ttr_counter > 483 * 3,
+            lambda: self.ttr_val.assign(tf.sin((50 * 483) / self.ttr_counter)),
+            lambda: None,
+        )
         tf.summary.scalar("ttr_val", self.ttr_val)
 
     def call(self, x, state, adj=None, training=False, z=None):
