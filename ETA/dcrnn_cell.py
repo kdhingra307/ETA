@@ -135,7 +135,6 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
     @tf.function
     def decode(self, state, adj=None, x_targ=None, training=False, z=None):
-        print("z", z)
         batch_size = tf.shape(state[0])[0]
 
         init = tf.zeros([batch_size, self.num_nodes, 1], dtype=tf.float32)
@@ -163,7 +162,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
                 if tf.random.uniform(shape=[]) < self.ttr_val:
                     init = tf.stop_gradient(output)
                 else:
-                    init = tf.squeeze(x_targ[:, i], axis=-1)
+                    init = x_targ[:, i]
 
     def ttr(self):
         self.ttr_counter.assign_add(1)
