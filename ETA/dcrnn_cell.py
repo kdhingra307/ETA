@@ -189,4 +189,13 @@ class GSConv(tf_keras.layers.Layer):
 
     def call(self, x0, support, training=False):
 
-        return self.layer2(x0)
+        if self.should:
+            return self.layer2(x0)
+        else:
+            self.operation(x0, support[0])
+
+    def operation(self, x0, support, layer, training=False):
+        x = tf.tensordot(support, x0, axes=[1, 1])
+        x = tf.transpose(x, [1, 0, 2])
+
+        return layer(x, training=training)
