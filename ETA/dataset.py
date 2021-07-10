@@ -10,17 +10,15 @@ mean, std = config.data.mean, config.data.std
 mean_expanded = np.array(mean).reshape([1, 1, -1])
 std_expanded = np.array(std).reshape([1, 1, -1])
 
+adj_mx = np.load(
+    "{}/{}/spearson_custom.npz".format(
+        config.model.working_dir, config.model.static_data_dir
+    )
+)["arr_0"].astype(np.float32)
 
 non_zero_rows = np.load(
     "/home/pravesh/speech_work/ETA/models/ETA/data/static/custom_non_zero_1165.npy"
 )
-
-
-adj_mx = np.load(
-    "{}/{}/sum_adj_matrix_v2.npz".format(
-        config.model.working_dir, config.model.static_data_dir
-    )
-)["arr_0"].astype(np.float32)[non_zero_rows[:, None], non_zero_rows]
 
 
 def calculate_random_walk_matrix(adj_mx):
@@ -178,12 +176,12 @@ class rwt_sampling:
 
         self.adj = (
             np.load(
-                "{}/{}/sum_adj_matrix_v2.npz".format(
+                "{}/{}/spearson_custom.npz".format(
                     config.model.working_dir, config.model.static_data_dir
                 )
             )["arr_0"].astype(np.float32)
             > 0
-        )[non_zero_rows[:, None], non_zero_rows]
+        )
 
         self.n_init = config.model.graph_batch_size
         self.n_nodes = config.model.num_nodes
