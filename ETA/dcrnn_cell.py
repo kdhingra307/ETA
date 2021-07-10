@@ -204,14 +204,14 @@ class GSConv(tf_keras.layers.Layer):
         x = tf.tensordot(support[0], x0, axes=[1, 1])
         x = tf.transpose(x, [1, 0, 2])
         x = self.layer(x)
-        x = self.batch_norm(x)
+        x = self.batch_norm(x, training=training)
         output.append(x)
 
         x = tf.tensordot(support[1], tf.concat([x, x0], axis=-1), axes=[1, 1])
         x = tf.transpose(x, [1, 0, 2])
 
         x = self.layer1(x)
-        x = self.batch_norm1(x)
+        x = self.batch_norm1(x, training=training)
         output.append(x)
 
         return self.layer2(tf.concat(output, axis=-1))
