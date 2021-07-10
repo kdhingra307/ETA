@@ -74,11 +74,11 @@ class Model(tf_keras.Model):
             encode=False,
         )
 
-        # self.gconv = GConv(32)
+        self.gconv = GConv(32)
 
     def call(self, x, training=False, y=None, adj=None, z=None):
 
-        # x = self.gconv(x, adj, training=training)
+        x = self.gconv(x, adj, training=training)
 
         encoded = self.encoder(x=x, adj=adj, state=None, training=training)
         decoded = self.decoder(adj=adj, state=encoded, x=y, training=training)
