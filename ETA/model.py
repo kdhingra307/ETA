@@ -48,10 +48,9 @@ class Model(tf_keras.Model):
         decoded = self.decoder(
             adj=adj,
             state=encoded,
-            x=y,
+            x=y[:, :, :, :1],
             training=training,
             z=z,
-            x_targ=y[:, :, :, :1],
         )
         return tf_squeeze(decoded, axis=-1)
 

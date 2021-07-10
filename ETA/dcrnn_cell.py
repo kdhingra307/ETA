@@ -172,9 +172,14 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
     def call(self, x, state, adj=None, training=False, z=None):
         if self.is_encoder:
-            return self.encode(x, adj, training=training, z=z)
+            return self.encode(
+                x,
+                adj,
+                training=training,
+                z=z,
+            )
         else:
-            return self.decode(state, adj, x, training=training, z=z)
+            return self.decode(state, adj, training=training, z=z, x_targ=x)
 
 
 class GSConv(tf_keras.layers.Layer):
