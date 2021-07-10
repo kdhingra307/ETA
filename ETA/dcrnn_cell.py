@@ -185,7 +185,7 @@ class GSConv(tf_keras.layers.Layer):
         self._hidden = units // 2
 
         self.should = should
-        self.layer2 = tf.keras.Dense(units)
+        self.layer2 = tf.keras.layers.Dense(units)
 
     def call(self, x0, support, training=False):
 
