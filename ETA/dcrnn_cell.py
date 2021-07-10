@@ -197,16 +197,16 @@ class GSConv(tf_keras.layers.Layer):
 
     def call(self, x0, support, training=False):
 
-        output = []
-        x = tf.tensordot(support[0], x0, axes=[1, 1])
-        x = tf.transpose(x, [1, 0, 2])
-        x = self.layer(x)
-        output.append(x)
+        # output = []
+        # x = tf.tensordot(support[0], x0, axes=[1, 1])
+        # x = tf.transpose(x, [1, 0, 2])
+        # x = self.layer(x)
+        # output.append(x)
 
-        x = tf.tensordot(support[1], tf.concat([x, x0], axis=-1), axes=[1, 1])
-        x = tf.transpose(x, [1, 0, 2])
+        # x = tf.tensordot(support[1], tf.concat([x, x0], axis=-1), axes=[1, 1])
+        # x = tf.transpose(x, [1, 0, 2])
 
-        x = self.layer1(x)
-        output.append(x)
+        # x = self.layer1(x)
+        # output.append(x)
 
-        return self.layer2(tf.concat(output, axis=-1))
+        return self.layer2(x0)
