@@ -80,7 +80,7 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         [type]
             [description]
         """
-        print("z", constants)
+        print("ipp", inputs)
         support = constants[0]
         state = state[0]
 
