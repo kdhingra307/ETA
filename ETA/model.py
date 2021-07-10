@@ -20,7 +20,7 @@ class GConv(tf_keras.layers.Layer):
                 padding="Same",
                 strides=[1, 1],
             )
-            for _ in range(2)
+            for _ in range(3)
         ]
 
         self.x_prev = tf.keras.layers.Conv2D(
@@ -57,11 +57,13 @@ class GConv(tf_keras.layers.Layer):
 
         x, x1, mask, dt = tf.split(x, num_or_size_splits=4, axis=-1)
 
+        embedding = self.x_prev1[0](dt)
+        embedding += self.x_prev1[1](embedding)
+        embedding += self.x_prev1[2](embedding)
+        embedding = tf.concate([embedding, dt], axis=-1)
+
         x_prev_mask = tf.exp(
-            -1
-            * tf.clip_by_value(
-                self.x_prev(self.x_prev1(dt)), 0, tf.float32.max
-            )
+            -1 * tf.clip_by_value(self.x_prev(embedding), 0, tf.float32.max)
         )
         x2 = tf.expand_dims(x2, axis=1)
 
