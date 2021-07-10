@@ -23,11 +23,13 @@ non_zero_rows = np.load(
 
 def calculate_random_walk_matrix(adj_mx):
     d = tf.reduce_sum(adj_mx, axis=1)
-    d_inv = tf.math.pow(d, -0.5)
+    d_inv = tf.math.pow(d, -1)
     d_inv = tf.where(tf.math.is_inf(d_inv), tf.zeros_like(d_inv), d_inv)
     d_mat_inv = tf.linalg.diag(d_inv)
     return tf.matmul(
-        tf.transpose(tf.matmul(adj_mx, d_mat_inv), [1, 0]), d_mat_inv
+        d_mat_inv,
+        adj_mx
+        # tf.transpose(tf.matmul(adj_mx, d_mat_inv), [1, 0]), d_mat_inv
     )
 
 
@@ -121,9 +123,7 @@ def get_data(split_label):
 
         support_prod = tf.matmul(support, support)
         final_support.append(support)
-        final_support.append(
-            2 * support_prod - tf.eye(support.shape[0])
-        )
+        final_support.append(2 * support_prod - tf.eye(support.shape[0]))
 
         # final_support.append(
         #     tf.matmul(support_prod, final_support[-1])
