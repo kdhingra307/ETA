@@ -68,18 +68,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                 ]
             )
 
-    # def build(self, inp_shape):
-    #     inp_shape = list(inp_shape)
-    #     inp_shape[-1] += self._num_units
-
-    #     self.first_layer[0].build(inp_shape)
-    #     inp_shape[-1] = self._num_units
-    #     self.first_layer[1].build(inp_shape)
-
-    #     self.second_layer[0].build(inp_shape)
-    #     inp_shape[-1] = self._num_units
-    #     self.second_layer[1].build(inp_shape)
-
     @tf.function
     def call(self, inputs, state, constants, training=False):
 
