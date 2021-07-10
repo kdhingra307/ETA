@@ -17,7 +17,7 @@ non_zero_rows = np.load(
 
 
 adj_mx = np.load(
-    "{}/{}/gaussian_adj_matrix.npz".format(
+    "{}/{}/sum_adj_matrix_v2.npz".format(
         config.model.working_dir, config.model.static_data_dir
     )
 )["arr_0"].astype(np.float32)[non_zero_rows[:, None], non_zero_rows]
@@ -178,7 +178,7 @@ class rwt_sampling:
 
         self.adj = (
             np.load(
-                "{}/{}/gaussian_adj_matrix.npz".format(
+                "{}/{}/sum_adj_matrix_v2.npz".format(
                     config.model.working_dir, config.model.static_data_dir
                 )
             )["arr_0"].astype(np.float32)
