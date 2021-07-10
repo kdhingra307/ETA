@@ -13,7 +13,7 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
     def get_initial_state(self, inputs, batch_size, dtype):
 
         return tf.zeros(
-            [batch_size, tf.shape(inputs)[1], self._num_units], dtype=dtype
+            [batch_size, self._num_nodes, self._num_units], dtype=dtype
         )
 
     @property
