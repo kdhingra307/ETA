@@ -209,7 +209,7 @@ class GSConv(tf_keras.layers.Layer):
         x = tf.transpose(x, [1, 0, 2])
 
         x = self.layer1(x)
-        x = self.batch_norm1(x, training=training)
+        x = self.batch_norm(x, training=training)
         output.append(x)
 
         return self.layer2(tf.concat(output, axis=-1))
