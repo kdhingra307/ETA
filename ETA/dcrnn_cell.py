@@ -43,30 +43,11 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._max_diffusion_step = max_diffusion_step
         self._use_gc_for_ru = use_gc_for_ru
 
-        if etype == 1:
-            self.first_layer = GSConv(units=num_units * 2, should=True)
-            self.second_layer = GSConv(num_units, should=True)
-        else:
-            self.first_layer = GSConv(units=num_units * 2)
-            self.second_layer = GSConv(num_units)
+        self.first_layer = GSConv(units=num_units * 2)
+        self.second_layer = GSConv(num_units)
 
         if num_proj != None:
-            self.projection_layer = tf_keras.Sequential(
-                [
-                    tf_keras.layers.Dense(
-                        units=64,
-                        activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                    ),
-                    tf_keras.layers.BatchNormalization(),
-                    tf_keras.layers.Dense(
-                        units=32,
-                        activation=tf_keras.layers.LeakyReLU(alpha=0.2),
-                    ),
-                    tf_keras.layers.Dense(
-                        units=1,
-                    ),
-                ]
-            )
+            self.projection_layer = tf_keras.layers.Dense(units=1)
 
     # def build(self, inp_shape):
     #     inp_shape = list(inp_shape)
@@ -185,31 +166,14 @@ class GSConv(tf_keras.layers.Layer):
         self._hidden = units // 2
 
         self.layer = tf.keras.layers.Dense(
-            units=units // 2,
-            activation=tf.keras.layers.LeakyReLU(0.2),
+            units=units,
         )
-        self.layer1 = tf.keras.layers.Dense(
-            units=units // 2,
-            activation=tf.keras.layers.LeakyReLU(0.2),
-        )
-        self.batch_norm = tf.keras.layers.Dropout(0.1)
-
-        self.layer2 = tf.keras.layers.Dense(units=units)
-        self.should = should
 
     def call(self, x0, support, training=False):
 
         output = []
-        x = tf.tensordot(support[0], x0, axes=[1, 1])
-        x = tf.transpose(x, [1, 0, 2])
-        x = self.layer(x)
-        output.append(x)
+        for e in support:
+            output.append(tf.tensordot(e, x0, axes=[1, 1]))
 
-        x = tf.tensordot(support[1], tf.concat([x, x0], axis=-1), axes=[1, 1])
-        x = tf.transpose(x, [1, 0, 2])
-
-        x = self.layer1(x)
-        x = self.batch_norm(x, training=training)
-        output.append(x)
-
-        return self.layer2(tf.concat(output, axis=-1))
+        x = tf.concat(output, axis=0)
+        return self.layer(x)

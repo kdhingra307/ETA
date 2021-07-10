@@ -23,17 +23,30 @@ non_zero_rows = np.load(
 
 def calculate_random_walk_matrix(adj_mx):
     d = tf.reduce_sum(adj_mx, axis=1)
-    d_inv = tf.math.pow(d, -0.5)
+    d_inv = tf.math.pow(d, -1)
     d_inv = tf.where(tf.math.is_inf(d_inv), tf.zeros_like(d_inv), d_inv)
     d_mat_inv = tf.linalg.diag(d_inv)
-    return tf.matmul(
-        tf.transpose(tf.matmul(adj_mx, d_mat_inv), [1, 0]), d_mat_inv
-    )
+    return tf.matmul(d_mat_inv, adj_mx)
 
 
 base_supports = [
-    tf.constant(adj_mx, dtype=tf.float32),
+    calculate_random_walk_matrix(tf.constant(adj_mx, dtype=tf.float32)),
+    calculate_random_walk_matrix(tf.constant(adj_mx.T, dtype=tf.float32)),
 ]
+
+final_support = []
+
+final_support.append(base_supports[0])
+final_support.append(
+    2 * tf.matmul(base_supports[0], base_supports[0]) - tf.eye(base_supports[0].shape[0])
+)
+final_support.append(tf.matmul(base_supports[1], final_support[-1]))
+final_support.append(
+    2 * tf.matmul(base_supports[1], final_support[-1]) - tf.eye(base_supports[0].shape[0])
+)
+
+
+final_support = tf.stack(final_support, axis=0)
 
 
 def get_data(split_label):
@@ -48,24 +61,7 @@ def get_data(split_label):
             np.transpose(data["y"], [1, 0, 2])[:, non_zero_rows, 0],
         )
 
-        x_mask = (x[:, :, 0] > 0).astype(np.float32)
         x = (x - mean_expanded) / std_expanded
-
-        x_mask = np.stack([x_mask, np.ones(x_mask.shape)], axis=-1)
-
-        x1 = [np.zeros(x[0].shape)]
-        dt = [np.zeros(x[0].shape)]
-        for e in range(len(x)):
-            x1.append((x1[-1] * (1 - x_mask[e])) + x_mask[e] * x[e])
-            dt.append(((1 + dt[-1]) * (1 - x_mask[e])) + x_mask[e])
-
-        x1 = np.stack(x1[1:], axis=0)
-        dt = np.stack(dt[1:], axis=0) / 12
-
-        x2 = np.sum(x_mask * x, axis=0) / (np.sum(x_mask, axis=0) + 1e-12)
-
-        x = np.concatenate([x, x1, x_mask, dt], axis=-1)
-
         mask = (y > 0) * 1
 
         y = (y - mean[0]) / std[0]
@@ -91,38 +87,21 @@ def get_data(split_label):
     )
 
     tf_dataset = tf_dataset.map(
-        lambda x, y, z: (
+        lambda x, y: (
             tf.ensure_shape(
-                x, [config.model.steps_to_predict, config.model.num_nodes, 8]
+                x, [config.model.steps_to_predict, config.model.num_nodes, 2]
             ),
             tf.ensure_shape(
                 y, [config.model.steps_to_predict, config.model.num_nodes, 2]
             ),
-            tf.ensure_shape(z, [config.model.num_nodes, 2]),
         )
     )
 
     tf_dataset = tf_dataset.batch(batch_size=config.model.batch_size)
 
-    def second_map(x, y, z):
-        positions = batch_sampler.sampler[split_label]()
+    def second_map(x, y):
 
-        x = tf.gather(x, indices=positions, axis=2)
-        y = tf.gather(y, indices=positions, axis=2)
-        z = tf.gather(z, indices=positions, axis=1)
-
-        final_support = []
-
-        cur_support = tf.gather(
-            tf.gather(base_supports[0], positions, axis=1), positions, axis=0
-        )
-
-        support = calculate_random_walk_matrix(cur_support)
-
-        support_prod = tf.matmul(support, support)
-        final_support.append(support)
-        final_support.append(2 * support_prod - tf.eye(support.shape[0]))
-        return tf.stack(final_support, axis=0), x, y, z
+        return final_support, x, y
 
     tf_dataset = tf_dataset.map(second_map)
 
