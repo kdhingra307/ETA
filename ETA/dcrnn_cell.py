@@ -125,6 +125,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
 
     def encode(self, x, adj, training=False, z=None):
+        print(adj, z)
         state = self.block(x, training=training, constants=[adj, z])
         return state[1:]
 
