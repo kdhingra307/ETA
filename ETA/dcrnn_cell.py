@@ -174,7 +174,9 @@ class DCGRUBlock(tf_keras.layers.Layer):
             ),
             lambda: self.ttr_val,
         )
-        tf.summary.scalar("ttr_val", self.ttr_val, step=self.ttr_counter)
+        tf.summary.scalar(
+            "ttr_val", self.ttr_val, step=tf.cast(self.ttr_counter, tf.int64)
+        )
 
     def call(self, x, state, adj=None, training=False, z=None):
         if self.is_encoder:
