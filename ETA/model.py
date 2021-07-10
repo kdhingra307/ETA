@@ -15,10 +15,6 @@ class GConv(tf_keras.layers.Layer):
         self.layer = [
             tf.keras.Sequential(
                 [
-                    # tf.keras.layers.Dense(
-                    #     units=2 * units, activation=tf.keras.layers.LeakyReLU()
-                    # ),
-                    # tf.keras.layers.BatchNormalization(),
                     tf.keras.layers.Conv2D(
                         filters=units,
                         activation=tf.keras.layers.LeakyReLU(0.2),
@@ -39,7 +35,7 @@ class GConv(tf_keras.layers.Layer):
 
     def call(self, x, support, training=False):
         output = []
-        # x = self.operation(x, support[0], self.layer[0], training=training)
+
         for i in range(0, 2):
             output.append(
                 self.operation(x, support[i], self.layer[i], training=training)
@@ -78,11 +74,11 @@ class Model(tf_keras.Model):
             encode=False,
         )
 
-        # self.gconv = GConv(32)
+        self.gconv = GConv(32)
 
     def call(self, x, training=False, y=None, adj=None, z=None):
 
-        # x = self.gconv(x, adj, training=training)
+        x = self.gconv(x, adj, training=training)
 
         encoded = self.encoder(x=x, adj=adj, state=None, training=training)
         decoded = self.decoder(adj=adj, state=encoded, x=y, training=training)

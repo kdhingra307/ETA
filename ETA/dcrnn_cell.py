@@ -121,18 +121,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         x_ = tf.expand_dims(x_, 0)
         return tf.concat([x, x_], axis=0)
 
-    # @tf.function
-    # def _gconv(self, inputs, state, support, output_size, bias_start=0.0):
-
-    #     print(output_size, self._num_units)
-    #     if output_size == self._num_units:
-
-    #     else:
-    #         x = self.second_layer[0](inputs_and_state, support)
-    #         x = self.second_layer[1](x, support)
-
-    #     return x
-
 
 class DCGRUBlock(tf_keras.layers.Layer):
     def __init__(self, dcrnn_cells, num_nodes, steps_to_predict, encode=True):
@@ -209,26 +197,14 @@ class GSConv(tf_keras.layers.Layer):
 
     def call(self, x0, support, training=False):
 
-        # size = 1
-        # if self.should:
-        #     x = tf.tensordot(support[1], x0, axes=[1, 1])
-        #     x = tf.transpose(x, [1, 0, 2])
-
-        #     return self.layer(x, training=training)
-        # else:
-
         output = []
-        x = tf.tensordot(support[:1], x0, axes=[1, 1])
-        x = tf.transpose(x, [2, 1, 3, 0])
-        x = tf.reshape(x, [tf.shape(x0)[0], tf.shape(x0)[1], x0.shape[-1]])
+        x = tf.tensordot(support[0], x0, axes=[1, 1])
+        x = tf.transpose(x, [1, 0, 2])
         x = self.layer(x)
         output.append(x)
 
-        x = tf.tensordot(support[:1], tf.concat([x, x0], axis=-1), axes=[1, 1])
-        x = tf.transpose(x, [2, 1, 3, 0])
-        x = tf.reshape(
-            x, [tf.shape(x0)[0], tf.shape(x0)[1], self._hidden + x0.shape[-1]]
-        )
+        x = tf.tensordot(support[1], tf.concat([x, x0], axis=-1), axes=[1, 1])
+        x = tf.transpose(x, [1, 0, 2])
 
         x = self.layer1(x)
         output.append(x)
