@@ -79,7 +79,7 @@ class Model(tf_keras.Model):
             encode=False,
         )
 
-        self.gconv = GConv(32)
+        # self.gconv = GConv(32)
 
     def call(self, x, training=False, y=None, adj=None, z=None):
 
