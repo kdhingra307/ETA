@@ -48,11 +48,11 @@ class GConv(tf_keras.layers.Layer):
         x = (x * mask) + (
             (1 - mask) * (x_prev_mask * x1 + (1 - x_prev_mask) * x2)
         )
-        print(x)
 
         h_prev_mask = tf.exp(
             -1 * tf.clip_by_value(self.h_prev(dt), 0, tf.float32.max)
         )
+        print(h_prev_mask)
 
         output = []
         for i in range(0, 4):
