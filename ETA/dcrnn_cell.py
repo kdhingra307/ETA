@@ -173,7 +173,11 @@ class GSConv(tf_keras.layers.Layer):
         print(x0)
         output = []
         for e in range(4):
-            output.append(tf.tensordot(support[e], x0, axes=[1, 1]))
+            output.append(
+                tf.transpose(
+                    tf.tensordot(support[e], x0, axes=[1, 1]), [1, 0, 2]
+                )
+            )
 
         x = tf.concat(output, axis=-1)
         print(x)
