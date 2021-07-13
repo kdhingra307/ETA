@@ -119,8 +119,8 @@ def get_data(split_label):
 
         support_prod = tf.matmul(support, support)
         final_support.append(support)
-        # final_support.append(support_prod)
-        final_support.appen3(support_prod - tf.eye(support.shape[0]))
+        final_support.append(-1 * support_prod)
+        # final_support.append(support_prod - tf.eye(support.shape[0]))
         return tf.stack(final_support, axis=0), x, y, z
 
     tf_dataset = tf_dataset.map(second_map)
