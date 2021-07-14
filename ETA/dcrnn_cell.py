@@ -147,7 +147,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         to_return = tf.TensorArray(
             size=self.steps_to_predict, dtype=tf.float32
         )
-        start_time = init[:, :, -1:]
+        start_time = init[:, :, 1:2]
 
         if x_targ is None:
             for i in tf.range(self.steps_to_predict):
