@@ -16,13 +16,13 @@ class Model(tf_keras.Model):
         num_nodes = config.model.graph_batch_size
         steps_to_predict = config.model.steps_to_predict
 
-        cell = GRUDCell(128, num_nodes)
+        cell = GRUDCell(256, num_nodes)
         cell.build([None, None, None, 2])
         self.encoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
                 [
                     cell,
-                    DCGRUCell(128, 2, num_nodes),
+                    DCGRUCell(256, 2, num_nodes),
                 ]
             ),
             num_nodes=num_nodes,
@@ -32,8 +32,8 @@ class Model(tf_keras.Model):
         self.decoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
                 [
-                    DCGRUCell(128, 2, num_nodes, etype=0),
-                    DCGRUCell(128, 2, num_nodes, num_proj=1, etype=0),
+                    DCGRUCell(256, 2, num_nodes, etype=0),
+                    DCGRUCell(256, 2, num_nodes, num_proj=1, etype=0),
                 ]
             ),
             num_nodes=num_nodes,
@@ -48,6 +48,7 @@ class Model(tf_keras.Model):
         decoded = self.decoder(
             adj=adj,
             state=encoded,
+            init=x[:, -1],
             x=y,
             training=training,
             z=z,

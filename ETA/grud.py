@@ -50,7 +50,7 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
         self.x_prev = tf.keras.layers.Dense(2, name="x_prev")
         self.x_prev1 = [
             tf.keras.layers.Dense(
-                16,
+                8,
                 name="x_prev",
                 activation=tf_keras.layers.LeakyReLU(alpha=0.2),
             )

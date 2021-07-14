@@ -133,16 +133,21 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return state[1:]
 
     @tf.function
-    def decode(self, state, adj=None, x_targ=None, training=False, z=None):
+    def decode(
+        self, state, init=None, adj=None, x_targ=None, training=False, z=None
+    ):
         batch_size = tf.shape(state[0])[0]
 
-        init = tf.zeros([batch_size, self.num_nodes, 1], dtype=tf.float32)
+        assert init != None
+
+        # init = tf.zeros([batch_size, self.num_nodes, 1], dtype=tf.float32)
 
         state = tuple(state)
 
         to_return = tf.TensorArray(
             size=self.steps_to_predict, dtype=tf.float32
         )
+        start_time = init[:, :, -1:]
 
         if x_targ is None:
             for i in tf.range(self.steps_to_predict):
@@ -150,6 +155,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
                     init, states=state, training=training, constants=[adj, z]
                 )
                 to_return = to_return.write(i, init)
+                init = tf.concat([init, start_time + (1 / 144)], axis=-1)
         else:
             for i in tf.range(self.steps_to_predict):
                 output, state = self.cells(
@@ -162,6 +168,8 @@ class DCGRUBlock(tf_keras.layers.Layer):
                     init = tf.stop_gradient(output)
                 else:
                     init = x_targ[:, i]
+
+                init = tf.concat([init, start_time + (1 / 144)], axis=-1)
 
         return tf.transpose(to_return.stack(), [1, 0, 2, 3])
 
@@ -206,7 +214,7 @@ class GSConv(tf_keras.layers.Layer):
 
     def call(self, x0, support, training=False):
 
-        output = []
+        output = [x0]
         x = tf.tensordot(support[0], x0, axes=[1, 1])
         x = tf.transpose(x, [1, 0, 2])
         x = self.layer(x)
