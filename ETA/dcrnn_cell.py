@@ -124,9 +124,9 @@ class DCGRUBlock(tf_keras.layers.Layer):
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
         else:
             self.ttr_counter = tf.Variable(
-                0, dtype=tf.float32, trainable=False
+                1, dtype=tf.float32, trainable=False
             )
-            self.ttr_val = tf.Variable(0, dtype=tf.float32, trainable=False)
+            self.ttr_val = tf.Variable(1, dtype=tf.float32, trainable=False)
 
     def encode(self, x, adj, training=False, z=None):
         state = self.block(x, training=training, constants=[adj, z])
@@ -165,9 +165,11 @@ class DCGRUBlock(tf_keras.layers.Layer):
                 to_return = to_return.write(i, output)
 
                 if tf.random.uniform(shape=[]) < self.ttr_val:
+                    tf.print("tfipp-tippp")
                     init = tf.stop_gradient(output)
                 else:
                     init = x_targ[:, i]
+                    tf.print("taap-taaap")
 
                 init = tf.concat([init, start_time + (1 / 144)], axis=-1)
 
@@ -175,7 +177,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
     def ttr(self):
         self.ttr_counter.assign_add(1)
-        self.ttr_val.assign(1 - tf.exp((self.ttr_counter - 10 * 483) / (12)))
+        self.ttr_val.assign(tf.exp((-1 * self.ttr_counter) / (483 * 12)))
 
         tf.summary.scalar(
             "ttr_val", self.ttr_val, step=tf.cast(self.ttr_counter, tf.int64)
