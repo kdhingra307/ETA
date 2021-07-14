@@ -191,7 +191,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
             )
         else:
             return self.decode(
-                state, adj, init=init, training=training, z=z, x_targ=x
+                state, adj=adj, init=init, training=training, z=z, x_targ=x
             )
 
 
