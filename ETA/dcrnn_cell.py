@@ -164,6 +164,12 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
                 to_return = to_return.write(i, output)
 
+                tf.print(
+                    tf.random.uniform(shape=[]),
+                    self.ttr_val,
+                    tf.random.uniform(shape=[]) < self.ttr_val,
+                )
+
                 if tf.random.uniform(shape=[]) < self.ttr_val:
                     tf.print("tfipp-tippp")
                     init = tf.stop_gradient(output)
