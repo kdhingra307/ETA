@@ -1,7 +1,7 @@
 model:
   working_dir: "/home/pravesh/speech_work/ETA/models/ETA/data"
   batch_size: 16
-  training_label: "small_eta/ours/time_decode/curriculum/2"
+  training_label: "small_eta/ours/time_decode/1"
   num_nodes: 1165
   steps_to_predict: 12
   graph_batch_size: 256
@@ -25,5 +25,5 @@ training:
   decay: 1e+3
   log_dir: "logs/{}"
   ckpt_dir: "ckpt/{}"
-  epochs: 50
+  epochs: 70
   reset: False
