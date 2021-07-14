@@ -160,7 +160,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
                 to_return = to_return.write(i, output)
 
-                if tf.random.uniform(shape=[]) < self.ttr_val:
+                if tf.random.uniform(shape=[]) > self.ttr_val:
                     init = tf.stop_gradient(output)
                 else:
                     init = x_targ[:, i]
