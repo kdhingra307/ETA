@@ -68,7 +68,7 @@ ckpt_manager.ckpt_manager.restore_or_initialize()
 model.fit(
     Dataset(train_split),
     epochs=config.training.epochs,
-    initial_epoch=50,
+    initial_epoch=0,
     callbacks=[ckpt_manager, log_manager, lr_manager],
     validation_data=Dataset(validation_split),
 )
