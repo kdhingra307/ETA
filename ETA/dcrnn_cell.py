@@ -119,7 +119,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         self.cells = dcrnn_cells
         self.num_nodes = num_nodes
         self.steps_to_predict = steps_to_predict
-        # config.model.counter_position
+
         if encode:
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
         else:
@@ -136,11 +136,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
     def decode(
         self, state, init=None, adj=None, x_targ=None, training=False, z=None
     ):
-        batch_size = tf.shape(state[0])[0]
-
         assert init != None
-
-        # init = tf.zeros([batch_size, self.num_nodes, 1], dtype=tf.float32)
 
         state = tuple(state)
 
@@ -164,18 +160,10 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
                 to_return = to_return.write(i, output)
 
-                tf.print(
-                    tf.random.uniform(shape=[]),
-                    self.ttr_val,
-                    tf.random.uniform(shape=[]) < self.ttr_val,
-                )
-
                 if tf.random.uniform(shape=[]) < self.ttr_val:
-                    tf.print("tfipp-tippp")
                     init = tf.stop_gradient(output)
                 else:
                     init = x_targ[:, i]
-                    tf.print("taap-taaap")
 
                 init = tf.concat([init, start_time + (1 / 144)], axis=-1)
 
