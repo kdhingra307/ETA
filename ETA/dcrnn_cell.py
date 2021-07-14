@@ -124,9 +124,9 @@ class DCGRUBlock(tf_keras.layers.Layer):
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
         else:
             self.ttr_counter = tf.Variable(
-                0.5, dtype=tf.float32, trainable=False
+                1, dtype=tf.float32, trainable=False
             )
-            self.ttr_val = tf.Variable(1, dtype=tf.float32, trainable=False)
+            self.ttr_val = tf.Variable(0.5, dtype=tf.float32, trainable=False)
 
     def encode(self, x, adj, training=False, z=None):
         state = self.block(x, training=training, constants=[adj, z])
