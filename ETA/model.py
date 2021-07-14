@@ -66,7 +66,7 @@ class Model(tf_keras.Model):
                 y, y_pred, None, regularization_losses=self.losses
             )
 
-        self.decoder.ttr()
+        # self.decoder.ttr()
 
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
         self.compiled_metrics.update_state(y, y_pred, sample_weight)
