@@ -31,7 +31,9 @@ def direction(y_true, y_pred):
     y_true = y_true[:, :, :, 0]
 
     output = y_true * y_pred * mask
-    return tf_maths.reduce_sum(output > 0) / tf_maths.reduce_sum(mask)
+    return tf_maths.reduce_sum(
+        tf.cast(output > 0, tf.float32)
+    ) / tf_maths.reduce_sum(mask)
 
 
 def rmse(y_true, y_pred):
