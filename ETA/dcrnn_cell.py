@@ -181,7 +181,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
             "ttr_val", self.ttr_val, step=tf.cast(self.ttr_counter, tf.int64)
         )
 
-    def call(self, x, state, adj=None, training=False, z=None):
+    def call(self, x, state, adj=None, init=None, training=False, z=None):
         if self.is_encoder:
             return self.encode(
                 x,
@@ -190,7 +190,9 @@ class DCGRUBlock(tf_keras.layers.Layer):
                 z=z,
             )
         else:
-            return self.decode(state, adj, training=training, z=z, x_targ=x)
+            return self.decode(
+                state, adj, init=init, training=training, z=z, x_targ=x
+            )
 
 
 class GSConv(tf_keras.layers.Layer):
