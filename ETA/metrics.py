@@ -31,6 +31,9 @@ def loss(y_true, y_pred):
     y_true = y_true * std + mean
     y_pred = y_pred * std + mean
 
+    y_pred = tf_maths.log(tf_maths.maximum(y_pred, 1e-7) + 1.0)
+    y_true = tf_maths.log(tf_maths.maximum(y_true, 1e-7) + 1.0)
+
     output = ((y_true - y_pred) ** 2) * mask
 
     output = tf.where(y_true > y_pred, 2 * output, 1 * output)
