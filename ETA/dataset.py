@@ -20,14 +20,31 @@ def get_data(split_label):
         data = np.load(file_name)
         x, y = data["x"], data["y"][:, :, 0]
 
+        x_mask = (x[:, :, 0] > 0).astype(np.float32)
+        x = (x - mean_expanded) / std_expanded
+
+        x_mask = np.stack([x_mask, np.ones(x_mask.shape)], axis=-1)
+
+        x1 = [np.zeros(x[0].shape)]
+        dt = [np.zeros(x[0].shape)]
+        for e in range(len(x)):
+            x1.append((x1[-1] * (1 - x_mask[e])) + x_mask[e] * x[e])
+            dt.append(((1 + dt[-1]) * (1 - x_mask[e])) + x_mask[e])
+
+        x1 = np.stack(x1[1:], axis=0)
+        dt = np.stack(dt[1:], axis=0) / 12
+
+        x2 = np.sum(x_mask * x, axis=0) / (np.sum(x_mask, axis=0) + 1e-12)
+
+        x = np.concatenate([x, x1, x_mask, dt], axis=-1)
+
         mask = (y > 0) * 1
 
         y = (y - mean[0]) / std[0]
-        x = (x - mean_expanded) / std_expanded
 
         y = np.stack([y, mask], axis=-1).astype(np.float32)
 
-        return x.astype(np.float32), y
+        return x.astype(np.float32), y, x2.astype(np.float32)
 
     files = glob(
         "{}/{}/{}/*.npz".format(
@@ -38,26 +55,31 @@ def get_data(split_label):
     tf_dataset = tf_dataset.shuffle(config.data.shuffle, seed=1234)
     tf_dataset = tf_dataset.map(
         lambda x: tf.numpy_function(
-            tf_map, [x], [tf.float32, tf.float32], name="load_each_file"
+            tf_map,
+            [x],
+            [tf.float32, tf.float32, tf.float32],
+            name="load_each_file",
         )
     )
 
     tf_dataset = tf_dataset.map(
-        lambda x, y: (
-            tf.ensure_shape(x, [None, config.model.num_nodes, 2]),
+        lambda x, y, z: (
+            tf.ensure_shape(x, [None, config.model.num_nodes, 8]),
             tf.ensure_shape(y, [None, config.model.num_nodes, 2]),
+            tf.ensure_shape(z, [config.model.num_nodes, 2]),
         )
     )
 
     tf_dataset = tf_dataset.batch(batch_size=config.model.batch_size)
 
-    def second_map(x, y):
+    def second_map(x, y, z):
         positions = batch_sampler.sampler[split_label]()
 
         x = tf.gather(x, indices=positions, axis=2)
         y = tf.gather(y, indices=positions, axis=2)
+        z = tf.gather(z, indices=positions, axis=1)
 
-        return positions, x, y
+        return positions, x, y, z
 
     tf_dataset = tf_dataset.map(second_map)
 
@@ -112,8 +134,8 @@ class rwt_sampling:
         self.n_nodes = config.model.num_nodes
 
         self.sampler = {
-            "melr_train": self.sample,
-            "melr_val": lambda: np.arange(207),
+            "metr_missing/train": self.sample,
+            "metr_missing/val": lambda: np.arange(207),
         }
 
     def dummy(self):
