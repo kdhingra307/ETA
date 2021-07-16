@@ -44,6 +44,9 @@ def direction(y_true, y_pred):
     mask = y_true[:, :, :, 1]
     y_true = y_true[:, :, :, 0]
 
+    y_true = y_true * std + mean
+    y_pred = y_pred * std + mean
+
     output = (y_true <= y_pred) * mask
     return tf_maths.reduce_sum(
         tf.cast(output, tf.float32)
