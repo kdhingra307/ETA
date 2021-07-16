@@ -8,4 +8,4 @@ from ETA.dcrnn_cell import DCGRUBlock, DCGRUCell
 from ETA.model import Model
 
 metrics = [mse, mae, mape, rmse, direction]
-loss_function = mse
+loss_function = loss
