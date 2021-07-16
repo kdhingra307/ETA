@@ -126,7 +126,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
             self.ttr_counter = tf.Variable(
                 1, dtype=tf.float32, trainable=False
             )
-            self.ttr_val = tf.Variable(1, dtype=tf.float32, trainable=False)
+            self.ttr_val = tf.Variable(0.5, dtype=tf.float32, trainable=False)
 
     def encode(self, x, adj, training=False, z=None):
         state = self.block(x, training=training, constants=[adj, z])
@@ -161,9 +161,9 @@ class DCGRUBlock(tf_keras.layers.Layer):
                 to_return = to_return.write(i, output)
 
                 # if tf.random.uniform(shape=[]) > self.ttr_val:
-                # init = tf.stop_gradient(output)
+                init = tf.stop_gradient(output)
                 # else:
-                init = x_targ[:, i]
+                # init = x_targ[:, i]
 
                 init = tf.concat([init, start_time + (1 / 144)], axis=-1)
 
