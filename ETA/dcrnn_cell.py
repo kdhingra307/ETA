@@ -1,10 +1,5 @@
 import tensorflow.keras as tf_keras
-import numpy as np
 import tensorflow as tf
-import scipy.sparse as sp
-from tensorflow.python.keras.layers.advanced_activations import LeakyReLU
-from tensorflow.python.ops.gen_array_ops import const
-from tensorflow.python.ops.gen_math_ops import prod_eager_fallback
 from ETA import config
 
 
@@ -35,9 +30,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         num_nodes,
         num_proj=None,
         activation=tf.nn.tanh,
-        reuse=None,
-        filter_type="laplacian",
-        use_gc_for_ru=True,
     ):
 
         super(DCGRUCell, self).__init__()
@@ -49,12 +41,8 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._supports = []
         self._use_gc_for_ru = use_gc_for_ru
 
-        norm = np.load("./data/static/norm.npy")
-
-        self._supports = [
-            tf.constant(adj_mx, dtype=tf.float32),
-            tf.constant(adj_mx.T, dtype=tf.float32),
-        ]
+        self.first_layer = GSConv(units=num_units * 2)
+        self.second_layer = GSConv(num_units)
 
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
@@ -70,54 +58,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
                 ]
             )
 
-    @staticmethod
-    def _build_sparse_matrix(L, fac=None):
-        if fac is not None:
-            return tf.constant(L.todense() / fac)
-        else:
-            return tf.constant(L.todense())
-        # return tf.constant(
-        #     [np.arange(207) for _ in range(207)], dtype=tf.float32
-        # )
-        # L = L.tocoo()
-        # indices = np.column_stack((L.row, L.col))
-        # L = tf.SparseTensor(indices, L.data, L.shape)
-        # return tf.sparse.reorder(L)
-
-    def build(self, inp_shape):
-
-        inpt_features = (inp_shape[-1] + 64) * 4
-
-        kernel_initializer = tf_keras.initializers.GlorotUniform()
-        bias_initializer = tf_keras.initializers.Zeros()
-        self.w1 = tf.Variable(
-            initial_value=kernel_initializer(
-                shape=(inpt_features, 2 * self._num_units), dtype=tf.float32
-            ),
-            trainable=True,
-        )
-        self.w2 = tf.Variable(
-            initial_value=kernel_initializer(
-                shape=(inpt_features, self._num_units), dtype=tf.float32
-            ),
-            trainable=True,
-        )
-
-        self.b1 = tf.Variable(
-            initial_value=bias_initializer(
-                shape=(2 * self._num_units,), dtype=tf.float32
-            ),
-            trainable=True,
-        )
-        self.b2 = tf.Variable(
-            initial_value=bias_initializer(
-                shape=(self._num_units,), dtype=tf.float32
-            ),
-            trainable=True,
-        )
-
-        self.batch_size = inp_shape[0]
-
     @tf.function
     def call(self, inputs, state, constants=None, scope=None, training=False):
 
@@ -130,32 +70,19 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         [type]
             [description]
         """
-        position = constants[0]
+        support = constants[0]
+        state = state[0]
 
-        state = tf.reshape(state, [tf.shape(state[0])[0], -1, self._num_units])
-        num_nodes = tf.shape(state)[1]
+        inputs_and_state = tf.concat([inputs, state], axis=2)
 
-        output_size = 2 * self._num_units
         value = tf.sigmoid(
-            self._gconv(
-                inputs,
-                state,
-                output_size,
-                bias_start=1.0,
-                pos=position,
-                training=training,
-            )
+            self.first_layer(inputs_and_state, support, training=training)
         )
-        value = tf.reshape(value, (-1, num_nodes, output_size))
+
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
-        c = self._gconv(
-            inputs,
-            r * state,
-            self._num_units,
-            pos=position,
-            training=training,
-        )
+        inputs_and_state = tf.concat([inputs, r * state], axis=2)
+        c = self.second_layer(inputs_and_state, support, training=training)
 
         if self._activation is not None:
             c = self._activation(c)
@@ -165,74 +92,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         if self._num_proj is not None:
             output = self.projection_layer(output)
         return output, new_state
-
-    @staticmethod
-    def _concat(x, x_):
-        x_ = tf.expand_dims(x_, 0)
-        return tf.concat([x, x_], axis=0)
-
-    @tf.function
-    def _gconv(
-        self,
-        inputs,
-        state,
-        output_size,
-        pos,
-        bias_start=0.0,
-        training=False,
-    ):
-
-        inputs_and_state = tf.concat([inputs, state], axis=2)
-        num_nodes = tf.shape(inputs)[1]
-        num_inpt_features = inputs_and_state.shape[-1]
-
-        x0 = tf.reshape(
-            tf.transpose(inputs_and_state, [1, 0, 2]),
-            [num_nodes, -1],
-        )
-        output = []
-
-        for support in self._supports:
-
-            cur_support = tf.gather(
-                tf.gather(support, pos, axis=1), pos, axis=0
-            )
-            cur_support = calculate_random_walk_matrix(cur_support)
-
-            x1 = tf.matmul(cur_support, x0)
-            output.append(x1)
-
-            for k in range(2, self._max_diffusion_step + 1):
-                x2 = 2 * tf.matmul(cur_support, x1) - x0
-                output.append(x2)
-                x1, x0 = x2, x1
-
-        batch_size = tf.shape(inputs)[0]
-        x = tf.reshape(
-            tf.stack(output, axis=-1),
-            [num_nodes, batch_size, num_inpt_features, -1],
-        )
-
-        x = tf.transpose(x, [1, 0, 3, 2])
-        x = tf.reshape(x, [batch_size, num_nodes, -1])
-
-        if output_size == self._num_units:
-            x = tf.matmul(x, self.w2) + self.b2
-        else:
-            x = tf.matmul(x, self.w1) + self.b1
-
-        return x
-
-
-def calculate_random_walk_matrix(adj_mx):
-    d = tf.reduce_sum(adj_mx, axis=1)
-    d_inv = tf.math.pow(d, -1)
-    d_inv = tf.where(tf.math.is_inf(d_inv), tf.zeros_like(d_inv), d_inv)
-    d_mat_inv = tf.linalg.diag(d_inv)
-
-    random_walk_mx = tf.matmul(d_mat_inv, adj_mx)
-
-    return random_walk_mx
 
 
 class DCGRUBlock(tf_keras.layers.Layer):
@@ -246,6 +105,11 @@ class DCGRUBlock(tf_keras.layers.Layer):
         # self.counter = config.model.counter_position
         if encode:
             self.block = tf.keras.layers.RNN(self.cells, return_state=True)
+        else:
+            self.ttr_counter = tf.Variable(
+                1, dtype=tf.float32, trainable=False
+            )
+            self.ttr_val = tf.Variable(0.5, dtype=tf.float32, trainable=False)
 
     def build(self, x_shape):
         self.batch_size = x_shape[0]
@@ -274,7 +138,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return teacher_coeff
 
     @tf.function
-    def decode(self, state, pos=None, x_targ=None, z=None):
+    def decode(self, state, pos=None, x_targ=None, z=None, training=training):
 
         init = tf.zeros(
             [tf.shape(state[0])[0], tf.shape(state[0])[1], 1], dtype=tf.float32
@@ -285,14 +149,77 @@ class DCGRUBlock(tf_keras.layers.Layer):
         to_return = tf.TensorArray(
             size=self.steps_to_predict, dtype=tf.float32
         )
-        for i in range(self.steps_to_predict):
-            init, state = self.cells(init, states=state, constants=[pos, z])
-            to_return = to_return.write(i, init)
+
+        if x_targ is None:
+            for i in tf.range(self.steps_to_predict):
+                init, state = self.cells(
+                    init, states=state, training=training, constants=[pos, z]
+                )
+                to_return = to_return.write(i, init)
+        else:
+            for i in tf.range(self.steps_to_predict):
+                output, state = self.cells(
+                    init, states=state, training=training, constants=[pos, z]
+                )
+
+                to_return = to_return.write(i, output)
+
+                if tf.random.uniform(shape=[]) > self.ttr_val:
+                    init = tf.stop_gradient(output)
+                else:
+                    init = x_targ[:, i]
 
         return tf.transpose(tf.squeeze(to_return.stack(), axis=-1), [1, 0, 2])
+
+    def ttr(self):
+        self.ttr_counter.assign_add(1)
+        self.ttr_val.assign(tf.exp((-1 * self.ttr_counter) / (483 * 18)))
+
+        tf.summary.scalar(
+            "ttr_val",
+            self.ttr_val,
+            step=tf.cast(self.ttr_counter, tf.int64),
+        )
 
     def call(self, x, state, pos, z):
         if self.is_encoder:
             return self.encode(x, pos=pos, z=z)
         else:
             return self.decode(state=state, x_targ=x, pos=pos, z=z)
+
+
+class GSConv(tf_keras.layers.Layer):
+    def __init__(self, units, should=False):
+        super(GSConv, self).__init__()
+
+        self._hidden = units // 2
+
+        self.layer = tf.keras.layers.Dense(
+            units=units // 2,
+            activation=tf.keras.layers.LeakyReLU(0.2),
+        )
+        self.layer1 = tf.keras.layers.Dense(
+            units=units // 2,
+            activation=tf.keras.layers.LeakyReLU(0.2),
+        )
+        self.batch_norm = tf.keras.layers.Dropout(0.1)
+
+        self.layer2 = tf.keras.layers.Dense(units=units)
+        self.should = should
+
+    def call(self, x0, support, training=False):
+
+        output = [x0]
+        x = tf.tensordot(support[0], x0, axes=[1, 1])
+        x = tf.transpose(x, [1, 0, 2])
+        x = self.layer(x)
+        output.append(x)
+
+        x = tf.tensordot(support[1], tf.concat([x, x0], axis=-1), axes=[1, 1])
+        x = tf.transpose(x, [1, 0, 2])
+
+        x = self.layer1(x)
+        x = self.batch_norm(x, training=training)
+        output.append(x)
+
+        return self.layer2(tf.concat(output, axis=-1))

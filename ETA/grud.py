@@ -5,7 +5,6 @@ import scipy.sparse as sp
 from tensorflow.python.keras.layers.advanced_activations import LeakyReLU
 from tensorflow.python.ops.gen_array_ops import const
 from tensorflow.python.ops.gen_math_ops import prod_eager_fallback
-from ETA import config
 
 
 class GRUDCell(tf.keras.layers.AbstractRNNCell):
@@ -29,13 +28,10 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
     def __init__(
         self,
         num_units,
-        adj_mx,
         max_diffusion_step,
         num_nodes,
         num_proj=None,
         activation=tf.nn.tanh,
-        reuse=None,
-        filter_type="laplacian",
         use_gc_for_ru=True,
     ):
 
@@ -48,19 +44,19 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
         self._supports = []
         self._use_gc_for_ru = use_gc_for_ru
 
-        self._supports = [
-            tf.constant(adj_mx, dtype=tf.float32),
-            tf.constant(adj_mx.T, dtype=tf.float32),
-        ]
-
         self.x_prev = tf.keras.layers.Dense(2, name="x_prev")
         self.h_prev = tf.keras.layers.Dense(num_units, name="h_prev")
-        self.h1_prev = tf.keras.layers.Dense(
-            2 * num_units, name="h_prev", use_bias=False
-        )
-        self.h2_prev = tf.keras.layers.Dense(
-            num_units, name="h_prev", use_bias=False
-        )
+        self.x_prev1 = [
+            tf.keras.layers.Dense(
+                8,
+                name="x_prev",
+                activation=tf_keras.layers.LeakyReLU(alpha=0.2),
+            )
+            for _ in range(4)
+        ]
+        self.first_layer = GSConv(units=num_units * 2)
+        self.norms = [tf.keras.layers.Dropout(0.01) for _ in range(3)]
+        self.second_layer = GSConv(num_units)
 
         if num_proj != None:
             self.projection_layer = tf_keras.Sequential(
@@ -76,43 +72,8 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
                 ]
             )
 
-    def build(self, inp_shape):
-
-        inpt_features = (inp_shape[-1] + 64) * 4
-
-        kernel_initializer = tf_keras.initializers.GlorotUniform()
-        bias_initializer = tf_keras.initializers.Zeros()
-        self.w1 = tf.Variable(
-            initial_value=kernel_initializer(
-                shape=(inpt_features, 2 * self._num_units), dtype=tf.float32
-            ),
-            trainable=True,
-        )
-        self.w2 = tf.Variable(
-            initial_value=kernel_initializer(
-                shape=(inpt_features, self._num_units), dtype=tf.float32
-            ),
-            trainable=True,
-        )
-
-        self.b1 = tf.Variable(
-            initial_value=bias_initializer(
-                shape=(2 * self._num_units,), dtype=tf.float32
-            ),
-            trainable=True,
-        )
-        self.b2 = tf.Variable(
-            initial_value=bias_initializer(
-                shape=(self._num_units,), dtype=tf.float32
-            ),
-            trainable=True,
-        )
-        self.built = True
-
-        self.batch_size = inp_shape[0]
-
     @tf.function
-    def call(self, inputs, state, constants=None, scope=None, training=False):
+    def call(self, inputs, state, constants=None, training=False):
 
         """
             inputs_shape [BatchSize, Num_Nodes, Inp_features]
@@ -123,13 +84,18 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
         [type]
             [description]
         """
-        position = constants[0]
+        support = constants[0]
         x2 = constants[1]
 
         x, x1, mask, dt = tf.split(inputs, num_or_size_splits=4, axis=-1)
 
+        x_l = self.x_prev1[0](dt)
+        for e in range(1, 4):
+            x_l = self.norms[e - 1](x_l)
+            x_l += self.x_prev1[e](x_l)
+
         x_prev_mask = tf.exp(
-            -1 * tf.clip_by_value(self.x_prev(dt), 0, tf.float32.max)
+            -1 * tf.clip_by_value(self.x_prev(x_l), 0, tf.float32.max)
         )
 
         inputs = (x * mask) + (
@@ -143,108 +109,57 @@ class GRUDCell(tf.keras.layers.AbstractRNNCell):
         )
         state = h_prev_mask * state
 
-        num_nodes = tf.shape(state)[1]
+        inputs_and_state = tf.concat([inputs, state], axis=2)
 
-        output_size = 2 * self._num_units
         value = tf.sigmoid(
-            self._gconv(
-                inputs,
-                state,
-                output_size,
-                bias_start=1.0,
-                pos=position,
-                training=training,
-            )
-            + self.h1_prev(dt)
+            self.first_layer(inputs_and_state, support, training=training)
         )
-        value = tf.reshape(value, (-1, num_nodes, output_size))
+
         r, u = tf.split(value=value, num_or_size_splits=2, axis=-1)
 
-        c = (
-            self._gconv(
-                inputs,
-                r * state,
-                self._num_units,
-                pos=position,
-                training=training,
-            )
-            + self.h2_prev(dt)
-        )
+        inputs_and_state = tf.concat([inputs, r * state], axis=2)
+        c = self.second_layer(inputs_and_state, support, training=training)
 
         if self._activation is not None:
             c = self._activation(c)
 
         output = new_state = u * state + (1 - u) * c
 
-        if self._num_proj is not None:
-            output = self.projection_layer(output)
         return output, new_state
 
-    @staticmethod
-    def _concat(x, x_):
-        x_ = tf.expand_dims(x_, 0)
-        return tf.concat([x, x_], axis=0)
 
-    @tf.function
-    def _gconv(
-        self,
-        inputs,
-        state,
-        output_size,
-        pos,
-        bias_start=0.0,
-        training=False,
-    ):
+class GSConv(tf_keras.layers.Layer):
+    def __init__(self, units, should=False):
+        super(GSConv, self).__init__()
 
-        inputs_and_state = tf.concat([inputs, state], axis=2)
+        self._hidden = units // 2
 
-        num_nodes = tf.shape(inputs)[1]
-        num_inpt_features = inputs_and_state.shape[-1]
-
-        x0 = tf.reshape(
-            tf.transpose(inputs_and_state, [1, 0, 2]),
-            [num_nodes, -1],
+        self.layer = tf.keras.layers.Dense(
+            units=units // 2,
+            activation=tf.keras.layers.LeakyReLU(0.2),
         )
+        self.layer1 = tf.keras.layers.Dense(
+            units=units // 2,
+            activation=tf.keras.layers.LeakyReLU(0.2),
+        )
+        self.batch_norm = tf.keras.layers.Dropout(0.1)
+
+        self.layer2 = tf.keras.layers.Dense(units=units)
+        self.should = should
+
+    def call(self, x0, support, training=False):
+
         output = []
+        x = tf.tensordot(support[0], x0, axes=[1, 1])
+        x = tf.transpose(x, [1, 0, 2])
+        x = self.layer(x)
+        output.append(x)
 
-        for support in self._supports:
+        x = tf.tensordot(support[1], tf.concat([x, x0], axis=-1), axes=[1, 1])
+        x = tf.transpose(x, [1, 0, 2])
 
-            cur_support = tf.gather(
-                tf.gather(support, pos, axis=1), pos, axis=0
-            )
-            cur_support = calculate_random_walk_matrix(cur_support)
+        x = self.layer1(x)
+        x = self.batch_norm(x, training=training)
+        output.append(x)
 
-            x1 = tf.matmul(cur_support, x0)
-            output.append(x1)
-
-            for k in range(2, self._max_diffusion_step + 1):
-                x2 = 2 * tf.matmul(cur_support, x1) - x0
-                output.append(x2)
-                x1, x0 = x2, x1
-
-        batch_size = tf.shape(inputs)[0]
-        x = tf.reshape(
-            tf.stack(output, axis=-1),
-            [num_nodes, batch_size, num_inpt_features, -1],
-        )
-
-        x = tf.transpose(x, [1, 0, 3, 2])
-        x = tf.reshape(x, [batch_size, num_nodes, -1])
-
-        if output_size == self._num_units:
-            x = tf.matmul(x, self.w2) + self.b2
-        else:
-            x = tf.matmul(x, self.w1) + self.b1
-
-        return x
-
-
-def calculate_random_walk_matrix(adj_mx):
-    d = tf.reduce_sum(adj_mx, axis=1)
-    d_inv = tf.math.pow(d, -1)
-    d_inv = tf.where(tf.math.is_inf(d_inv), tf.zeros_like(d_inv), d_inv)
-    d_mat_inv = tf.linalg.diag(d_inv)
-
-    random_walk_mx = tf.matmul(d_mat_inv, adj_mx)
-
-    return random_walk_mx
+        return self.layer2(tf.concat(output, axis=-1))
