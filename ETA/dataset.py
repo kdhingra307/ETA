@@ -102,7 +102,7 @@ def get_data(split_label):
         final_support.append(support)
         final_support.append(support_prod)
 
-        return positions, x, y, z
+        return tf.stack(final_support, axis=0), x, y, z
 
     tf_dataset = tf_dataset.map(second_map)
 

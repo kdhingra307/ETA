@@ -145,7 +145,6 @@ class GSConv(tf_keras.layers.Layer):
         self.batch_norm = tf.keras.layers.Dropout(0.1)
 
         self.layer2 = tf.keras.layers.Dense(units=units)
-        self.should = should
 
     def call(self, x0, support, training=False):
 
