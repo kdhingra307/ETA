@@ -22,7 +22,7 @@ def loss(y_true, y_pred):
 
     output = ((y_true - y_pred) ** 2) * mask
 
-    output = tf.where(y_true > (y_pred + 0.5), 1.6 * output, 1 * output)
+    output = tf.where(y_true > (y_pred + 0.5), 1.5 * output, 1 * output)
 
     return tf_maths.reduce_sum(output) / tf_maths.reduce_sum(mask)
 
