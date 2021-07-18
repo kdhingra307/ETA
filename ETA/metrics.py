@@ -20,8 +20,10 @@ def loss(y_true, y_pred):
     y_pred = tf_maths.log(tf_maths.maximum(y_pred, 1e-7) + 1.0)
     y_true = tf_maths.log(tf_maths.maximum(y_true, 1e-7) + 1.0)
 
-    output = tf.maximum(0.781 * (y_true - y_pred), 0.625 * (y_pred - y_true))
-    output = (output ** 2) * mask
+    # output = (
+    #     tf.maximum(0.61 * (y_true - y_pred), 0.39 * (y_pred - y_true)) * mask
+    # )
+    output = (y_true - y_pred) ** 2 * mask
 
     # output = tf.where(y_true > y_pred, 1.2 * output, 1 * output)
 
