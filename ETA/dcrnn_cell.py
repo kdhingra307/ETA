@@ -160,7 +160,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
                 to_return = to_return.write(i, output)
 
-                if tf.random.uniform(shape=[]) > self.ttr_val:
+                if tf.random.uniform(shape=[]) < self.ttr_val:
                     init = tf.stop_gradient(output)
                 else:
                     init = x_targ[:, i]
@@ -171,7 +171,12 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
     def ttr(self):
         self.ttr_counter.assign_add(1)
-        self.ttr_val.assign(tf.exp((-1 * self.ttr_counter) / (483 * 18)))
+
+        # self.ttr_val.assign(tf.exp((-1 * self.ttr_counter) / (483 * 18)))
+
+        self.ttr_val.assign(
+            1 / (1 + tf.exp(5 - self.ttr_counter / (3.5 * 483)))
+        )
 
         tf.summary.scalar(
             "ttr_val", self.ttr_val, step=tf.cast(self.ttr_counter, tf.int64)
