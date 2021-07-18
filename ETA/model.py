@@ -1,6 +1,5 @@
 import tensorflow.keras as tf_keras
 from tensorflow.python.keras.engine.sequential import Sequential
-import tensorflow.autodiff as tf_diff
 from tensorflow import squeeze as tf_squeeze
 from tensorflow.python.keras.engine import data_adapter
 from ETA import DCGRUBlock, DCGRUCell, config
@@ -16,13 +15,13 @@ class Model(tf_keras.Model):
         num_nodes = config.model.graph_batch_size
         steps_to_predict = config.model.steps_to_predict
 
-        cell = GRUDCell(256, num_nodes)
+        cell = GRUDCell(128, num_nodes)
         cell.build([None, None, None, 2])
         self.encoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
                 [
                     cell,
-                    DCGRUCell(256, 2, num_nodes),
+                    DCGRUCell(128, 2, num_nodes),
                 ]
             ),
             num_nodes=num_nodes,
@@ -32,8 +31,8 @@ class Model(tf_keras.Model):
         self.decoder = DCGRUBlock(
             tf_keras.layers.StackedRNNCells(
                 [
-                    DCGRUCell(256, 2, num_nodes, etype=0),
-                    DCGRUCell(256, 2, num_nodes, num_proj=1, etype=0),
+                    DCGRUCell(128, 2, num_nodes, etype=0),
+                    DCGRUCell(128, 2, num_nodes, num_proj=1, etype=0),
                 ]
             ),
             num_nodes=num_nodes,
@@ -60,11 +59,13 @@ class Model(tf_keras.Model):
 
         sample_weight = None
 
-        with tf_diff.GradientTape() as tape:
+        with tf.GradientTape() as tape:
             y_pred = self(x, training=True, y=y[:, :, :, :1], adj=pos, z=z)
             loss = self.compiled_loss(
                 y, y_pred, None, regularization_losses=self.losses
             )
+
+        self.decoder.ttr()
 
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
         self.compiled_metrics.update_state(y, y_pred, sample_weight)
@@ -73,7 +74,6 @@ class Model(tf_keras.Model):
     def test_step(self, data):
         pos, x, y, z = data
         y_pred = self(x, training=False, adj=pos, z=z)
-        # Updates stateful loss metrics.
         loss = self.compiled_loss(
             y, y_pred, None, regularization_losses=self.losses
         )

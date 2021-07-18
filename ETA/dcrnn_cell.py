@@ -160,10 +160,10 @@ class DCGRUBlock(tf_keras.layers.Layer):
 
                 to_return = to_return.write(i, output)
 
-                # if tf.random.uniform(shape=[]) > self.ttr_val:
-                init = tf.stop_gradient(output)
-                # else:
-                # init = x_targ[:, i]
+                if tf.random.uniform(shape=[]) > self.ttr_val:
+                    init = tf.stop_gradient(output)
+                else:
+                    init = x_targ[:, i]
 
                 init = tf.concat([init, start_time + (1 / 144)], axis=-1)
 
@@ -216,6 +216,7 @@ class GSConv(tf_keras.layers.Layer):
         x = tf.tensordot(support[0], x0, axes=[1, 1])
         x = tf.transpose(x, [1, 0, 2])
         x = self.layer(x)
+        x = self.batch_norm(x, training=training)
         output.append(x)
 
         x = tf.tensordot(support[1], tf.concat([x, x0], axis=-1), axes=[1, 1])
