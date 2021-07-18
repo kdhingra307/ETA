@@ -39,7 +39,6 @@ class DCGRUCell(tf.keras.layers.AbstractRNNCell):
         self._num_units = num_units
         self._max_diffusion_step = max_diffusion_step
         self._supports = []
-        self._use_gc_for_ru = use_gc_for_ru
 
         self.first_layer = GSConv(units=num_units * 2)
         self.second_layer = GSConv(num_units)
@@ -138,7 +137,7 @@ class DCGRUBlock(tf_keras.layers.Layer):
         return teacher_coeff
 
     @tf.function
-    def decode(self, state, pos=None, x_targ=None, z=None, training=training):
+    def decode(self, state, pos=None, x_targ=None, z=None, training=False):
 
         init = tf.zeros(
             [tf.shape(state[0])[0], tf.shape(state[0])[1], 1], dtype=tf.float32
