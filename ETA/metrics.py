@@ -17,13 +17,14 @@ def loss(y_true, y_pred):
     y_true = y_true * std + mean
     y_pred = y_pred * std + mean
 
-    y_pred = tf_maths.log(tf_maths.maximum(y_pred, 1e-7) + 1.0)
-    y_true = tf_maths.log(tf_maths.maximum(y_true, 1e-7) + 1.0)
+    # y_pred = tf_maths.log(tf_maths.maximum(y_pred, 1e-7) + 1.0)
+    # y_true = tf_maths.log(tf_maths.maximum(y_true, 1e-7) + 1.0)
 
-    output = tf.maximum(0.6 * (y_true - y_pred), 0.4 * (y_pred - y_true))
+    output = (
+        tf.maximum(0.6 * (y_true - y_pred), 0.4 * (y_pred - y_true)) * mask
+    )
 
     # output = tf.where(y_true > y_pred, 1.2 * output, 1 * output)
-    output *= mask
 
     return tf_maths.reduce_sum(output) / tf_maths.reduce_sum(mask)
 
