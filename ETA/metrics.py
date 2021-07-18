@@ -21,7 +21,7 @@ def loss(y_true, y_pred):
     y_true = tf_maths.log(tf_maths.maximum(y_true, 1e-7) + 1.0)
 
     output = ((y_true - y_pred) ** 2) * mask
-    print((y_true > y_pred).shape)
+
     output = tf.where(y_true > y_pred, 1.2 * output, 1 * output)
 
     return tf_maths.reduce_sum(output) / tf_maths.reduce_sum(mask)
